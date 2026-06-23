@@ -1,0 +1,396 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Paralang</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="icon" type="image/x-icon" href="./../static/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body class="{% if is_url_input %}url-input-env{% endif %}">
+
+  <header>
+    <p class="pageTitle"><strong>PARA<span>LANG</span></strong>&nbsp;<small>v0.11.2</small></p>
+    <button type="button" id="toggleDarkMode" class="dark-mode-toggle icon-toggle-btn" aria-label="Enable dark mode"
+      title="Enable dark mode">
+      <span id="darkModeIcon" class="icon-toggle-btn__icon" aria-hidden="true"></span>
+    </button>
+    <form class="toolbar" method="get" action="/">
+      <div id="envSelectGroup">
+        <label for="env">Environment</label>
+        <select id="env" name="env">
+          {% for source in source_options %}
+          <option value="{{ source.key }}" {% if source.key==source_env %}selected{% endif %}>
+            {{ source.label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="yearSelectGroup">
+        <label for="year">Year</label>
+        <select id="year" name="year">
+          {% for available_year in available_years %}
+          <option value="{{ available_year }}" {% if available_year==year %}selected{% endif %}>
+            {{ available_year }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="left" id="leftSelectLabel">
+          {% if is_url_input %}
+            {% if source_env == 'canada-ca-url' %}EN Canada.ca URL{% else %}EN AEM URL{% endif %}
+          {% else %}
+            EN page
+          {% endif %}
+        </label>
+
+        {% if is_url_input %}
+        <input id="left" name="left" type="text" value="{{ left_input_value }}"
+          placeholder="{% if source_env == 'canada-ca-url' %}Paste EN Canada.ca URL{% else %}Paste EN AEM sensitive URL{% endif %}">
+        {% else %}
+        <select id="left" name="left">
+          {% for file in en_files %}
+          <option value="{{ file }}" data-lang="en" {% if file==left_file %}selected{% endif %}>
+            {{ file|replace('report-rapport/', '') }}
+          </option>
+          {% endfor %}
+        </select>
+        {% endif %}
+        <input type="hidden" id="leftResolvedFile" value="{{ left_file }}">
+      </div>
+
+      <div id="rightSelectGroup">
+        <label for="right">
+          {% if is_url_input %}
+            {% if source_env == 'canada-ca-url' %}FR Canada.ca URL{% else %}FR AEM URL{% endif %}
+          {% else %}
+            FR page
+          {% endif %}
+        </label>
+
+        {% if is_url_input %}
+        <input id="right" name="right" type="text" value="{{ right_input_value }}"
+          placeholder="{% if source_env == 'canada-ca-url' %}Paste FR Canada.ca URL{% else %}Paste FR AEM sensitive URL{% endif %}">
+        {% else %}
+        <select id="right" name="right">
+          {% for file in fr_files %}
+          <option value="{{ file }}" data-lang="fr" {% if file==right_file %}selected{% endif %}>
+            {{ file|replace('report-rapport/', '') }}
+          </option>
+          {% endfor %}
+        </select>
+        {% endif %}
+        <input type="hidden" id="rightResolvedFile" value="{{ right_file }}">
+      </div>
+
+      <div>
+        <button type="submit">Load</button>
+      </div>
+
+      <div class="toolbar-menu-wrapper">
+        <button type="button"
+                id="layoutMenuButton"
+                class="toolbar-menu-button"
+                aria-haspopup="true"
+                aria-expanded="false">
+          Layout ▾
+        </button>
+
+        <div id="layoutMenu" class="toolbar-menu" hidden>
+          <label class="toolbar-menu-item">
+            <input type="checkbox" id="layoutMenuMaps">
+            <span>Show structure maps</span>
+          </label>
+
+          <label class="toolbar-menu-item">
+            <input type="checkbox" id="layoutMenuIssues">
+            <span>Show issues panel</span>
+          </label>
+
+          <label class="toolbar-menu-item">
+            <input type="checkbox" id="layoutMenuSingleView">
+            <span>Single view</span>
+          </label>
+
+          <label class="toolbar-menu-item">
+            <input type="checkbox" id="layoutMenuCodeView">
+            <span>Code view</span>
+          </label>
+
+          <div class="toolbar-menu-divider"></div>
+
+          <button type="button" id="layoutMenuReset" class="toolbar-menu-reset">
+            Reset layout
+          </button>
+        </div>
+      </div>
+    </form>
+  </header>
+
+  <div id="layout" class="layout">
+    <div class="view-control-bar" id="viewControlBar" aria-label="View controls">
+      <div class="view-control-actions view-control-actions-left">
+        <button type="button" id="toggleFocusMode" class="view-control-button">
+          Focus mode
+        </button>
+
+        <button type="button" id="toggleHighlightMode" class="view-control-button">
+          Hide outline
+        </button>
+      </div>
+
+      <div class="view-control-actions view-control-actions-right">
+        <button type="button" id="toggleAutoSync" class="view-control-button">
+          Auto-sync off
+        </button>
+
+        <span class="view-control-divider" aria-hidden="true"></span>
+
+        <button type="button" id="rightBack" class="view-control-button view-control-button-small">
+          Sync -1
+        </button>
+
+        <button type="button" id="rightForward" class="view-control-button view-control-button-small">
+          Sync +1
+        </button>
+
+        <button type="button" id="resetSyncOffset" class="view-control-button">
+          Reset sync
+        </button>
+      </div>
+    </div>
+
+    <div id="viewLoadingOverlay" class="view-loading-overlay" aria-live="polite" aria-hidden="true">
+      <div class="view-loading-card">
+        <div class="view-loading-spinner"></div>
+        <div id="viewLoadingText">Loading view...</div>
+      </div>
+    </div>
+
+    <aside class="panel map left-map">
+      <h2>Left structure</h2>
+      {% for heading in left_headings %}
+      <button class="heading-btn level-{{ heading.level }}"
+        type="button"
+        data-frame-id="leftFrame"
+        data-heading-index="{{ heading.index }}"
+        onclick="scrollToHeading('leftFrame', {{ heading.index }})">
+        <span class="heading-main-line">
+          <span class="heading-level">H{{ heading.level }}</span>
+          <span class="heading-text">{{ heading.text }}</span>
+        </span>
+        <span class="heading-section-count {% if heading.section_count_mismatch %}is-count-mismatch{% endif %}">
+          {{ heading.section_count }} elements
+        </span>
+      </button>
+      {% endfor %}
+      <div class="small-note">{{ left_headings|length }} headings</div>
+    </aside>
+
+    <div class="resizer resizer-map-left" data-resizer="left-map"
+      title="Drag to resize. Double-click to collapse or restore."></div>
+
+    <section class="page-stack left-stack">
+      <section class="panel left-page">
+        {% if left_file %}
+        <iframe id="leftFrame" src="/page/{{ source_env }}/{{ year }}/{{ left_file }}"></iframe>
+        {% else %}
+        <iframe id="leftFrame"
+          srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste an EN page and press Load.</p>"></iframe>
+        {% endif %}
+      </section>
+
+      <div id="codeResizer" class="code-resizer" title="Drag to resize code panel. Double-click to expand or collapse.">
+      </div>
+
+      <section class="panel code-panel-side left-code-panel">
+        <div class="code-frame-wrapper">
+          <iframe id="leftCodeFrame"></iframe>
+
+          <div class="code-loading-overlay" id="leftCodeLoadingOverlay" aria-hidden="true">
+            <div class="code-loading-box">Loading code section...</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="resizer resizer-pages" data-resizer="pages"
+      title="Drag to resize pages. Double-click to balance pages."></div>
+
+    <section class="page-stack right-stack">
+      <section class="panel right-page">
+        {% if right_file %}
+        <iframe id="rightFrame" src="/page/{{ source_env }}/{{ year }}/{{ right_file }}"></iframe>
+        {% else %}
+        <iframe id="rightFrame"
+          srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste a FR page and press Load.</p>"></iframe>
+        {% endif %}
+      </section>
+
+      <div class="code-resizer code-resizer-right"
+        title="Drag to resize code panel. Double-click to expand or collapse." aria-hidden="true"></div>
+
+      <section class="panel code-panel-side right-code-panel">
+        <div class="code-frame-wrapper">
+          <iframe id="rightCodeFrame"></iframe>
+
+          <div class="code-loading-overlay" id="rightCodeLoadingOverlay" aria-hidden="true">
+            <div class="code-loading-box">Loading code section...</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="resizer resizer-map-right" data-resizer="right-map"
+      title="Drag to resize. Double-click to collapse or restore."></div>
+
+    <aside class="panel map right-map">
+      <h2>Right structure</h2>
+      {% for heading in right_headings %}
+      <button class="heading-btn level-{{ heading.level }}"
+        type="button"
+        data-frame-id="rightFrame"
+        data-heading-index="{{ heading.index }}"
+        onclick="scrollToHeading('rightFrame', {{ heading.index }})">
+        <span class="heading-main-line">
+          <span class="heading-level">H{{ heading.level }}</span>
+          <span class="heading-text">{{ heading.text }}</span>
+        </span>
+        <span class="heading-section-count {% if heading.section_count_mismatch %}is-count-mismatch{% endif %}">
+          {{ heading.section_count }} elements
+        </span>
+      </button>
+      {% endfor %}
+      <div class="small-note">{{ right_headings|length }} headings</div>
+    </aside>
+  </div>
+
+  <div id="diffResizer" class="diff-resizer" title="Drag to resize. Double-click to expand or collapse."></div>
+
+  <section id="diffPanel" class="diff-panel">
+    <div class="diff-header">
+      <div class="diff-header-title">
+        Issues -
+        <span id="automatedIssueCount">{{ automated_issues|length }}</span> automated,
+        <span id="userIssueCount">{{ user_issues|length }}</span> user-marked
+      </div>
+
+      <div class="diff-header-actions">
+        <span id="issueRefreshCountdown" class="issue-refresh-countdown">Refresh in 5s</span>
+        <button type="button" id="changeReviewerNameButton">Change name</button>
+        <button type="button" id="rerunAutomatedIssuesButton">Re-run automated check</button>
+        <button type="button" id="markIssueButton">Create new issue</button>
+      </div>
+    </div>
+
+    {% if user_issues %}
+      {% for issue in user_issues %}
+        <div class="diff-row user-issue {{ issue.severity }}"
+            data-issue-id="{{ issue.id }}"
+            data-issue-source="{{ issue.issue_source }}"
+            data-issue-side="{{ issue.side }}"
+            data-issue-block-index="{{ issue.block_index }}"
+            data-issue-block-signature="{{ issue.block_signature|default('', true)|e }}">
+          <div class="diff-index">User</div>
+
+          <div class="diff-left">
+            <strong>{{ issue.title }}</strong><br>
+            {{ issue.comment }}
+          </div>
+
+          <div class="diff-right">
+            <span>Status: {{ issue.status }}</span><br>
+            <span>By: {{ issue.created_by }}</span>
+          </div>
+
+          <button class="issue-fixed-btn"
+                  type="button"
+                  data-issue-action="fixed"
+                  data-issue-id="{{ issue.id }}">
+            Mark fixed
+          </button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if automated_issues %}
+      {% for issue in automated_issues %}
+        <div class="diff-row automated-issue {{ issue.severity }}"
+            data-issue-id="{{ issue.id }}"
+            data-issue-source="{{ issue.issue_source }}"
+            data-issue-side="{{ issue.side }}"
+            data-issue-block-index="{{ issue.block_index }}"
+            data-issue-block-signature="{{ issue.block_signature|default('', true)|e }}">
+          <div class="diff-index">Auto</div>
+
+          <div class="diff-left">
+            <strong>{{ issue.title }}</strong><br>
+            {{ issue.comment }}
+          </div>
+
+          <div class="diff-right">
+            <span>Status: {{ issue.status }}</span><br>
+            <span>By: {{ issue.created_by }}</span>
+          </div>
+
+          <button class="issue-fixed-btn"
+                  type="button"
+                  data-issue-action="fixed"
+                  data-issue-id="{{ issue.id }}">
+            Mark fixed
+          </button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% if not automated_issues and not user_issues %}
+      <div id="noIssuesMessage" class="no-diffs">No issues found.</div>
+    {% endif %}
+  </section>
+
+  <div id="dragCover" class="drag-cover"></div>
+
+  <script>
+    window.PARALANG_PREFLIGHT_ISSUES = {{ automated_issues | tojson }};
+    window.PARALANG_ALL_FILES = {{ files | tojson }};
+    window.PARALANG_EN_FILES = {{ en_files | tojson }};
+    window.PARALANG_FR_FILES = {{ fr_files | tojson }};
+    window.PARALANG_SOURCE_OPTIONS = {{ source_options | tojson }};
+    window.PARALANG_IS_URL_INPUT = {{ is_url_input | tojson }};
+    window.PARALANG_USER_ISSUES = {{ user_issues|tojson }};
+  </script>
+
+  <script src="{{ url_for('static', filename='js/state.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dom-cache.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/sync/comparable-elements.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/page-highlight.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/sync-signatures.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/alignment-engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/section-utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/sync-map-runs.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/auto-sync-engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/details-sync.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/structure-map-sync.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/issue-navigation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sync/page-scroll-sync.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/code-sync.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/review-issues.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/view-mode.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/events.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+
+</html>
