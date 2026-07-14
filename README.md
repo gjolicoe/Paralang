@@ -14,6 +14,8 @@ Paralang is a local bilingual HTML comparison tool for reviewing English and Fre
 
 On managed workplace computers, double-click `launch-paralang.pyw`. It does not
 use PowerShell or Command Prompt and determines the project folder automatically.
+Its control window shows whether Paralang is running and provides buttons to open
+the browser or stop the local server cleanly.
 
 Alternatively, double-click `launch-paralang.cmd`, or run it from a terminal:
 
