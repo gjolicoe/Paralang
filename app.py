@@ -3,6 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from datetime import datetime
+from urllib.parse import urlsplit
 import uuid
 
 from services.sources import (
@@ -18,6 +19,7 @@ from services.sources import (
     get_resolved_source_file_path,
     safe_resolve,
     path_is_within,
+    LOCAL_FILES_ENV,
 )
 
 from services.parsing import (
@@ -51,6 +53,36 @@ from services.automated_issues import (
 )
 
 app = Flask(__name__)
+
+
+def rewrite_local_stylesheet_paths(soup):
+    """Point local-file stylesheet references at Paralang's static CSS folder."""
+    for link in soup.find_all("link", href=True):
+        rel_values = link.get("rel", [])
+        if isinstance(rel_values, str):
+            rel_values = rel_values.split()
+
+        if "stylesheet" not in {value.lower() for value in rel_values}:
+            continue
+
+        href = link["href"].strip()
+        parsed = urlsplit(href)
+
+        # Keep remotely hosted and inline stylesheets unchanged.
+        if parsed.scheme or parsed.netloc or href.startswith("//"):
+            continue
+
+        stylesheet_name = Path(parsed.path.replace("\\", "/")).name
+        if not stylesheet_name:
+            continue
+
+        rewritten_href = f"/static/css/{stylesheet_name}"
+        if parsed.query:
+            rewritten_href += f"?{parsed.query}"
+        if parsed.fragment:
+            rewritten_href += f"#{parsed.fragment}"
+
+        link["href"] = rewritten_href
 
 @app.route("/")
 def index():
@@ -246,6 +278,9 @@ def page_view(source_env, year, filename):
 
     raw_html = requested.read_text(encoding="utf-8", errors="ignore")
     soup = BeautifulSoup(raw_html, "html.parser")
+
+    if source_env == LOCAL_FILES_ENV:
+        rewrite_local_stylesheet_paths(soup)
 
     content_area, container_selector = get_primary_content_container_for_source(soup, source_env)
 

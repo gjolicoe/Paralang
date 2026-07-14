@@ -60,7 +60,7 @@ function setDiffHidden(hidden) {
 
 function loadDiffState() {
   const savedHeight = localStorage.getItem(diffHeightKey);
-  const hidden = localStorage.getItem(diffHiddenKey) === "true";
+  const hidden = localStorage.getItem(diffHiddenKey) !== "false";
 
   if (savedHeight && !hidden) {
     setDiffHeight(Number(savedHeight));
@@ -91,7 +91,7 @@ function loadLayout() {
     applyLayoutState(defaults);
   }
 
-  const mapsHidden = localStorage.getItem(mapsHiddenKey) === "true";
+  const mapsHidden = localStorage.getItem(mapsHiddenKey) !== "false";
   document.body.classList.toggle("hide-maps", mapsHidden);
 
   loadDiffState();
@@ -395,6 +395,8 @@ function resetLayout() {
   localStorage.removeItem(codeHeightKey);
   localStorage.removeItem(mapsHiddenKey);
   localStorage.removeItem(diffHiddenKey);
+  localStorage.removeItem(singleViewKey);
+  localStorage.removeItem(codePanelKey);
 
   document.documentElement.style.removeProperty("--left-map-width");
   document.documentElement.style.removeProperty("--left-page-width");
@@ -403,12 +405,14 @@ function resetLayout() {
   document.documentElement.style.removeProperty("--diff-height");
   document.documentElement.style.removeProperty("--code-height");
 
-  document.body.classList.remove("hide-maps");
-  document.body.classList.remove("hide-diff");
-
   applyLayoutState(defaults);
   setDiffHeight(defaults.diffHeight);
   loadCodePanelHeight();
+
+  setMapsHidden(true);
+  setDiffHidden(true);
+  setSingleView(false);
+  setCodeView(false);
 
   syncLayoutMenuState();
 }
