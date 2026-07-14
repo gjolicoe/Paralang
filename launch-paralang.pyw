@@ -2,11 +2,11 @@
 
 from pathlib import Path
 import os
+import socket
 import subprocess
 import sys
 import tkinter as tk
 from tkinter import messagebox
-import urllib.request
 import webbrowser
 
 
@@ -53,9 +53,9 @@ class ParalangLauncher:
 
     def server_is_ready(self):
         try:
-            with urllib.request.urlopen(SERVER_URL, timeout=1) as response:
-                return response.status == 200
-        except Exception:
+            with socket.create_connection(("127.0.0.1", 5000), timeout=1):
+                return True
+        except OSError:
             return False
 
     def start(self):
