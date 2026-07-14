@@ -23,3 +23,6 @@ be moved or copied to another computer without updating a shortcut target.
 
 The `.cmd` launcher does not require PowerShell, which allows it to work on
 managed computers where PowerShell is blocked by group policy.
+
+The browser is not opened automatically because managed-computer policies can
+block URL launcher commands. Open `http://127.0.0.1:5000` after startup.

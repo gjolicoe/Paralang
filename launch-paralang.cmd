@@ -5,29 +5,24 @@ set "PYTHON_EXE="
 
 cd /d "%SCRIPT_DIR%"
 
-if exist "C:\Program Files\anaconda3\python.exe" (
-    set "PYTHON_EXE=C:\Program Files\anaconda3\python.exe"
-    goto python_found
-)
+if exist "C:\Program Files\anaconda3\python.exe" call :try_python "C:\Program Files\anaconda3\python.exe"
+if defined PYTHON_EXE goto python_found
 
-if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\python.exe" (
-    set "PYTHON_EXE=%CONDA_PREFIX%\python.exe"
-    goto python_found
-)
+if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\python.exe" call :try_python "%CONDA_PREFIX%\python.exe"
+if defined PYTHON_EXE goto python_found
 
 where py.exe >nul 2>nul
-if not errorlevel 1 (
-    set "PYTHON_EXE=py.exe"
-    goto python_found
-)
+if not errorlevel 1 call :try_python "py.exe"
+if defined PYTHON_EXE goto python_found
 
 for /f "delims=" %%P in ('where python.exe 2^>nul ^| findstr /v /i "\WindowsApps\"') do (
-    if not defined PYTHON_EXE set "PYTHON_EXE=%%P"
+    if not defined PYTHON_EXE call :try_python "%%P"
 )
 
 if not defined PYTHON_EXE (
-    echo Could not find a usable Python installation.
-    echo The Microsoft Store Python alias is not sufficient.
+    echo Could not run a usable Python installation.
+    echo Python may be missing or blocked by workplace Group Policy.
+    echo Ask IT to allow an installed python.exe, then run this launcher again.
     goto failed
 )
 
@@ -56,7 +51,6 @@ echo Keep this window open while using Paralang.
 echo Press Ctrl+C to stop the application.
 echo.
 
-start "" "http://127.0.0.1:5000"
 "%PYTHON_EXE%" "%SCRIPT_DIR%app.py"
 
 if errorlevel 1 goto failed
@@ -71,3 +65,8 @@ echo Paralang could not start. Error code: %ERRORLEVEL%
 echo Press any key to close this window.
 pause >nul
 exit /b 1
+
+:try_python
+"%~1" -c "import sys" >nul 2>nul
+if not errorlevel 1 set "PYTHON_EXE=%~1"
+exit /b 0
