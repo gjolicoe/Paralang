@@ -12,22 +12,14 @@ Paralang is a local bilingual HTML comparison tool for reviewing English and Fre
 
 ## Running locally
 
-On managed workplace computers, double-click `launch-paralang.pyw`. It does not
-use PowerShell or Command Prompt and determines the project folder automatically.
-Its control window shows whether Paralang is running and provides buttons to open
-the browser or stop the local server cleanly.
+Run the portable Python launcher:
 
-Alternatively, double-click `launch-paralang.cmd`, or run it from a terminal:
-
-```powershell
-.\launch-paralang.cmd
+```console
+python launch-paralang.pyw
 ```
 
-The launchers use their own folder as the project location, so the repository can
-be moved or copied to another computer without updating a shortcut target.
+You can also double-click `launch-paralang.pyw` when `.pyw` files are associated with Python.
 
-The `.cmd` launcher does not require PowerShell, which allows it to work on
-managed computers where PowerShell is blocked by group policy.
-
-The browser is not opened automatically because managed-computer policies can
-block URL launcher commands. Open `http://127.0.0.1:5000` after startup.
+The launcher starts the local server, opens Paralang in the browser, and keeps a
+small control window available. Use **Open Browser** if needed, and use
+**Stop Paralang** or close the control window to stop the server cleanly.
