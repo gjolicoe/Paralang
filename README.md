@@ -20,3 +20,6 @@ Double-click `launch-paralang.cmd`, or run it from a terminal:
 
 The launchers use their own folder as the project location, so the repository can
 be moved or copied to another computer without updating a shortcut target.
+
+The `.cmd` launcher does not require PowerShell, which allows it to work on
+managed computers where PowerShell is blocked by group policy.
