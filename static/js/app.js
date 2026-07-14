@@ -1,5 +1,4 @@
 loadLayout();
-setupResizers();
 setupDiffResizer();
 setupCodeResizer();
 loadCodePanelHeight();
