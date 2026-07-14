@@ -7,6 +7,7 @@ from services.parsing import (
     get_primary_content_container_for_source,
     get_direct_text,
 )
+from services.sources import safe_resolve
 
 VOID_ELEMENTS = {
     "area", "base", "br", "col", "embed", "hr", "img", "input",
@@ -33,7 +34,7 @@ def get_code_view_cache_key(path, source_env):
     except OSError:
         modified_time = 0
 
-    return f"{source_env}|{path.resolve()}|{modified_time}"
+    return f"{source_env}|{safe_resolve(path)}|{modified_time}"
 
 
 def trim_code_view_cache():

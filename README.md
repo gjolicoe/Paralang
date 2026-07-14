@@ -10,18 +10,13 @@ Paralang is a local bilingual HTML comparison tool for reviewing English and Fre
 - Page/code comparison workflow
 - Local Flask app
 
-## Work in progress
-
-- Local translation MiniLM implementation (sentence-transformers)
-    - Match EN/FR equivalent elements
-    - Improve scroll-syncing
-    - Identify questionable translations
-    - Find and highlight missing/merged elements
-- And much more...
-
 ## Running locally
 
-Run the PowerShell launcher:
+Double-click `launch-paralang.cmd`, or run it from a terminal:
 
 ```powershell
-.\launch-paralang.ps1
+.\launch-paralang.cmd
+```
+
+The launchers use their own folder as the project location, so the repository can
+be moved or copied to another computer without updating a shortcut target.

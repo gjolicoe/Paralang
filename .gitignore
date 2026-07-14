@@ -1,0 +1,24 @@
+# Local content and generated caches
+local-files/**
+pasted-html/**
+data/local-files/**
+.cache/
+
+# Preserve optional directory placeholders
+!local-files/.gitkeep
+!pasted-html/.gitkeep
+!data/local-files/.gitkeep
+
+# Python, local environments, editors, and OS files
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.bak
+.venv/
+venv/
+env/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

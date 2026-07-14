@@ -5,6 +5,8 @@ from services.sources import (
     get_html_dir,
     get_source_root,
     is_url_input_environment,
+    path_is_within,
+    safe_resolve,
 )
 
 def read_soup(filename, source_env, year):
@@ -14,9 +16,9 @@ def read_soup(filename, source_env, year):
         if not source_root:
             return None
 
-        path = (source_root / filename).resolve()
+        path = safe_resolve(source_root / filename)
 
-        if not str(path).lower().startswith(str(source_root).lower()):
+        if not path_is_within(path, source_root):
             return None
 
         if not path.exists() or not path.is_file():
@@ -30,9 +32,9 @@ def read_soup(filename, source_env, year):
     if not source_root:
         return None
 
-    path = (source_root / filename).resolve()
+    path = safe_resolve(source_root / filename)
 
-    if not str(path).lower().startswith(str(source_root).lower()):
+    if not path_is_within(path, source_root):
         return None
 
     if not path.exists() or not path.is_file():
@@ -383,9 +385,9 @@ def get_resolved_source_file_path(source_env, year, filename):
     if not source_root:
         return None
 
-    path = (source_root / filename).resolve()
+    path = safe_resolve(source_root / filename)
 
-    if not str(path).lower().startswith(str(source_root).lower()):
+    if not path_is_within(path, source_root):
         return None
 
     if not path.exists() or not path.is_file():

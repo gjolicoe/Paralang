@@ -16,6 +16,8 @@ from services.sources import (
     fetch_canada_ca_url_to_cache,
     get_canada_ca_source_url_from_cached_file,
     get_resolved_source_file_path,
+    safe_resolve,
+    path_is_within,
 )
 
 from services.parsing import (
@@ -198,9 +200,9 @@ def source(source_env, year, filename):
     if not source_root:
         abort(404)
 
-    requested = (source_root / filename).resolve()
+    requested = safe_resolve(source_root / filename)
 
-    if not str(requested).lower().startswith(str(source_root).lower()):
+    if not path_is_within(requested, source_root):
         abort(403)
 
     if not requested.exists() or not requested.is_file():
@@ -215,11 +217,11 @@ def aem_sensitive_root_asset(filename):
     if not source_root:
         abort(404)
 
-    aem_root = (source_root / "aem-sensitive").resolve()
-    requested = (aem_root / filename).resolve()
+    aem_root = safe_resolve(source_root / "aem-sensitive")
+    requested = safe_resolve(aem_root / filename)
 
     # SECURITY: prevent escaping aem-sensitive root
-    if not str(requested).lower().startswith(str(aem_root).lower()):
+    if not path_is_within(requested, aem_root):
         abort(403)
 
     if not requested.exists() or not requested.is_file():
@@ -234,9 +236,9 @@ def page_view(source_env, year, filename):
     if not source_root:
         abort(404)
 
-    requested = (source_root / filename).resolve()
+    requested = safe_resolve(source_root / filename)
 
-    if not str(requested).lower().startswith(str(source_root).lower()):
+    if not path_is_within(requested, source_root):
         abort(403)
 
     if not requested.exists() or not requested.is_file():
@@ -332,9 +334,9 @@ def code_view(source_env, year, filename):
     if not source_root:
         abort(404)
 
-    requested = (source_root / filename).resolve()
+    requested = safe_resolve(source_root / filename)
 
-    if not str(requested).lower().startswith(str(source_root).lower()):
+    if not path_is_within(requested, source_root):
         abort(403)
 
     if not requested.exists() or not requested.is_file():

@@ -7,19 +7,48 @@ import re
 
 
 # READ-ONLY SOURCES (DO NOT MODIFY)
-BASE_ROOT = Path(r"\\intra-web-prd\authoring.budget.canada.ca").resolve()
-AEM_SENSITIVE_ROOT = Path(r"\\intra-web-prd\authoring.finb.gc.ca").resolve()
+BASE_ROOT = Path(r"\\intra-web-prd\authoring.budget.canada.ca")
+AEM_SENSITIVE_ROOT = Path(r"\\intra-web-prd\authoring.finb.gc.ca")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_ROOT = PROJECT_ROOT / "data"
+LOCAL_FILES_ROOT = DATA_ROOT / "local-files"
 URL_CACHE_ROOT = PROJECT_ROOT / ".cache" / "canada-ca-pages"
 
+LOCAL_FILES_ROOT.mkdir(parents=True, exist_ok=True)
+URL_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+def safe_resolve(path):
+    """Resolve local paths without making unavailable network paths fatal."""
+    try:
+        return path.resolve(strict=False)
+    except OSError:
+        return path
+
+
+def path_is_within(path, root):
+    try:
+        safe_resolve(path).relative_to(safe_resolve(root))
+        return True
+    except (ValueError, OSError):
+        return False
+
 CANADA_CA_URL_ENV = "canada-ca-url"
+LOCAL_FILES_ENV = "local-files"
 
 SOURCE_ENVIRONMENTS = {
     "budget": {
         "label": "Budget",
         "root": BASE_ROOT,
         "type": "year-folder"
+    },
+    "local-files": {
+        "label": "Local files",
+        "root": LOCAL_FILES_ROOT,
+        "type": "year-folder",
+        "folder_name_pattern": r"[^\\/]+",
+        "show_when_empty": True
     },
     "fiscal-update": {
         "label": "Fiscal update",
@@ -49,12 +78,17 @@ def get_source_root(source_env, year=None):
         if source_env == CANADA_CA_URL_ENV:
             config["root"].mkdir(parents=True, exist_ok=True)
 
-        return config["root"].resolve()
+        return safe_resolve(config["root"])
 
-    if not re.fullmatch(r"\d{4}", str(year or "")):
+    folder_name = str(year or "")
+    folder_name_pattern = config.get("folder_name_pattern", r"\d{4}")
+    if not re.fullmatch(folder_name_pattern, folder_name):
         return None
 
-    return (config["root"] / str(year)).resolve()
+    source_root = safe_resolve(config["root"] / folder_name)
+    if not path_is_within(source_root, config["root"]):
+        return None
+    return source_root
 
 
 def get_html_dir(source_env, year):
@@ -63,11 +97,11 @@ def get_html_dir(source_env, year):
     if not source_root:
         return None
 
-    html_dir = (source_root / "report-rapport").resolve()
+    html_dir = safe_resolve(source_root / "report-rapport")
 
-    env_root = SOURCE_ENVIRONMENTS[source_env]["root"].resolve()
+    env_root = safe_resolve(SOURCE_ENVIRONMENTS[source_env]["root"])
 
-    if not str(html_dir).lower().startswith(str(env_root).lower()):
+    if not path_is_within(html_dir, env_root):
         return None
 
     if not html_dir.exists() or not html_dir.is_dir():
@@ -82,20 +116,23 @@ def get_available_years(source_env):
 
     env_root = SOURCE_ENVIRONMENTS[source_env]["root"]
 
-    if not env_root.exists() or not env_root.is_dir():
+    try:
+        if not env_root.exists() or not env_root.is_dir():
+            return []
+    except OSError:
         return []
 
     years = []
 
-    for child in env_root.iterdir():
-        if not child.is_dir():
-            continue
-
-        if not re.fullmatch(r"\d{4}", child.name):
-            continue
-
-        if (child / "report-rapport").is_dir():
-            years.append(child.name)
+    folder_name_pattern = SOURCE_ENVIRONMENTS[source_env].get("folder_name_pattern", r"\d{4}")
+    try:
+        for child in env_root.iterdir():
+            if not child.is_dir() or not re.fullmatch(folder_name_pattern, child.name):
+                continue
+            if source_env == LOCAL_FILES_ENV or (child / "report-rapport").is_dir():
+                years.append(child.name)
+    except OSError:
+        return []
 
     return sorted(years, reverse=True)
 
@@ -114,7 +151,7 @@ def get_available_sources():
 
         years = get_available_years(key)
 
-        if years:
+        if years or config.get("show_when_empty"):
             sources.append({
                 "key": key,
                 "label": config["label"],
@@ -139,7 +176,7 @@ def get_html_files(source_env, year):
     files = []
 
     # Landing pages live one level above report-rapport.
-    if source_env in {"budget", "fiscal-update"}:
+    if source_env in {"budget", "fiscal-update", LOCAL_FILES_ENV}:
         for landing_page in ["home-accueil-en.html", "home-accueil-fr.html"]:
             landing_path = source_root / landing_page
 
@@ -147,6 +184,14 @@ def get_html_files(source_env, year):
                 files.append(landing_page)
 
     report_dir = source_root / "report-rapport"
+
+    if source_env == LOCAL_FILES_ENV:
+        try:
+            for html_file in sorted(source_root.glob("*.html")):
+                if html_file.name not in files:
+                    files.append(html_file.name)
+        except OSError:
+            return files
 
     if report_dir.exists() and report_dir.is_dir():
         for html_file in sorted(report_dir.glob("*.html")):
@@ -291,9 +336,9 @@ def get_resolved_source_file_path(source_env, year, filename):
     if not source_root:
         return None
 
-    path = (source_root / filename).resolve()
+    path = safe_resolve(source_root / filename)
 
-    if not str(path).lower().startswith(str(source_root).lower()):
+    if not path_is_within(path, source_root):
         return None
 
     if not path.exists() or not path.is_file():
