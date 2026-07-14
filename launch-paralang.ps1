@@ -93,5 +93,12 @@ if (-not $serverReady) {
     exit 1
 }
 
-try { Start-Process $serverUrl }
-catch { Write-Host "Open $serverUrl in your browser." -ForegroundColor Yellow }
+Write-Host "Paralang is running at: $serverUrl" -ForegroundColor Green
+Write-Host "If the browser does not open, copy that address into your browser."
+
+try {
+    Start-Process $serverUrl -ErrorAction Stop
+}
+catch {
+    Write-Host "The browser could not be opened automatically." -ForegroundColor Yellow
+}
