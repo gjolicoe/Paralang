@@ -2,4 +2,6 @@
 setlocal
 set "SCRIPT_DIR=%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%launch-paralang.ps1"
-exit /b %ERRORLEVEL%
+set "EXIT_CODE=%ERRORLEVEL%"
+if not "%EXIT_CODE%"=="0" pause
+exit /b %EXIT_CODE%

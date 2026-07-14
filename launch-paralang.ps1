@@ -5,10 +5,20 @@ Set-Location $ProjectDir
 
 function Resolve-PythonExe {
     if (Test-Path $PreferredPythonExe) { return $PreferredPythonExe }
-    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-    if ($pythonCmd) { return $pythonCmd.Source }
+
+    if ($env:CONDA_PREFIX) {
+        $condaPython = Join-Path $env:CONDA_PREFIX "python.exe"
+        if (Test-Path $condaPython) { return $condaPython }
+    }
+
     $pyCmd = Get-Command py -ErrorAction SilentlyContinue
-    if ($pyCmd) { return "py" }
+    if ($pyCmd) { return $pyCmd.Source }
+
+    $pythonCmd = Get-Command python -All -ErrorAction SilentlyContinue |
+        Where-Object { $_.Source -notlike "*\WindowsApps\*" } |
+        Select-Object -First 1
+    if ($pythonCmd) { return $pythonCmd.Source }
+
     return $null
 }
 
@@ -33,19 +43,54 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Starting Paralang..."
 $serverUrl = "http://127.0.0.1:5000"
-$process = Start-Process -FilePath $PythonExe -ArgumentList "app.py" -WorkingDirectory $ProjectDir -WindowStyle Hidden -PassThru
+$logDir = Join-Path $ProjectDir ".cache\launcher"
+$stdoutLog = Join-Path $logDir "paralang.stdout.log"
+$stderrLog = Join-Path $logDir "paralang.stderr.log"
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+Remove-Item $stdoutLog, $stderrLog -Force -ErrorAction SilentlyContinue
 
+try {
+    $process = Start-Process `
+        -FilePath $PythonExe `
+        -ArgumentList "app.py" `
+        -WorkingDirectory $ProjectDir `
+        -WindowStyle Hidden `
+        -RedirectStandardOutput $stdoutLog `
+        -RedirectStandardError $stderrLog `
+        -PassThru
+}
+catch {
+    Write-Host "Could not start Python: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
+$serverReady = $false
 for ($i = 0; $i -lt 20; $i++) {
-    if ($process.HasExited) {
-        Write-Host "Paralang stopped before it could start." -ForegroundColor Red
-        exit $process.ExitCode
-    }
     try {
         $response = Invoke-WebRequest -Uri $serverUrl -UseBasicParsing -TimeoutSec 2
-        if ($response.StatusCode -eq 200) { break }
+        if ($response.StatusCode -eq 200) {
+            $serverReady = $true
+            break
+        }
     }
     catch {}
+
+    if ($process.HasExited) { break }
     Start-Sleep -Seconds 1
+}
+
+if (-not $serverReady) {
+    Write-Host "Paralang could not start." -ForegroundColor Red
+    if (Test-Path $stderrLog) {
+        $details = Get-Content $stderrLog -Raw
+        if ($details) {
+            Write-Host ""
+            Write-Host $details.Trim()
+        }
+    }
+    Write-Host ""
+    Write-Host "Diagnostic log: $stderrLog"
+    exit 1
 }
 
 try { Start-Process $serverUrl }
