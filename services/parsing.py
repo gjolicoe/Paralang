@@ -2,42 +2,13 @@ from bs4 import BeautifulSoup
 import re
 
 from services.sources import (
-    get_html_dir,
+    get_resolved_source_file_path,
     get_source_root,
-    is_url_input_environment,
-    path_is_within,
-    safe_resolve,
 )
 
 def read_soup(filename, source_env, year):
-    if is_url_input_environment(source_env):
-        source_root = get_source_root(source_env, year)
-
-        if not source_root:
-            return None
-
-        path = safe_resolve(source_root / filename)
-
-        if not path_is_within(path, source_root):
-            return None
-
-        if not path.exists() or not path.is_file():
-            return None
-
-        html = path.read_text(encoding="utf-8", errors="ignore")
-        return BeautifulSoup(html, "html.parser")
-
-    source_root = get_source_root(source_env, year)
-
-    if not source_root:
-        return None
-
-    path = safe_resolve(source_root / filename)
-
-    if not path_is_within(path, source_root):
-        return None
-
-    if not path.exists() or not path.is_file():
+    path = get_resolved_source_file_path(source_env, year, filename)
+    if not path:
         return None
 
     html = path.read_text(encoding="utf-8", errors="ignore")
@@ -181,11 +152,6 @@ def get_heading_section_counts(content_area, headings):
 
         comparable_elements.append(element)
 
-    heading_elements = [
-        item["element"]
-        for item in headings
-    ]
-
     for heading_index, heading in enumerate(headings):
         heading_element = heading["element"]
         heading_level = heading["level"]
@@ -212,25 +178,6 @@ def get_heading_section_counts(content_area, headings):
         heading["section_count"] = count
 
     return headings
-
-
-def summarize_table(table):
-    rows = table.find_all("tr")
-    row_count = len(rows)
-    max_cols = 0
-    th_count = len(table.find_all("th"))
-    td_count = len(table.find_all("td"))
-
-    for row in rows:
-        cell_count = len(row.find_all(["th", "td"]))
-        max_cols = max(max_cols, cell_count)
-
-    return f"{row_count} rows, {max_cols} columns, {th_count} headers, {td_count} cells"
-
-
-def summarize_list(list_element):
-    direct_items = list_element.find_all("li", recursive=False)
-    return f"{len(direct_items)} items"
 
 
 def normalize_text(text):
@@ -378,19 +325,3 @@ def get_primary_content_container_for_source(soup, source_env):
             return body, "body"
 
     return get_primary_content_container(soup)
-
-def get_resolved_source_file_path(source_env, year, filename):
-    source_root = get_source_root(source_env, year)
-
-    if not source_root:
-        return None
-
-    path = safe_resolve(source_root / filename)
-
-    if not path_is_within(path, source_root):
-        return None
-
-    if not path.exists() or not path.is_file():
-        return None
-
-    return path

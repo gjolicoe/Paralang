@@ -1,8 +1,5 @@
 from difflib import SequenceMatcher
 
-from services.parsing import normalize_text
-
-
 def comparable_token(block):
     if not block:
         return ""
@@ -10,17 +7,7 @@ def comparable_token(block):
     return block["signature"]
 
 
-def text_similarity(left_text, right_text):
-    left_text = normalize_text(left_text).lower()
-    right_text = normalize_text(right_text).lower()
-
-    if not left_text and not right_text:
-        return 1
-
-    return SequenceMatcher(None, left_text, right_text, autojunk=False).ratio()
-
-
-def classify_preflight_issue(left, right, opcode):
+def classify_preflight_issue(left, right):
     if left is None:
         return {
             "severity": "warning",
@@ -155,7 +142,7 @@ def diff_comparable_blocks(left_blocks, right_blocks):
                 left = left_slice[offset] if offset < len(left_slice) else None
                 right = right_slice[offset] if offset < len(right_slice) else None
 
-                issue_info = classify_preflight_issue(left, right, opcode)
+                issue_info = classify_preflight_issue(left, right)
 
                 issues.append({
                     "index": len(issues) + 1,
@@ -166,15 +153,3 @@ def diff_comparable_blocks(left_blocks, right_blocks):
                 })
 
     return issues
-
-
-def format_block(block):
-    if not block:
-        return "none"
-
-    label = block["signature"].upper()
-
-    if block["summary"]:
-        label += f" — {block['summary']}"
-
-    return label

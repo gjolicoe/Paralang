@@ -342,7 +342,7 @@ function resetLayout() {
 
   setMapsHidden(true);
   setDiffHidden(true);
-  setSingleView(false);
+  setSingleView(false, { reloadPages: false });
   setCodeView(false);
 
   syncLayoutMenuState();

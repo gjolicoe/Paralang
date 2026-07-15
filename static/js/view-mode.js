@@ -277,7 +277,9 @@ function setViewLoading(isLoading, message = "Loading view...") {
   overlay.setAttribute("aria-hidden", isLoading ? "false" : "true");
 }
 
-function setSingleView(enabled) {
+function setSingleView(enabled, options = {}) {
+  const reloadPages = options.reloadPages !== false;
+
   singleViewEnabled = enabled;
   localStorage.setItem(singleViewKey, enabled ? "true" : "false");
 
@@ -306,7 +308,9 @@ function setSingleView(enabled) {
     disableReviewDisplayControlsForSingleView();
     rebuildLeftDropdownForSingleView();
     setDiffHidden(true);
-    loadSinglePage();
+    if (reloadPages) {
+      loadSinglePage();
+    }
   } else {
     highlightModeEnabled = true;
 
@@ -335,7 +339,9 @@ function setSingleView(enabled) {
     }
 
     setDiffHidden(localStorage.getItem(diffHiddenKey) === "true");
-    loadDualPages();
+    if (reloadPages) {
+      loadDualPages();
+    }
   }
 
   syncLayoutMenuState();

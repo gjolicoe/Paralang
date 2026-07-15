@@ -2,10 +2,8 @@ from datetime import datetime
 import uuid
 
 from services.preflight import diff_comparable_blocks
-from services.parsing import (
-    extract_comparable_blocks,
-    get_resolved_source_file_path,
-)
+from services.parsing import extract_comparable_blocks
+from services.sources import get_resolved_source_file_path
 from services.review_storage import (
     create_issues_bulk,
     delete_automated_issues_for_page_pair,

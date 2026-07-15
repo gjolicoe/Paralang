@@ -100,10 +100,6 @@ def get_file_modified_iso(path):
     return datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
 
 
-def get_issue_page_pair_key(issue):
-    return issue.get("page_pair_key", "")
-
-
 def get_issues_for_page_pair(source_env, year, left_file, right_file):
     issues = get_all_issues()
     page_pair_key = get_page_pair_key(source_env, year, left_file, right_file)
@@ -151,21 +147,18 @@ def delete_automated_issues_for_page_pair(source_env, year, left_file, right_fil
     return deleted_count
 
 
-def create_issue(issue_data):
-    issues = get_all_issues()
-
+def build_issue(issue_data, default_source="user", default_side="", default_creator="Unknown"):
     issue_id = f"issue_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-
-    issue = {
+    return {
         "id": issue_id,
-        "issue_source": issue_data.get("issue_source", "user"),
+        "issue_source": issue_data.get("issue_source", default_source),
         "source_env": issue_data.get("source_env", ""),
         "year": str(issue_data.get("year", "")),
         "filename": issue_data.get("filename", ""),
         "left_file": issue_data.get("left_file", ""),
         "right_file": issue_data.get("right_file", ""),
         "page_pair_key": issue_data.get("page_pair_key", ""),
-        "side": issue_data.get("side", ""),
+        "side": issue_data.get("side", default_side),
         "block_index": issue_data.get("block_index"),
         "block_signature": issue_data.get("block_signature", ""),
         "block_hash": issue_data.get("block_hash", ""),
@@ -173,7 +166,7 @@ def create_issue(issue_data):
         "status": "open",
         "title": issue_data.get("title", "").strip(),
         "comment": issue_data.get("comment", "").strip(),
-        "created_by": issue_data.get("created_by", "Unknown").strip() or "Unknown",
+        "created_by": issue_data.get("created_by", default_creator),
         "created_at": utc_now_iso(),
         "scan_id": issue_data.get("scan_id"),
         "left_modified_at": issue_data.get("left_modified_at"),
@@ -181,6 +174,13 @@ def create_issue(issue_data):
         "resolved_by": None,
         "resolved_at": None
     }
+
+
+def create_issue(issue_data):
+    issues = get_all_issues()
+    issue_data = dict(issue_data)
+    issue_data["created_by"] = issue_data.get("created_by", "Unknown").strip() or "Unknown"
+    issue = build_issue(issue_data)
 
     issues.append(issue)
     save_all_issues(issues)
@@ -193,33 +193,12 @@ def create_issues_bulk(new_issues):
     created = []
 
     for issue_data in new_issues:
-        issue_id = f"issue_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-
-        issue = {
-            "id": issue_id,
-            "issue_source": issue_data.get("issue_source", "automated"),
-            "source_env": issue_data.get("source_env", ""),
-            "year": str(issue_data.get("year", "")),
-            "filename": issue_data.get("filename", ""),
-            "left_file": issue_data.get("left_file", ""),
-            "right_file": issue_data.get("right_file", ""),
-            "page_pair_key": issue_data.get("page_pair_key", ""),
-            "side": issue_data.get("side", "left"),
-            "block_index": issue_data.get("block_index"),
-            "block_signature": issue_data.get("block_signature", ""),
-            "block_hash": issue_data.get("block_hash", ""),
-            "severity": issue_data.get("severity", "warning"),
-            "status": "open",
-            "title": issue_data.get("title", "").strip(),
-            "comment": issue_data.get("comment", "").strip(),
-            "created_by": issue_data.get("created_by", "Automated check"),
-            "created_at": utc_now_iso(),
-            "scan_id": issue_data.get("scan_id"),
-            "left_modified_at": issue_data.get("left_modified_at"),
-            "right_modified_at": issue_data.get("right_modified_at"),
-            "resolved_by": None,
-            "resolved_at": None
-        }
+        issue = build_issue(
+            issue_data,
+            default_source="automated",
+            default_side="left",
+            default_creator="Automated check"
+        )
 
         issues.append(issue)
         created.append(issue)

@@ -91,25 +91,6 @@ def get_source_root(source_env, year=None):
     return source_root
 
 
-def get_html_dir(source_env, year):
-    source_root = get_source_root(source_env, year)
-
-    if not source_root:
-        return None
-
-    html_dir = safe_resolve(source_root / "report-rapport")
-
-    env_root = safe_resolve(SOURCE_ENVIRONMENTS[source_env]["root"])
-
-    if not path_is_within(html_dir, env_root):
-        return None
-
-    if not html_dir.exists() or not html_dir.is_dir():
-        return None
-
-    return html_dir
-
-
 def get_available_years(source_env):
     if source_env not in SOURCE_ENVIRONMENTS:
         return []
@@ -198,10 +179,6 @@ def get_html_files(source_env, year):
             files.append(f"report-rapport/{html_file.name}")
 
     return files
-
-
-def is_canada_ca_url_environment(source_env):
-    return source_env == CANADA_CA_URL_ENV
 
 
 def is_url_input_environment(source_env):

@@ -2,9 +2,7 @@ from flask import Flask, send_from_directory, abort, render_template, request, j
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-from datetime import datetime
 from urllib.parse import urlsplit
-import uuid
 
 from services.sources import (
     get_source_root,
@@ -16,7 +14,6 @@ from services.sources import (
     CANADA_CA_URL_ENV,
     fetch_canada_ca_url_to_cache,
     get_canada_ca_source_url_from_cached_file,
-    get_resolved_source_file_path,
     safe_resolve,
     path_is_within,
     LOCAL_FILES_ENV,
@@ -24,14 +21,8 @@ from services.sources import (
 
 from services.parsing import (
     get_headings,
-    extract_comparable_blocks,
     get_primary_content_container_for_source,
     mark_heading_section_count_mismatches,
-)
-
-from services.preflight import (
-    diff_comparable_blocks,
-    format_block,
 )
 
 from services.code_view import format_html_for_code_view
@@ -42,9 +33,7 @@ from services.review_storage import (
     delete_issue,
     delete_automated_issues_for_page_pair,
     create_issues_bulk,
-    get_latest_automated_scan_issues,
     get_page_pair_key,
-    get_file_modified_iso,
 )
 
 from services.automated_issues import (
@@ -105,11 +94,6 @@ def index():
 
     left_headings = []
     right_headings = []
-    left_blocks = []
-    right_blocks = []
-
-    preflight_issues = []
-
     if is_url_input:
         left_input_value = request.args.get("left", "").strip()
         right_input_value = request.args.get("right", "").strip()
@@ -172,17 +156,12 @@ def index():
 
     if left_file:
         left_headings = get_headings(left_file, source_env, year)
-        left_blocks = extract_comparable_blocks(left_file, source_env, year)
 
     if right_file:
         right_headings = get_headings(right_file, source_env, year)
-        right_blocks = extract_comparable_blocks(right_file, source_env, year)
     
     mark_heading_section_count_mismatches(left_headings, right_headings)
 
-    if left_blocks or right_blocks:
-        preflight_issues = diff_comparable_blocks(left_blocks, right_blocks)
-    
     if left_file and right_file:
         ensure_automated_issues_exist(source_env, year, left_file, right_file)
 
@@ -219,9 +198,7 @@ def index():
         is_url_input=is_url_input,
         left_headings=left_headings,
         right_headings=right_headings,
-        preflight_issues=automated_issues,
         user_issues=user_issues,
-        format_block=format_block,
         automated_issues=automated_issues,
     )
 
