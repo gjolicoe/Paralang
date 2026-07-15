@@ -17,7 +17,9 @@ from services.sources import (
     safe_resolve,
     path_is_within,
     LOCAL_FILES_ENV,
+    PASTED_HTML_ENV,
 )
+from services.pasted_html_cache import cleanup_expired, find_conflict, save_pasted_html
 
 from services.parsing import (
     get_headings,
@@ -42,6 +44,39 @@ from services.automated_issues import (
 )
 
 app = Flask(__name__)
+
+
+@app.post("/api/pasted-html")
+def api_pasted_html():
+    payload = request.get_json(silent=True) or {}
+    contents = {"en": payload.get("en_html", ""), "fr": payload.get("fr_html", "")}
+    if not all(value.strip() for value in contents.values()):
+        return jsonify({"ok": False, "error": "Both English and French HTML are required."}), 400
+
+    cleanup_expired()
+    decisions = payload.get("decisions") or {}
+    conflicts = [conflict for language, content in contents.items()
+                 if (conflict := find_conflict(content, language))]
+    unresolved = [conflict for conflict in conflicts if conflict["language"] not in decisions]
+    if unresolved:
+        return jsonify({"ok": False, "conflicts": unresolved}), 409
+    if any(decisions.get(conflict["language"]) == "cancel" for conflict in conflicts):
+        return jsonify({"ok": False, "cancelled": True})
+
+    filenames = {}
+    for language, content in contents.items():
+        conflict = next((item for item in conflicts if item["language"] == language), None)
+        action = decisions.get(language, "create") if conflict else "create"
+        if action not in {"overwrite", "create"}:
+            return jsonify({"ok": False, "error": "Invalid duplicate action."}), 400
+        filenames[language] = save_pasted_html(
+            content, language, action,
+            conflict["filename"] if conflict and action == "overwrite" else None,
+        )
+    return jsonify({
+        "ok": True,
+        "redirect": f"/?env={PASTED_HTML_ENV}&year=_&left={filenames['en']}&right={filenames['fr']}"
+    })
 
 
 def rewrite_local_stylesheet_paths(soup):
@@ -255,6 +290,26 @@ def page_view(source_env, year, filename):
 
     raw_html = requested.read_text(encoding="utf-8", errors="ignore")
     soup = BeautifulSoup(raw_html, "html.parser")
+
+    if source_env == PASTED_HTML_ENV:
+        for unsafe in soup.find_all(["script", "iframe", "object", "embed"]):
+            unsafe.decompose()
+        for element in soup.find_all(True):
+            for attribute in list(element.attrs):
+                value = element.get(attribute)
+                if attribute.lower().startswith("on") or (
+                    attribute.lower() in {"href", "src", "action", "formaction"}
+                    and isinstance(value, str) and value.strip().lower().startswith("javascript:")
+                ):
+                    del element.attrs[attribute]
+
+        if not soup.head:
+            soup.insert(0, soup.new_tag("head"))
+
+        theme_stylesheet = soup.new_tag("link")
+        theme_stylesheet["rel"] = "stylesheet"
+        theme_stylesheet["href"] = "/static/css/theme.min.css"
+        soup.head.append(theme_stylesheet)
 
     if source_env == LOCAL_FILES_ENV:
         rewrite_local_stylesheet_paths(soup)

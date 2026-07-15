@@ -13,7 +13,7 @@
     rel="stylesheet">
 </head>
 
-<body class="{% if is_url_input %}url-input-env{% endif %}">
+<body class="{% if is_url_input %}url-input-env{% endif %} {% if source_env == 'pasted-html' %}pasted-html-env{% endif %}">
   <script>
     // Restore visual preferences before parsing the visible page to prevent the
     // default theme and layout from flashing while the page views are loading.
@@ -76,6 +76,11 @@
       </div>
 
       <div id="yearSelectGroup">
+        {% if source_env == 'pasted-html' %}
+        <label for="openPasteDialog">Content</label>
+        <button type="button" id="openPasteDialog" class="primary-action">Paste HTML</button>
+        <input type="hidden" id="year" name="year" value="_">
+        {% else %}
         <label for="year">Year</label>
         <select id="year" name="year">
           {% for available_year in available_years %}
@@ -84,6 +89,7 @@
           </option>
           {% endfor %}
         </select>
+        {% endif %}
       </div>
 
       <div>
@@ -135,7 +141,7 @@
       </div>
 
       <div>
-        <button type="submit">Load</button>
+        <button type="submit" class="primary-action">Load</button>
       </div>
 
       <div class="toolbar-menu-wrapper">
@@ -177,6 +183,49 @@
       </div>
     </form>
   </header>
+
+  {% if source_env == 'pasted-html' %}
+  <dialog id="pasteHtmlDialog" class="paste-html-dialog">
+    <form id="pasteHtmlForm" method="dialog">
+      <div class="paste-html-heading">
+        <h2>Paste English and French HTML</h2>
+        <p>Paste both complete HTML documents, then save them to begin the comparison.</p>
+      </div>
+      <div class="paste-html-columns">
+        <div class="paste-html-field">
+          <label for="enPastedHtml">English HTML</label>
+          <textarea id="enPastedHtml" required spellcheck="false" placeholder="Paste English HTML here..."></textarea>
+        </div>
+        <div class="paste-html-field">
+          <label for="frPastedHtml">French HTML</label>
+          <textarea id="frPastedHtml" required spellcheck="false" placeholder="Paste French HTML here..."></textarea>
+        </div>
+      </div>
+      <div id="pasteHtmlMessage" class="paste-html-message" role="alert" hidden></div>
+      <div class="paste-html-actions">
+        <button type="button" id="cancelPasteHtml">Cancel</button>
+        <button type="submit" class="primary-action">Save and review</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pasteConflictDialog" class="paste-conflict-dialog">
+    <form id="pasteConflictForm" method="dialog">
+      <div class="paste-conflict-heading">
+        <span class="paste-conflict-icon" aria-hidden="true">!</span>
+        <div>
+          <h2>Similar pasted HTML found</h2>
+          <p>Choose what to do with each existing cached file before continuing.</p>
+        </div>
+      </div>
+      <div id="pasteConflictChoices" class="paste-conflict-choices"></div>
+      <div class="paste-html-actions">
+        <button type="button" id="cancelPasteConflict">Cancel submission</button>
+        <button type="submit" class="primary-action">Continue</button>
+      </div>
+    </form>
+  </dialog>
+  {% endif %}
 
   <div id="layout" class="layout">
     <div class="view-control-bar" id="viewControlBar" aria-label="View controls">
@@ -241,7 +290,8 @@
     <section class="page-stack left-stack">
       <section class="panel left-page">
         {% if left_file %}
-        <iframe id="leftFrame" src="/page/{{ source_env }}/{{ year }}/{{ left_file }}"></iframe>
+        <iframe id="leftFrame" src="/page/{{ source_env }}/{{ year }}/{{ left_file }}"
+          {% if source_env == 'pasted-html' %}sandbox="allow-same-origin"{% endif %}></iframe>
         {% else %}
         <iframe id="leftFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste an EN page and press Load.</p>"></iframe>
@@ -265,7 +315,8 @@
     <section class="page-stack right-stack">
       <section class="panel right-page">
         {% if right_file %}
-        <iframe id="rightFrame" src="/page/{{ source_env }}/{{ year }}/{{ right_file }}"></iframe>
+        <iframe id="rightFrame" src="/page/{{ source_env }}/{{ year }}/{{ right_file }}"
+          {% if source_env == 'pasted-html' %}sandbox="allow-same-origin"{% endif %}></iframe>
         {% else %}
         <iframe id="rightFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste a FR page and press Load.</p>"></iframe>
@@ -422,6 +473,7 @@
   <script src="{{ url_for('static', filename='js/review-issues.js') }}"></script>
   <script src="{{ url_for('static', filename='js/view-mode.js') }}"></script>
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>

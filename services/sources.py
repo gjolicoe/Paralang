@@ -5,6 +5,8 @@ import hashlib
 import json
 import re
 
+from services.pasted_html_cache import PASTED_HTML_CACHE_ROOT
+
 
 # READ-ONLY SOURCES (DO NOT MODIFY)
 BASE_ROOT = Path(r"\\intra-web-prd\authoring.budget.canada.ca")
@@ -17,6 +19,7 @@ URL_CACHE_ROOT = PROJECT_ROOT / ".cache" / "canada-ca-pages"
 
 LOCAL_FILES_ROOT.mkdir(parents=True, exist_ok=True)
 URL_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+PASTED_HTML_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 def safe_resolve(path):
@@ -36,6 +39,7 @@ def path_is_within(path, root):
 
 CANADA_CA_URL_ENV = "canada-ca-url"
 LOCAL_FILES_ENV = "local-files"
+PASTED_HTML_ENV = "pasted-html"
 
 SOURCE_ENVIRONMENTS = {
     "budget": {
@@ -48,6 +52,12 @@ SOURCE_ENVIRONMENTS = {
         "root": LOCAL_FILES_ROOT,
         "type": "year-folder",
         "folder_name_pattern": r"[^\\/]+",
+        "show_when_empty": True
+    },
+    "pasted-html": {
+        "label": "Pasted HTML",
+        "root": PASTED_HTML_CACHE_ROOT,
+        "type": "cache-folder",
         "show_when_empty": True
     },
     "fiscal-update": {
@@ -74,6 +84,10 @@ def get_source_root(source_env, year=None):
 
     config = SOURCE_ENVIRONMENTS[source_env]
 
+    if config.get("type") == "cache-folder":
+        config["root"].mkdir(parents=True, exist_ok=True)
+        return safe_resolve(config["root"])
+
     if config.get("type") == "url-input":
         if source_env == CANADA_CA_URL_ENV:
             config["root"].mkdir(parents=True, exist_ok=True)
@@ -96,6 +110,9 @@ def get_available_years(source_env):
         return []
 
     env_root = SOURCE_ENVIRONMENTS[source_env]["root"]
+
+    if SOURCE_ENVIRONMENTS[source_env].get("type") == "cache-folder":
+        return ["_"]
 
     try:
         if not env_root.exists() or not env_root.is_dir():
@@ -166,7 +183,7 @@ def get_html_files(source_env, year):
 
     report_dir = source_root / "report-rapport"
 
-    if source_env == LOCAL_FILES_ENV:
+    if source_env in {LOCAL_FILES_ENV, PASTED_HTML_ENV}:
         try:
             for html_file in sorted(source_root.glob("*.html")):
                 if html_file.name not in files:

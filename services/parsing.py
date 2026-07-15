@@ -313,6 +313,19 @@ def extract_comparable_blocks(filename, source_env, year):
 
 
 def get_primary_content_container_for_source(soup, source_env):
+    if source_env == "pasted-html":
+        content_container, selector = get_primary_content_container(soup)
+
+        if content_container:
+            return content_container, selector
+
+        source = soup.body or soup
+        wrapper = soup.new_tag("div")
+        wrapper["class"] = ["content-area"]
+        for child in list(source.contents):
+            wrapper.append(child.extract())
+        return wrapper, ".content-area"
+
     if source_env == "canada-ca-url":
         main = soup.find("main")
 

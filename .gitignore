@@ -4,6 +4,12 @@ pasted-html/**
 data/local-files/**
 .cache/
 
+# Local Codex validation tests (keep out of normal commits)
+/tests/test_pasted_html_*.py
+
+# Local review state
+/data/paralang-issues.json
+
 # Preserve optional directory placeholders
 !local-files/.gitkeep
 !pasted-html/.gitkeep

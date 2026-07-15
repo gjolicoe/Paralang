@@ -98,12 +98,20 @@ body.url-input-env .toolbar {
   grid-template-columns: calc(13.5% - 20px) auto calc(35.8% + 8px) calc(35.8% + 8px) 60px 1fr;
 }
 
+body.pasted-html-env .toolbar {
+  grid-template-columns: calc(13.5% - 95px) 105px calc(35.8% + 8px) calc(35.8% + 8px) 60px 1fr;
+}
+
 body.single-view .toolbar {
   grid-template-columns: calc(13.5% - 95px) 75px calc((35.8% * 2) + 26px) 60px 1fr;
 }
 
 body.single-view.url-input-env .toolbar {
   grid-template-columns: calc(13.5% - 20px) auto calc((35.8% * 2) + 26px) 60px 1fr;
+}
+
+body.single-view.pasted-html-env .toolbar {
+  grid-template-columns: calc(13.5% - 95px) 105px calc((35.8% * 2) - 4px) 60px 1fr;
 }
 
 .toolbar label {
@@ -190,25 +198,33 @@ body.dark-mode .toolbar input[type="text"]::placeholder {
   color: #9ca3af;
 }
 
-/* Primary action: Load */
-.toolbar button[type="submit"] {
+/* Primary actions */
+.toolbar .primary-action,
+.paste-html-dialog .primary-action,
+.paste-conflict-dialog .primary-action {
   background: #e8f2ff;
   border-color: #9ec5fe;
   color: #0b4f8a;
 }
 
-.toolbar button[type="submit"]:hover {
+.toolbar .primary-action:hover,
+.paste-html-dialog .primary-action:hover,
+.paste-conflict-dialog .primary-action:hover {
   background: #d6eaff;
   border-color: #6ea8fe;
 }
 
-body.dark-mode .toolbar button[type="submit"] {
+body.dark-mode .toolbar .primary-action,
+body.dark-mode .paste-html-dialog .primary-action,
+body.dark-mode .paste-conflict-dialog .primary-action {
   background: #17324d;
   border-color: #3d8bfd;
   color: #d6ecff;
 }
 
-body.dark-mode .toolbar button[type="submit"]:hover {
+body.dark-mode .toolbar .primary-action:hover,
+body.dark-mode .paste-html-dialog .primary-action:hover,
+body.dark-mode .paste-conflict-dialog .primary-action:hover {
   background: #1f4062;
 }
 
@@ -395,6 +411,89 @@ iframe {
 .left-stack {
   grid-column: 2;
   grid-row: 2;
+}
+
+.paste-html-dialog {
+  width: min(1100px, 92vw);
+  max-height: 88vh;
+  padding: 0;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: 12px;
+  background: var(--toolbar-control-bg);
+  color: var(--toolbar-control-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .3);
+}
+
+.paste-html-dialog::backdrop { background: rgba(15, 23, 42, .65); }
+.paste-html-dialog form { display: grid; gap: 18px; padding: 24px; }
+.paste-html-heading { padding-bottom: 16px; border-bottom: 1px solid var(--toolbar-control-border); }
+.paste-html-heading h2 { margin: 0; font-size: 22px; }
+.paste-html-heading p { margin: 6px 0 0; color: #667085; }
+body.dark-mode .paste-html-heading p { color: #b8c0cc; }
+.paste-html-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.paste-html-field { display: grid; gap: 7px; min-width: 0; }
+.paste-html-field label { font-size: 13px; font-weight: 700; color: inherit; }
+.paste-html-dialog textarea {
+  min-height: 360px;
+  resize: none;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: var(--toolbar-control-radius);
+  background: #fff;
+  color: #1f2937;
+  font: 13px/1.45 Consolas, "Courier New", monospace;
+}
+.paste-html-dialog textarea:focus {
+  outline: 3px solid rgba(61, 139, 253, .25);
+  border-color: var(--toolbar-control-focus);
+}
+body.dark-mode .paste-html-dialog textarea { background: #171b21; color: #f2f2f2; }
+.paste-html-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+.paste-html-actions button {
+  min-height: var(--toolbar-control-height);
+  padding: 0 14px;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: var(--toolbar-control-radius);
+  background: var(--toolbar-control-bg);
+  color: var(--toolbar-control-text);
+  font-weight: 600;
+}
+.paste-html-actions button:hover { background: var(--toolbar-control-bg-hover); border-color: var(--toolbar-control-border-hover); }
+.paste-html-message { padding: 12px; border: 1px solid #c2410c; border-radius: 8px; background: rgba(194, 65, 12, .08); }
+
+.paste-conflict-dialog {
+  width: min(680px, 90vw);
+  padding: 0;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: 12px;
+  background: var(--toolbar-control-bg);
+  color: var(--toolbar-control-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .38);
+}
+.paste-conflict-dialog::backdrop { background: rgba(15, 23, 42, .48); }
+.paste-conflict-dialog form { display: grid; gap: 18px; padding: 24px; }
+.paste-conflict-heading { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid var(--toolbar-control-border); }
+.paste-conflict-heading h2 { margin: 0; font-size: 20px; }
+.paste-conflict-heading p { margin: 5px 0 0; color: #667085; }
+body.dark-mode .paste-conflict-heading p { color: #b8c0cc; }
+.paste-conflict-icon { display: grid; place-items: center; flex: 0 0 34px; height: 34px; border-radius: 50%; background: #fff3cd; color: #7a4d00; font-size: 20px; font-weight: 700; }
+.paste-conflict-choices { display: grid; gap: 14px; }
+.paste-conflict-card { display: grid; gap: 9px; margin: 0; padding: 14px; border: 1px solid var(--toolbar-control-border); border-radius: 9px; }
+.paste-conflict-card legend { padding: 0 6px; font-weight: 700; }
+.paste-conflict-card > p { margin: 0 0 3px; overflow-wrap: anywhere; color: #667085; font-size: 13px; }
+body.dark-mode .paste-conflict-card > p { color: #b8c0cc; }
+.paste-conflict-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border: 1px solid var(--toolbar-control-border); border-radius: 7px; cursor: pointer; }
+.paste-conflict-option:hover { background: var(--toolbar-control-bg-hover); border-color: var(--toolbar-control-border-hover); }
+.paste-conflict-option input { margin-top: 3px; accent-color: #3d8bfd; }
+.paste-conflict-option span { display: grid; gap: 2px; }
+.paste-conflict-option small { color: #667085; font-size: 12px; }
+body.dark-mode .paste-conflict-option small { color: #b8c0cc; }
+
+@media (max-width: 800px) {
+  .paste-html-columns { grid-template-columns: 1fr; }
+  .paste-html-dialog textarea { min-height: 220px; }
 }
 
 .right-stack {

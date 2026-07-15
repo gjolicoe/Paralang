@@ -9,6 +9,11 @@ Paralang is a local bilingual HTML comparison tool for reviewing English and Fre
 - Manual sync offset controls
 - Page/code comparison workflow
 - Local Flask app
+- Pasted EN/FR HTML review with readable filenames and local cache retention
+
+Pasted pages are stored in `.cache/pasted_html/`. When new content is submitted,
+managed cache entries older than 14 days are removed. Similar or identical pages
+prompt for overwrite, a numbered new copy, or cancellation before saving.
 
 ## Running locally
 
