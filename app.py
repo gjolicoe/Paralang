@@ -19,7 +19,14 @@ from services.sources import (
     LOCAL_FILES_ENV,
     PASTED_HTML_ENV,
 )
-from services.pasted_html_cache import cleanup_expired, find_conflict, save_pasted_html
+from services.pasted_html_cache import (
+    cleanup_expired,
+    extract_name_text,
+    find_conflict,
+    get_unique_pair_slug,
+    save_pasted_html,
+    slugify,
+)
 
 from services.parsing import (
     get_headings,
@@ -63,15 +70,26 @@ def api_pasted_html():
     if any(decisions.get(conflict["language"]) == "cancel" for conflict in conflicts):
         return jsonify({"ok": False, "cancelled": True})
 
+    actions = {}
+    for language in contents:
+        conflict = next((item for item in conflicts if item["language"] == language), None)
+        actions[language] = decisions.get(language, "create") if conflict else "create"
+
+    shared_base_slug = None
+    if all(action == "create" for action in actions.values()):
+        english_base_slug = slugify(extract_name_text(contents["en"]))
+        shared_base_slug = get_unique_pair_slug(english_base_slug)
+
     filenames = {}
     for language, content in contents.items():
         conflict = next((item for item in conflicts if item["language"] == language), None)
-        action = decisions.get(language, "create") if conflict else "create"
+        action = actions[language]
         if action not in {"overwrite", "create"}:
             return jsonify({"ok": False, "error": "Invalid duplicate action."}), 400
         filenames[language] = save_pasted_html(
             content, language, action,
             conflict["filename"] if conflict and action == "overwrite" else None,
+            shared_base_slug if action == "create" else None,
         )
     return jsonify({
         "ok": True,

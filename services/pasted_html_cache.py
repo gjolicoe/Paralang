@@ -117,14 +117,26 @@ def _unique_path(base_slug, language):
     return candidate
 
 
-def save_pasted_html(content, language, action="create", existing_filename=None):
+def get_unique_pair_slug(base_slug):
+    root = ensure_cache_root()
+    candidate = base_slug
+    number = 2
+    while any((root / f"{candidate}-{language}.html").exists() for language in ("en", "fr")):
+        candidate = f"{base_slug}-{number}"
+        number += 1
+    return candidate
+
+
+def save_pasted_html(
+    content, language, action="create", existing_filename=None, base_slug_override=None
+):
     if language not in {"en", "fr"}:
         raise ValueError("Unsupported language")
     normalized = normalize_content(content)
     if not normalized:
         raise ValueError(f"The {language.upper()} HTML field is empty.")
     heading = extract_name_text(normalized)
-    base_slug = slugify(heading)
+    base_slug = base_slug_override or slugify(heading)
     root = ensure_cache_root()
 
     if action == "overwrite":
