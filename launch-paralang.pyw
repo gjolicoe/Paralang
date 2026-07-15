@@ -6,6 +6,7 @@ import socket
 import subprocess
 import sys
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import messagebox
 import webbrowser
 
@@ -16,6 +17,7 @@ SERVER_URL = "http://127.0.0.1:5000"
 LOG_DIR = PROJECT_DIR / ".cache" / "launcher"
 STDOUT_LOG = LOG_DIR / "paralang.stdout.log"
 STDERR_LOG = LOG_DIR / "paralang.stderr.log"
+ICON_PATH = PROJECT_DIR / "static" / "favicon.ico"
 
 
 class ParalangLauncher:
@@ -28,11 +30,16 @@ class ParalangLauncher:
         root.title("Paralang")
         root.resizable(False, False)
         root.protocol("WM_DELETE_WINDOW", self.stop)
+        if ICON_PATH.is_file():
+            try:
+                root.iconbitmap(default=str(ICON_PATH))
+            except tk.TclError:
+                pass
 
         frame = tk.Frame(root, padx=24, pady=20)
         frame.pack()
 
-        tk.Label(frame, text="Paralang", font=("Segoe UI", 16, "bold")).pack()
+        self.create_logo(frame).pack()
         self.status = tk.StringVar(value="Starting the local server...")
         tk.Label(frame, textvariable=self.status, font=("Segoe UI", 10)).pack(pady=(10, 4))
         tk.Label(frame, text=SERVER_URL, font=("Segoe UI", 10)).pack(pady=(0, 14))
@@ -50,6 +57,63 @@ class ParalangLauncher:
         tk.Button(buttons, text="Stop Paralang", width=14, command=self.stop).pack(side=tk.LEFT)
 
         root.after(100, self.start)
+
+    @staticmethod
+    def create_logo(parent):
+        font = tkfont.Font(family="Arial", size=20, weight="bold")
+        para_width = font.measure("PARA")
+        lang_width = font.measure("LANG")
+        badge_padding = 7
+        badge_width = lang_width + (badge_padding * 2)
+        height = font.metrics("linespace") + 14
+        width = para_width + badge_width + 3
+
+        canvas = tk.Canvas(
+            parent,
+            width=width,
+            height=height,
+            highlightthickness=0,
+            borderwidth=0,
+        )
+        canvas.logo_font = font
+        center_y = height / 2
+        canvas.create_text(
+            para_width,
+            center_y,
+            text="PARA",
+            font=font,
+            fill="black",
+            anchor=tk.E,
+        )
+
+        x1 = para_width + 3
+        y1 = 3
+        x2 = width
+        y2 = height - 3
+        radius = 10
+        canvas.create_polygon(
+            x1 + radius, y1,
+            x2 - radius, y1,
+            x2, y1 + radius,
+            x2, y2 - radius,
+            x2 - radius, y2,
+            x1 + radius, y2,
+            x1, y2 - radius,
+            x1, y1 + radius,
+            smooth=True,
+            splinesteps=36,
+            fill="#6495ED",
+            outline="",
+        )
+        canvas.create_text(
+            x1 + (badge_width / 2),
+            center_y,
+            text="LANG",
+            font=font,
+            fill="white",
+            anchor=tk.CENTER,
+        )
+        return canvas
 
     def server_is_ready(self):
         try:
