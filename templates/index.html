@@ -14,6 +14,48 @@
 </head>
 
 <body class="{% if is_url_input %}url-input-env{% endif %}">
+  <script>
+    // Restore visual preferences before parsing the visible page to prevent the
+    // default theme and layout from flashing while the page views are loading.
+    (() => {
+      try {
+        const body = document.body;
+        const root = document.documentElement;
+        const storedLayout = localStorage.getItem("paralangLayoutVars");
+
+        body.classList.toggle("dark-mode", localStorage.getItem("paralangDarkMode") === "true");
+        body.classList.toggle("hide-maps", localStorage.getItem("paralangMapsHidden") !== "false");
+        body.classList.toggle("hide-diff", localStorage.getItem("paralangDiffHidden") !== "false");
+        body.classList.toggle("single-view", localStorage.getItem("paralangSingleView") === "true");
+        body.classList.toggle("show-code-panel", localStorage.getItem("paralangCodePanelVisible") === "true");
+
+        if (storedLayout) {
+          const layout = JSON.parse(storedLayout);
+          const properties = [
+            ["--left-map-width", layout.leftMapWidth, "px"],
+            ["--left-page-width", layout.leftPageRatio, "fr"],
+            ["--right-page-width", layout.rightPageRatio, "fr"],
+            ["--right-map-width", layout.rightMapWidth, "px"]
+          ];
+
+          properties.forEach(([name, value, unit]) => {
+            if (Number.isFinite(value) && value >= 0) {
+              root.style.setProperty(name, `${value}${unit}`);
+            }
+          });
+        }
+
+        const diffHeight = Number(localStorage.getItem("paralangDiffHeight"));
+        const codeHeight = Number(localStorage.getItem("paralangCodePanelHeight"));
+
+        if (diffHeight > 0) root.style.setProperty("--diff-height", `${diffHeight}px`);
+        if (codeHeight > 0) root.style.setProperty("--code-height", `${codeHeight}px`);
+      } catch {
+        // Storage can be unavailable or contain stale data; normal startup will
+        // safely apply the defaults below.
+      }
+    })();
+  </script>
 
   <header>
     <p class="pageTitle"><strong>PARA<span>LANG</span></strong>&nbsp;<small>v0.11.2</small></p>

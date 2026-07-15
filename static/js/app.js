@@ -1,4 +1,5 @@
 loadLayout();
+updateDarkModeButton(document.body.classList.contains("dark-mode"));
 setupDiffResizer();
 setupCodeResizer();
 loadCodePanelHeight();
