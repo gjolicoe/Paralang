@@ -56,6 +56,49 @@ function moveSyncToFirstElementInsideDetails(frame, detailsElement) {
     syncToElement(comparableIndex);
 }
 
+function closeDetailsWhenLeaving(currentIndex, requestedIndex) {
+    const elements = getComparableElementsCached(leftFrame);
+    const currentElement = elements[currentIndex];
+    const currentDetails = currentElement
+        ? currentElement.closest("details")
+        : null;
+
+    if (!currentDetails || !currentDetails.open) return requestedIndex;
+
+    const safeRequestedIndex = Math.max(
+        0,
+        Math.min(requestedIndex, elements.length - 1)
+    );
+    const requestedElement = elements[safeRequestedIndex];
+
+    if (!requestedElement || currentDetails.contains(requestedElement)) {
+        return requestedIndex;
+    }
+
+    const detailsIndex = getDetailsIndex(leftFrame, currentDetails);
+
+    isSyncingDetails = true;
+
+    try {
+        currentDetails.open = false;
+
+        if (detailsIndex >= 0) {
+            setDetailsOpenAtIndex(rightFrame, detailsIndex, false);
+        }
+    } finally {
+        isSyncingDetails = false;
+    }
+
+    clearComparableElementsCache(leftFrame);
+    clearComparableElementsCache(rightFrame);
+    clearSyncMapCache();
+
+    const collapsedElements = getComparableElementsCached(leftFrame);
+    const collapsedIndex = collapsedElements.indexOf(requestedElement);
+
+    return collapsedIndex >= 0 ? collapsedIndex : requestedIndex;
+}
+
 function syncMatchingDetailsPanel(sourceFrame, sourceDetails) {
     if (isSyncingDetails) return;
 

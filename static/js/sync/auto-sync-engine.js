@@ -5,6 +5,8 @@ let pendingSyncIndex = null;
 let syncFrameRequested = false;
 
 function syncToElement(index) {
+    index = closeDetailsWhenLeaving(selectedElementIndex, index);
+
     if (singleViewEnabled) {
         selectedElementIndex = Math.max(0, index);
         syncCodePanelsToCurrentSelection();

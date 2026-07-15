@@ -5,6 +5,7 @@ function applyDarkModeToFrame(frame, enabled) {
 
   let style = doc.getElementById("paralang-dark-mode-style");
   const lightIslandElements = doc.querySelectorAll(".table-responsive, table, figure");
+  const figureFooterElements = doc.querySelectorAll("figure footer, figure footer *");
 
   // Read these values with the dark-mode rules inactive. Transparent figures and
   // tables receive the light page background in both view modes.
@@ -24,6 +25,11 @@ function applyDarkModeToFrame(frame, enabled) {
       : computedStyle.backgroundColor;
 
     element.style.setProperty("--paralang-light-background", backgroundColor);
+    element.style.setProperty("--paralang-light-color", computedStyle.color);
+  });
+
+  figureFooterElements.forEach((element) => {
+    const computedStyle = frame.contentWindow.getComputedStyle(element);
     element.style.setProperty("--paralang-light-color", computedStyle.color);
   });
 
@@ -58,6 +64,11 @@ function applyDarkModeToFrame(frame, enabled) {
         /* Give figures, tables, and responsive table wrappers explicit light-mode defaults in both modes. */
         html :is(.content-area, .paralang-content-scope, main) :is(.table-responsive, table, figure) {
             background-color: var(--paralang-light-background) !important;
+            color: var(--paralang-light-color) !important;
+        }
+
+        html :is(.content-area, .paralang-content-scope, main) figure footer,
+        html :is(.content-area, .paralang-content-scope, main) figure footer * {
             color: var(--paralang-light-color) !important;
         }
 
