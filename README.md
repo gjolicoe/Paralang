@@ -18,7 +18,7 @@ Run the portable Python launcher:
 python launch-paralang.pyw
 ```
 
-You can also double-click `launch-paralang.pyw` when `.pyw` files are associated with Python.
+You can also double-click `launch-paralang.pyw` when the default app for `.pyw` files is python.
 
 The launcher starts the local server, opens Paralang in the browser, and keeps a
 small control window available. Use **Open Browser** if needed, and use

@@ -4,12 +4,28 @@ function applyDarkModeToFrame(frame, enabled) {
   if (!doc) return;
 
   let style = doc.getElementById("paralang-dark-mode-style");
+  const lightIslandElements = doc.querySelectorAll(".table-responsive, table, figure");
 
-  if (!enabled) {
-    if (style) style.remove();
-    doc.documentElement.classList.remove("paralang-dark-mode");
-    return;
-  }
+  // Read these values with the dark-mode rules inactive. Transparent figures and
+  // tables receive the light page background in both view modes.
+  doc.documentElement.classList.remove("paralang-dark-mode");
+
+  const htmlStyle = frame.contentWindow.getComputedStyle(doc.documentElement);
+  const bodyStyle = frame.contentWindow.getComputedStyle(doc.body);
+  const transparentColor = /^(?:transparent|rgba\([^)]*,\s*0\))$/;
+  const lightPageBackground = !transparentColor.test(bodyStyle.backgroundColor)
+    ? bodyStyle.backgroundColor
+    : (!transparentColor.test(htmlStyle.backgroundColor) ? htmlStyle.backgroundColor : "rgb(255, 255, 255)");
+
+  lightIslandElements.forEach((element) => {
+    const computedStyle = frame.contentWindow.getComputedStyle(element);
+    const backgroundColor = transparentColor.test(computedStyle.backgroundColor)
+      ? lightPageBackground
+      : computedStyle.backgroundColor;
+
+    element.style.setProperty("--paralang-light-background", backgroundColor);
+    element.style.setProperty("--paralang-light-color", computedStyle.color);
+  });
 
   if (!style) {
     style = doc.createElement("style");
@@ -17,7 +33,7 @@ function applyDarkModeToFrame(frame, enabled) {
     doc.head.appendChild(style);
   }
 
-  doc.documentElement.classList.add("paralang-dark-mode");
+  doc.documentElement.classList.toggle("paralang-dark-mode", enabled);
 
   style.textContent = `
         html.paralang-dark-mode,
@@ -31,21 +47,27 @@ function applyDarkModeToFrame(frame, enabled) {
             color: #f2f2f2 !important;
         }
 
-        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(h1, h2, h3, h4, h5, h6, p, li, a, strong, em, span) {
+        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(h1, h2, h3, h4, h5, h6, p, li, a, strong, em, span):not(:is(.table-responsive, .table-responsive *, table, table *, figure, figure *)) {
             color: #f2f2f2 !important;
         }
 
-        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) a {
+        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) a:not(:is(.table-responsive *, table *, figure *)) {
             color: #8ab4f8 !important;
         }
 
+        /* Give figures, tables, and responsive table wrappers explicit light-mode defaults in both modes. */
+        html :is(.content-area, .paralang-content-scope, main) :is(.table-responsive, table, figure) {
+            background-color: var(--paralang-light-background) !important;
+            color: var(--paralang-light-color) !important;
+        }
+
         /* Keep nested designed components mostly unchanged */
-        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(table, thead, tbody, tfoot, tr, th, td, figure, figcaption, .panel, .well, .alert, .card, .box, aside) {
+        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(.panel, .well, .alert, .card, .box, aside):not(:is(.table-responsive, .table-responsive *, table *, figure *)) {
             background-color: revert !important;
             color: revert !important;
         }
 
-        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(table, thead, tbody, tfoot, tr, th, td, figure, figcaption, .panel, .well, .alert, .card, .box, aside) * {
+        html.paralang-dark-mode :is(.content-area, .paralang-content-scope, main) :is(.panel, .well, .alert, .card, .box, aside) *:not(:is(.table-responsive, .table-responsive *, table, table *, figure, figure *)) {
             color: revert !important;
         }
     `;
