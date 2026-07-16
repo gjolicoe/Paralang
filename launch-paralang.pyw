@@ -18,6 +18,7 @@ LOG_DIR = PROJECT_DIR / ".cache" / "launcher"
 STDOUT_LOG = LOG_DIR / "paralang.stdout.log"
 STDERR_LOG = LOG_DIR / "paralang.stderr.log"
 ICON_PATH = PROJECT_DIR / "static" / "favicon.ico"
+CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 class ParalangLauncher:
@@ -122,24 +123,42 @@ class ParalangLauncher:
         except OSError:
             return False
 
-    def start(self):
-        if not APP_PATH.is_file():
-            self.fail(f"app.py was not found in:\n{PROJECT_DIR}")
-            return
-
+    def ensure_dependencies(self):
         dependency_check = subprocess.run(
             [sys.executable, "-c", "import flask, bs4"],
             cwd=PROJECT_DIR,
             capture_output=True,
             text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            creationflags=CREATE_NO_WINDOW,
         )
-        if dependency_check.returncode != 0:
+        if dependency_check.returncode == 0:
+            return True
+
+        self.status.set("Installing required Python packages...")
+        install_check = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "flask", "beautifulsoup4"],
+            cwd=PROJECT_DIR,
+            capture_output=True,
+            text=True,
+            creationflags=CREATE_NO_WINDOW,
+        )
+        if install_check.returncode != 0:
             self.fail(
-                "Required Python packages are missing.\n\n"
+                "Required Python packages could not be installed automatically.\n\n"
                 f"Python: {sys.executable}\n\n"
-                "Install them with:\npython -m pip install flask beautifulsoup4"
+                "Install them manually with:\npython -m pip install flask beautifulsoup4\n\n"
+                f"Installer output:\n{install_check.stderr.strip() or install_check.stdout.strip()}"
             )
+            return False
+
+        return True
+
+    def start(self):
+        if not APP_PATH.is_file():
+            self.fail(f"app.py was not found in:\n{PROJECT_DIR}")
+            return
+
+        if not self.ensure_dependencies():
             return
 
         if self.server_is_ready():
@@ -157,7 +176,7 @@ class ParalangLauncher:
                 cwd=PROJECT_DIR,
                 stdout=stdout_file,
                 stderr=stderr_file,
-                creationflags=subprocess.CREATE_NO_WINDOW,
+                creationflags=CREATE_NO_WINDOW,
             )
         finally:
             stdout_file.close()
