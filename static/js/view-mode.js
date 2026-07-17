@@ -318,6 +318,7 @@ function setSingleView(enabled, options = {}) {
 
     if (highlightButton) {
       highlightButton.textContent = "Hide outline";
+      highlightButton.classList.remove("is-active");
     }
 
     const selectedSingleFile = leftSelect.value;
@@ -370,15 +371,6 @@ function loadSinglePage() {
   loaded = 1;
 }
 
-function scrollFrameToTop(frame) {
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  const scroller = doc.scrollingElement || doc.documentElement || doc.body;
-
-  if (scroller) {
-    scroller.scrollTop = 0;
-  }
-}
-
 function loadDualPages() {
   clearAllComparableElementsCache();
   clearSyncMapCache();
@@ -425,13 +417,8 @@ function frameLoaded() {
   if (loaded >= requiredLoads) {
     loadDarkMode();
 
-    if (!singleViewEnabled) {
-      attachElementSnapSync();
-      syncToElement(selectedElementIndex);
-    } else {
-      scrollFrameToTop(leftFrame);
-      updateStructureMapActiveHeading();
-    }
+    attachElementSnapSync();
+    syncToElement(selectedElementIndex);
 
     setViewLoading(false);
   }

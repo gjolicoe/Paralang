@@ -32,7 +32,9 @@ function handleSnapWheel(event, sourceFrame) {
 }
 
 function attachElementSnapSync() {
-    [leftFrame, rightFrame].forEach(frame => {
+    const frames = singleViewEnabled ? [leftFrame] : [leftFrame, rightFrame];
+
+    frames.forEach(frame => {
         const doc = frame.contentDocument || frame.contentWindow.document;
 
         doc.addEventListener("wheel", event => {

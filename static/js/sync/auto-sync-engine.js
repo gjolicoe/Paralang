@@ -8,7 +8,11 @@ function syncToElement(index) {
     index = closeDetailsWhenLeaving(selectedElementIndex, index);
 
     if (singleViewEnabled) {
-        selectedElementIndex = Math.max(0, index);
+        const leftCount = getComparableElementsCached(leftFrame).length;
+        const leftIndex = Math.max(0, Math.min(index, leftCount - 1));
+
+        selectedElementIndex = leftIndex;
+        scrollFrameToElement(leftFrame, leftIndex, "cornflowerblue");
         syncCodePanelsToCurrentSelection();
         updateStructureMapActiveHeading();
         return;

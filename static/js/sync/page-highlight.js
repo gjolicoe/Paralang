@@ -139,6 +139,7 @@ function disableReviewDisplayControlsForSingleView() {
 
     if (highlightButton) {
         highlightButton.textContent = "Show outline";
+        highlightButton.classList.add("is-active");
     }
 
     clearFocusMode(leftFrame);
