@@ -27,6 +27,13 @@
       if (conflictDialog.open) conflictDialog.close();
     });
   });
+  document.querySelectorAll('input[name="pasteSaveLocation"]').forEach(input => {
+    input.addEventListener("change", () => {
+      decisions = {};
+      message.hidden = true;
+      if (conflictDialog.open) conflictDialog.close();
+    });
+  });
 
   async function savePastedHtml() {
     const response = await fetch("/api/pasted-html", {
@@ -35,6 +42,7 @@
       body: JSON.stringify({
         en_html: document.getElementById("enPastedHtml").value,
         fr_html: document.getElementById("frPastedHtml").value,
+        save_location: document.querySelector('input[name="pasteSaveLocation"]:checked').value,
         decisions
       })
     });
@@ -51,7 +59,7 @@
         detail.textContent = `A ${conflict.match} file already exists: ${conflict.filename}`;
         card.append(legend, detail);
 
-        [["overwrite", "Overwrite existing", "Replace the cached file with this pasted content."],
+        [["overwrite", "Overwrite existing", "Replace the existing file with this pasted content."],
          ["create", "Create new copy", "Keep the existing file and save a numbered copy."]]
           .forEach(([value, title, description], index) => {
             const label = document.createElement("label");

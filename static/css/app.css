@@ -430,6 +430,15 @@ iframe {
 .paste-html-heading h2 { margin: 0; font-size: 22px; }
 .paste-html-heading p { margin: 6px 0 0; color: #667085; }
 body.dark-mode .paste-html-heading p { color: #b8c0cc; }
+.paste-storage-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; border: 0; }
+.paste-storage-options legend { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+.paste-storage-option { display: flex; gap: 10px; align-items: flex-start; padding: 11px; border: 1px solid var(--toolbar-control-border); border-radius: 8px; cursor: pointer; }
+.paste-storage-option:hover { background: var(--toolbar-control-bg-hover); border-color: var(--toolbar-control-border-hover); }
+.paste-storage-option input { margin-top: 3px; accent-color: #3d8bfd; }
+.paste-storage-option span { display: grid; gap: 2px; }
+.paste-storage-option small { color: #667085; font-size: 12px; }
+body.dark-mode .paste-storage-option small { color: #b8c0cc; }
+.paste-retention-notice { padding: 10px 12px; border: 1px solid #e0b44c; border-radius: 8px; background: rgba(224, 180, 76, .11); color: inherit; font-size: 13px; }
 .paste-html-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 .paste-html-field { display: grid; gap: 7px; min-width: 0; }
 .paste-html-field label { font-size: 13px; font-weight: 700; color: inherit; }
@@ -492,6 +501,7 @@ body.dark-mode .paste-conflict-card > p { color: #b8c0cc; }
 body.dark-mode .paste-conflict-option small { color: #b8c0cc; }
 
 @media (max-width: 800px) {
+  .paste-storage-options { grid-template-columns: 1fr; }
   .paste-html-columns { grid-template-columns: 1fr; }
   .paste-html-dialog textarea { min-height: 220px; }
 }

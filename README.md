@@ -40,7 +40,7 @@ English filenames must end in `-en.html` and French filenames in `-fr.html`. A `
 
 ### Pasted HTML review
 
-Paste complete English and French HTML documents directly into Paralang. Saved pages receive readable filenames and are retained in `.cache/pasted_html/`; managed entries older than 14 days are removed when new content is submitted. If similar content already exists, Paralang lets you overwrite it, create a numbered copy, or cancel.
+Paste complete English and French HTML documents directly into Paralang. Choose temporary storage in `.cache/pasted_html/` or longer-term storage in `data/local-files/pasted-html/`. Temporary entries older than 14 days are removed when new content is submitted; Local files are retained until removed manually. If similar content already exists, Paralang lets you overwrite it, create a numbered copy, or cancel.
 
 ### Customizable workspace
 

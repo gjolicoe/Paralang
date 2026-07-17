@@ -191,6 +191,21 @@
         <h2>Paste English and French HTML</h2>
         <p>Paste both complete HTML documents, then save them to begin the comparison.</p>
       </div>
+      <fieldset class="paste-storage-options">
+        <legend>Save location</legend>
+        <label class="paste-storage-option">
+          <input type="radio" name="pasteSaveLocation" value="temporary" checked>
+          <span><strong>Temporary cache</strong><small>Use for short-term review.</small></span>
+        </label>
+        <label class="paste-storage-option">
+          <input type="radio" name="pasteSaveLocation" value="local">
+          <span><strong>Local files</strong><small>Keep for longer-term work.</small></span>
+        </label>
+      </fieldset>
+      <div class="paste-retention-notice" role="note">
+        <strong>Temporary content is deleted after 14 days.</strong>
+        Files saved to Local files are kept until you remove them.
+      </div>
       <div class="paste-html-columns">
         <div class="paste-html-field">
           <label for="enPastedHtml">English HTML</label>
@@ -215,7 +230,7 @@
         <span class="paste-conflict-icon" aria-hidden="true">!</span>
         <div>
           <h2>Similar pasted HTML found</h2>
-          <p>Choose what to do with each existing cached file before continuing.</p>
+          <p>Choose what to do with each existing file before continuing.</p>
         </div>
       </div>
       <div id="pasteConflictChoices" class="paste-conflict-choices"></div>

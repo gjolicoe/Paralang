@@ -5,6 +5,7 @@ from services.sources import (
     get_resolved_source_file_path,
     get_source_root,
 )
+from services.pasted_html_cache import is_managed_pasted_html
 
 def read_soup(filename, source_env, year):
     path = get_resolved_source_file_path(source_env, year, filename)
@@ -53,7 +54,11 @@ def get_content_area(filename, source_env, year):
     if not soup:
         return None
 
-    content_container, _ = get_primary_content_container_for_source(soup, source_env)
+    path = get_resolved_source_file_path(source_env, year, filename)
+    effective_source_env = (
+        "pasted-html" if path and is_managed_pasted_html(path) else source_env
+    )
+    content_container, _ = get_primary_content_container_for_source(soup, effective_source_env)
 
     if not content_container:
         return None

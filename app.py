@@ -17,6 +17,7 @@ from services.sources import (
     safe_resolve,
     path_is_within,
     LOCAL_FILES_ENV,
+    LOCAL_FILES_ROOT,
     PASTED_HTML_ENV,
 )
 from services.pasted_html_cache import (
@@ -24,6 +25,7 @@ from services.pasted_html_cache import (
     extract_name_text,
     find_conflict,
     get_unique_pair_slug,
+    is_managed_pasted_html,
     save_pasted_html,
     slugify,
 )
@@ -60,10 +62,23 @@ def api_pasted_html():
     if not all(value.strip() for value in contents.values()):
         return jsonify({"ok": False, "error": "Both English and French HTML are required."}), 400
 
+    save_location = payload.get("save_location", "temporary")
+    if save_location not in {"temporary", "local"}:
+        return jsonify({"ok": False, "error": "Invalid save location."}), 400
+
     cleanup_expired()
+    local_folder = "pasted-html"
+    storage_root = (
+        LOCAL_FILES_ROOT / local_folder
+        if save_location == "local"
+        else None
+    )
+    english_base_slug = slugify(extract_name_text(contents["en"]))
     decisions = payload.get("decisions") or {}
     conflicts = [conflict for language, content in contents.items()
-                 if (conflict := find_conflict(content, language))]
+                 if (conflict := find_conflict(
+                     content, language, storage_root, english_base_slug
+                 ))]
     unresolved = [conflict for conflict in conflicts if conflict["language"] not in decisions]
     if unresolved:
         return jsonify({"ok": False, "conflicts": unresolved}), 409
@@ -77,8 +92,7 @@ def api_pasted_html():
 
     shared_base_slug = None
     if all(action == "create" for action in actions.values()):
-        english_base_slug = slugify(extract_name_text(contents["en"]))
-        shared_base_slug = get_unique_pair_slug(english_base_slug)
+        shared_base_slug = get_unique_pair_slug(english_base_slug, storage_root)
 
     filenames = {}
     for language, content in contents.items():
@@ -90,10 +104,16 @@ def api_pasted_html():
             content, language, action,
             conflict["filename"] if conflict and action == "overwrite" else None,
             shared_base_slug if action == "create" else None,
+            storage_root,
         )
+    target_env = LOCAL_FILES_ENV if save_location == "local" else PASTED_HTML_ENV
+    target_year = local_folder if save_location == "local" else "_"
     return jsonify({
         "ok": True,
-        "redirect": f"/?env={PASTED_HTML_ENV}&year=_&left={filenames['en']}&right={filenames['fr']}"
+        "redirect": (
+            f"/?env={target_env}&year={target_year}"
+            f"&left={filenames['en']}&right={filenames['fr']}"
+        )
     })
 
 
@@ -309,7 +329,8 @@ def page_view(source_env, year, filename):
     raw_html = requested.read_text(encoding="utf-8", errors="ignore")
     soup = BeautifulSoup(raw_html, "html.parser")
 
-    if source_env == PASTED_HTML_ENV:
+    is_pasted_content = source_env == PASTED_HTML_ENV or is_managed_pasted_html(requested)
+    if is_pasted_content:
         for unsafe in soup.find_all(["script", "iframe", "object", "embed"]):
             unsafe.decompose()
         for element in soup.find_all(True):
@@ -332,7 +353,8 @@ def page_view(source_env, year, filename):
     if source_env == LOCAL_FILES_ENV:
         rewrite_local_stylesheet_paths(soup)
 
-    content_area, container_selector = get_primary_content_container_for_source(soup, source_env)
+    parsing_env = PASTED_HTML_ENV if is_pasted_content else source_env
+    content_area, container_selector = get_primary_content_container_for_source(soup, parsing_env)
 
     if not content_area:
         return render_template("content_not_found.html")

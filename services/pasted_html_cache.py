@@ -15,9 +15,14 @@ MAX_SLUG_LENGTH = 80
 MAX_AGE_SECONDS = 14 * 24 * 60 * 60
 
 
+def ensure_storage_root(storage_root=None):
+    root = Path(storage_root) if storage_root else PASTED_HTML_CACHE_ROOT
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def ensure_cache_root():
-    PASTED_HTML_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
-    return PASTED_HTML_CACHE_ROOT
+    return ensure_storage_root()
 
 
 def normalize_content(content):
@@ -86,10 +91,14 @@ def _read_metadata(html_path):
         return {}
 
 
-def find_conflict(content, language):
-    root = ensure_cache_root()
+def is_managed_pasted_html(html_path):
+    return _read_metadata(Path(html_path)).get("source_type") == "pasted_html"
+
+
+def find_conflict(content, language, storage_root=None, base_slug_override=None):
+    root = ensure_storage_root(storage_root)
     heading = extract_name_text(content)
-    base_slug = slugify(heading)
+    base_slug = base_slug_override or slugify(heading)
     digest = content_digest(content)
     similar = None
     for path in sorted(root.glob(f"*-{language}.html")):
@@ -102,13 +111,20 @@ def find_conflict(content, language):
                 continue
         if existing_digest == digest:
             return {"language": language, "filename": path.name, "match": "identical"}
-        if metadata.get("base_slug") == base_slug or slugify(metadata.get("heading", "")) == base_slug:
+        filename_slug = re.sub(rf"-{language}$", "", path.stem)
+        filename_matches = (
+            filename_slug == base_slug
+            or bool(re.fullmatch(rf"{re.escape(base_slug)}-\d+", filename_slug))
+        )
+        if (metadata.get("base_slug") == base_slug
+                or slugify(metadata.get("heading", "")) == base_slug
+                or filename_matches):
             similar = {"language": language, "filename": path.name, "match": "similar"}
     return similar
 
 
-def _unique_path(base_slug, language):
-    root = ensure_cache_root()
+def _unique_path(base_slug, language, storage_root=None):
+    root = ensure_storage_root(storage_root)
     candidate = root / f"{base_slug}-{language}.html"
     number = 2
     while candidate.exists():
@@ -117,8 +133,8 @@ def _unique_path(base_slug, language):
     return candidate
 
 
-def get_unique_pair_slug(base_slug):
-    root = ensure_cache_root()
+def get_unique_pair_slug(base_slug, storage_root=None):
+    root = ensure_storage_root(storage_root)
     candidate = base_slug
     number = 2
     while any((root / f"{candidate}-{language}.html").exists() for language in ("en", "fr")):
@@ -128,7 +144,8 @@ def get_unique_pair_slug(base_slug):
 
 
 def save_pasted_html(
-    content, language, action="create", existing_filename=None, base_slug_override=None
+    content, language, action="create", existing_filename=None, base_slug_override=None,
+    storage_root=None,
 ):
     if language not in {"en", "fr"}:
         raise ValueError("Unsupported language")
@@ -137,7 +154,7 @@ def save_pasted_html(
         raise ValueError(f"The {language.upper()} HTML field is empty.")
     heading = extract_name_text(normalized)
     base_slug = base_slug_override or slugify(heading)
-    root = ensure_cache_root()
+    root = ensure_storage_root(storage_root)
 
     if action == "overwrite":
         if not existing_filename or Path(existing_filename).name != existing_filename:
@@ -147,7 +164,7 @@ def save_pasted_html(
             raise ValueError("The cached file to overwrite no longer exists.")
         created = _read_metadata(path).get("created_at")
     else:
-        path = _unique_path(base_slug, language)
+        path = _unique_path(base_slug, language, root)
         created = None
 
     now = datetime.now(timezone.utc).isoformat()
