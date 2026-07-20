@@ -49,6 +49,20 @@ def get_primary_content_container(soup):
     return wrapper, selector
 
 
+def include_document_h1(soup, content_container):
+    """Place the document's first H1 before selected content when it is outside it."""
+    if not content_container:
+        return content_container
+
+    h1 = soup.find("h1")
+
+    if not h1 or h1 is content_container or content_container in h1.parents:
+        return content_container
+
+    content_container.insert(0, h1.extract())
+    return content_container
+
+
 def get_content_area(filename, source_env, year):
     soup = read_soup(filename, source_env, year)
 
@@ -323,25 +337,25 @@ def get_primary_content_container_for_source(soup, source_env):
         content_container, selector = get_primary_content_container(soup)
 
         if content_container:
-            return content_container, selector
+            return include_document_h1(soup, content_container), selector
 
         source = soup.body or soup
         wrapper = soup.new_tag("div")
         wrapper["class"] = ["content-area"]
         for child in list(source.contents):
             wrapper.append(child.extract())
-        return wrapper, ".content-area"
+        return include_document_h1(soup, wrapper), ".content-area"
 
     if source_env == "canada-ca-url":
         main = soup.find("main")
 
         if main:
-            return main, "main"
+            return include_document_h1(soup, main), "main"
 
         body = soup.body
 
         if body:
-            return body, "body"
+            return include_document_h1(soup, body), "body"
 
     config = SOURCE_ENVIRONMENTS.get(source_env, {})
     selector = config.get("content_selector")
@@ -351,12 +365,13 @@ def get_primary_content_container_for_source(soup, source_env):
         except Exception:
             containers = []
         if len(containers) == 1:
-            return containers[0], selector
+            return include_document_h1(soup, containers[0]), selector
         if len(containers) > 1:
             wrapper = soup.new_tag("div")
             wrapper["class"] = "paralang-content-scope"
             for container in containers:
                 wrapper.append(container.extract())
-            return wrapper, selector
+            return include_document_h1(soup, wrapper), selector
 
-    return get_primary_content_container(soup)
+    content_container, selector = get_primary_content_container(soup)
+    return include_document_h1(soup, content_container), selector
