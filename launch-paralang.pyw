@@ -27,6 +27,7 @@ class ParalangLauncher:
         self.process = None
         self.opened_browser = False
         self.poll_attempts = 0
+        self.is_refreshing = False
 
         root.title("Paralang")
         root.resizable(False, False)
@@ -55,6 +56,14 @@ class ParalangLauncher:
             command=self.open_browser,
         )
         self.open_button.pack(side=tk.LEFT, padx=(0, 8))
+        self.refresh_button = tk.Button(
+            buttons,
+            text="Refresh Application",
+            width=18,
+            state=tk.DISABLED,
+            command=self.refresh_application,
+        )
+        self.refresh_button.pack(side=tk.LEFT, padx=(0, 8))
         tk.Button(buttons, text="Stop Paralang", width=14, command=self.stop).pack(side=tk.LEFT)
 
         root.after(100, self.start)
@@ -154,6 +163,8 @@ class ParalangLauncher:
         return True
 
     def start(self):
+        self.poll_attempts = 0
+
         if not APP_PATH.is_file():
             self.fail(f"app.py was not found in:\n{PROJECT_DIR}")
             return
@@ -164,6 +175,7 @@ class ParalangLauncher:
         if self.server_is_ready():
             self.status.set("Paralang is already running")
             self.open_button.config(state=tk.NORMAL)
+            self.refresh_button.config(state=tk.DISABLED)
             self.open_browser()
             return
 
@@ -188,7 +200,11 @@ class ParalangLauncher:
         if self.server_is_ready():
             self.status.set("Paralang is running")
             self.open_button.config(state=tk.NORMAL)
-            self.open_browser()
+            self.refresh_button.config(state=tk.NORMAL)
+            if self.is_refreshing:
+                self.is_refreshing = False
+            else:
+                self.open_browser()
             return
 
         self.poll_attempts += 1
@@ -226,17 +242,40 @@ class ParalangLauncher:
 
     def fail(self, message):
         self.status.set("Paralang could not start")
+        self.refresh_button.config(state=tk.DISABLED)
         messagebox.showerror("Paralang could not start", message)
+
+    def terminate_server(self):
+        if not self.process or self.process.poll() is not None:
+            return
+
+        self.process.terminate()
+        try:
+            self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.wait(timeout=2)
+
+    def refresh_application(self):
+        if not self.process or self.process.poll() is not None:
+            messagebox.showwarning(
+                "Refresh Paralang",
+                "This launcher does not own the running server, so it cannot restart it safely.",
+            )
+            return
+
+        self.is_refreshing = True
+        self.status.set("Refreshing Paralang...")
+        self.open_button.config(state=tk.DISABLED)
+        self.refresh_button.config(state=tk.DISABLED)
+        self.terminate_server()
+        self.process = None
+        self.root.after(150, self.start)
 
     def stop(self):
         if self.process and self.process.poll() is None:
             self.status.set("Stopping Paralang...")
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=2)
+            self.terminate_server()
         self.root.destroy()
 
 

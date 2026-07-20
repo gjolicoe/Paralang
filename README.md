@@ -65,7 +65,7 @@ python launch-paralang.pyw
 
 On Windows, you can also double-click `launch-paralang.pyw` when `.pyw` files are associated with Python.
 
-The launcher checks for Flask and Beautiful Soup and installs them with `pip` if needed. It then starts Paralang at <http://127.0.0.1:5000>, opens the site in your browser, and leaves a small control window running. Use **Open Browser** to reopen the site and **Stop Paralang** (or close the control window) to stop the server cleanly.
+The launcher checks for Flask and Beautiful Soup and installs them with `pip` if needed. It then starts Paralang at <http://127.0.0.1:5000>, opens the site in your browser, and leaves a small control window running. Use **Refresh Application** to restart the local server and automatically reload open Paralang pages after code changes. Use **Open Browser** to reopen the site and **Stop Paralang** (or close the control window) to stop the server cleanly.
 
 If startup fails, diagnostic output is available in `.cache/launcher/`.
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from urllib.parse import urlsplit
+from uuid import uuid4
 
 from services.sources import (
     get_source_root,
@@ -55,6 +56,14 @@ from services.automated_issues import (
 )
 
 app = Flask(__name__)
+APP_INSTANCE_ID = uuid4().hex
+
+
+@app.get("/api/app-instance")
+def api_app_instance():
+    response = jsonify({"instance_id": APP_INSTANCE_ID})
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/api/environment-presets")
@@ -293,6 +302,7 @@ def index():
         right_headings=right_headings,
         user_issues=user_issues,
         automated_issues=automated_issues,
+        app_instance_id=APP_INSTANCE_ID,
     )
 
 @app.route("/source/<source_env>/<year>/<path:filename>")

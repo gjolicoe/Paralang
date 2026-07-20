@@ -548,6 +548,7 @@
     window.PARALANG_SOURCE_OPTIONS = {{ source_options | tojson }};
     window.PARALANG_IS_URL_INPUT = {{ is_url_input | tojson }};
     window.PARALANG_USER_ISSUES = {{ user_issues|tojson }};
+    window.PARALANG_APP_INSTANCE_ID = {{ app_instance_id | tojson }};
   </script>
 
   <script src="{{ url_for('static', filename='js/state.js') }}"></script>

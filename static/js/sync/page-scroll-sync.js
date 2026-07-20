@@ -31,6 +31,37 @@ function handleSnapWheel(event, sourceFrame) {
     requestSyncToElement(nextIndex);
 }
 
+function shouldPreserveNativeArrowKeyBehavior(event) {
+    if (event.ctrlKey || event.altKey || event.metaKey) return true;
+
+    const target = event.target;
+
+    if (!target || !target.closest) return false;
+
+    return Boolean(target.closest([
+        "input",
+        "textarea",
+        "select",
+        "option",
+        "[contenteditable='true']"
+    ].join(", ")));
+}
+
+function handleSnapNavigationKey(event) {
+    if (shouldPreserveNativeArrowKeyBehavior(event)) return;
+
+    if (event.key === "ArrowDown" || event.key === "PageDown") {
+        event.preventDefault();
+        requestSyncToElement(selectedElementIndex + 1);
+        return;
+    }
+
+    if (event.key === "ArrowUp" || event.key === "PageUp") {
+        event.preventDefault();
+        requestSyncToElement(selectedElementIndex - 1);
+    }
+}
+
 function attachElementSnapSync() {
     const frames = singleViewEnabled ? [leftFrame] : [leftFrame, rightFrame];
 
@@ -41,18 +72,13 @@ function attachElementSnapSync() {
             handleSnapWheel(event, frame);
         }, { passive: false });
 
-        doc.addEventListener("keydown", event => {
-            if (event.key === "ArrowDown" || event.key === "PageDown") {
-                event.preventDefault();
-                requestSyncToElement(selectedElementIndex + 1);
-            }
-
-            if (event.key === "ArrowUp" || event.key === "PageUp") {
-                event.preventDefault();
-                requestSyncToElement(selectedElementIndex - 1);
-            }
-        });
+        doc.addEventListener("keydown", handleSnapNavigationKey);
     });
+
+    if (document.documentElement.dataset.paralangSnapKeysBound !== "true") {
+        document.documentElement.dataset.paralangSnapKeysBound = "true";
+        document.addEventListener("keydown", handleSnapNavigationKey);
+    }
 
     requestSyncToElement(0);
 }
