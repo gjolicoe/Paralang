@@ -1,5 +1,6 @@
 function selectedEnvUsesTextInputs(env) {
-  return env === "aem-sensitive" || env === "canada-ca-url";
+  const option = Array.from(envSelect.options).find(item => item.value === env);
+  return option?.dataset.sourceType === "url-input";
 }
 
 function setViewControlButtonActive(buttonId, isActive) {
@@ -104,8 +105,6 @@ document.getElementById("toggleDarkMode").addEventListener("click", () => {
 });
 
 leftSelect.addEventListener("change", () => {
-  if (getSelectedEnv() === "aem-sensitive") return;
-
   if (singleViewEnabled) {
     loadSinglePage();
     return;
@@ -116,8 +115,6 @@ leftSelect.addEventListener("change", () => {
 });
 
 rightSelect.addEventListener("change", () => {
-  if (getSelectedEnv() === "aem-sensitive") return;
-
   if (singleViewEnabled) return;
 
   const paired = getPairedFilename(rightSelect.value, "-fr.html", "-en.html");

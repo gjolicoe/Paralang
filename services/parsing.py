@@ -4,6 +4,7 @@ import re
 from services.sources import (
     get_resolved_source_file_path,
     get_source_root,
+    SOURCE_ENVIRONMENTS,
 )
 from services.pasted_html_cache import is_managed_pasted_html
 
@@ -341,5 +342,21 @@ def get_primary_content_container_for_source(soup, source_env):
 
         if body:
             return body, "body"
+
+    config = SOURCE_ENVIRONMENTS.get(source_env, {})
+    selector = config.get("content_selector")
+    if selector:
+        try:
+            containers = soup.select(selector)
+        except Exception:
+            containers = []
+        if len(containers) == 1:
+            return containers[0], selector
+        if len(containers) > 1:
+            wrapper = soup.new_tag("div")
+            wrapper["class"] = "paralang-content-scope"
+            for container in containers:
+                wrapper.append(container.extract())
+            return wrapper, selector
 
     return get_primary_content_container(soup)

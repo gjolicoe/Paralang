@@ -7,8 +7,6 @@ function getSelectedYear() {
 }
 
 function rebuildYearDropdown() {
-  if (getSelectedEnv() === "aem-sensitive") return;
-
   const selectedEnv = envSelect.value;
   const matchingSource = sourceOptions.find(source => source.key === selectedEnv);
 
@@ -30,8 +28,6 @@ function getPairedFilename(filename, fromSuffix, toSuffix) {
 }
 
 function rebuildLeftDropdownForDualView() {
-  if (getSelectedEnv() === "aem-sensitive") return;
-
   const currentValue = leftSelect.value;
 
   leftSelect.innerHTML = "";
@@ -50,8 +46,6 @@ function rebuildLeftDropdownForDualView() {
 }
 
 function rebuildLeftDropdownForSingleView() {
-  if (getSelectedEnv() === "aem-sensitive") return;
-
   const currentValue = leftSelect.value;
 
   leftSelect.innerHTML = "";

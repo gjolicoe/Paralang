@@ -602,7 +602,7 @@ function updateNoIssuesMessage() {
 }
 
 function reviewIssuesDisabledForEnvironment(env) {
-  return env === "aem-sensitive" || env === "canada-ca-url";
+  return sourceOptions.find(source => source.key === env)?.type === "url-input";
 }
 
 function updateReviewIssueButtonsState() {

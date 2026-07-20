@@ -10,7 +10,6 @@ from services.sources import (
     get_available_years,
     get_html_files,
     is_url_input_environment,
-    aem_sensitive_url_to_relative_path,
     CANADA_CA_URL_ENV,
     fetch_canada_ca_url_to_cache,
     get_canada_ca_source_url_from_cached_file,
@@ -19,6 +18,9 @@ from services.sources import (
     LOCAL_FILES_ENV,
     LOCAL_FILES_ROOT,
     PASTED_HTML_ENV,
+    read_environment_presets,
+    save_environment_preset,
+    delete_environment_preset,
 )
 from services.pasted_html_cache import (
     cleanup_expired,
@@ -53,6 +55,27 @@ from services.automated_issues import (
 )
 
 app = Flask(__name__)
+
+
+@app.get("/api/environment-presets")
+def api_environment_presets():
+    return jsonify({"presets": read_environment_presets()})
+
+
+@app.post("/api/environment-presets")
+def api_create_environment_preset():
+    try:
+        preset = save_environment_preset(request.get_json(silent=True) or {})
+    except ValueError as error:
+        return jsonify({"ok": False, "error": str(error)}), 400
+    return jsonify({"ok": True, "preset": preset}), 201
+
+
+@app.delete("/api/environment-presets/<preset_id>")
+def api_delete_environment_preset(preset_id):
+    if not delete_environment_preset(preset_id):
+        return jsonify({"ok": False, "error": "Preset not found or cannot be deleted."}), 404
+    return jsonify({"ok": True})
 
 
 @app.post("/api/pasted-html")
@@ -156,7 +179,7 @@ def index():
     if requested_env in available_envs:
         source_env = requested_env
     else:
-        source_env = available_envs[0] if available_envs else "budget"
+        source_env = available_envs[0] if available_envs else LOCAL_FILES_ENV
 
     is_url_input = is_url_input_environment(source_env)
 
@@ -189,10 +212,6 @@ def index():
                     right_file = fetch_canada_ca_url_to_cache(right_input_value)
                 except Exception as error:
                     print(f"[Paralang] Could not fetch right Canada.ca URL: {error}")
-
-        else:
-            left_file = aem_sensitive_url_to_relative_path(left_input_value)
-            right_file = aem_sensitive_url_to_relative_path(right_input_value)
 
     else:
         available_years = get_available_years(source_env)
@@ -267,6 +286,7 @@ def index():
         source_env=source_env,
         year=year,
         source_options=source_options,
+        environment_presets=read_environment_presets(),
         available_years=available_years,
         is_url_input=is_url_input,
         left_headings=left_headings,
@@ -291,25 +311,6 @@ def source(source_env, year, filename):
         abort(404)
 
     return send_from_directory(source_root, filename)
-
-@app.route("/aem-sensitive/<path:filename>")
-def aem_sensitive_root_asset(filename):
-    source_root = get_source_root("aem-sensitive", "_")
-
-    if not source_root:
-        abort(404)
-
-    aem_root = safe_resolve(source_root / "aem-sensitive")
-    requested = safe_resolve(aem_root / filename)
-
-    # SECURITY: prevent escaping aem-sensitive root
-    if not path_is_within(requested, aem_root):
-        abort(403)
-
-    if not requested.exists() or not requested.is_file():
-        abort(404)
-
-    return send_from_directory(aem_root, filename)
 
 @app.route("/page/<source_env>/<year>/<path:filename>")
 def page_view(source_env, year, filename):

@@ -144,14 +144,6 @@ function appendCodeWindowParams(src, options = {}) {
 function getPageSrc(filename, side = "left") {
   const env = getSelectedEnv();
 
-  if (env === "aem-sensitive") {
-    const relativePath = normalizeAemSensitivePath(filename);
-
-    if (!relativePath) return "";
-
-    return `/page/${env}/_/${encodeURI(relativePath)}`;
-  }
-
   if (env === "canada-ca-url") {
     const resolvedFile = getResolvedFileForSide(filename, side);
 
@@ -183,17 +175,6 @@ function appendCodeSectionParams(src, options = {}) {
 
 function getCodeSrc(filename, side = "left", options = {}) {
   const env = getSelectedEnv();
-
-  if (env === "aem-sensitive") {
-    const relativePath = normalizeAemSensitivePath(filename);
-
-    if (!relativePath) return "";
-
-    return appendCodeSectionParams(
-      `/code/${env}/_/${encodeURI(relativePath)}`,
-      options
-    );
-  }
 
   if (env === "canada-ca-url") {
     const resolvedFile = getResolvedFileForSide(filename, side);
@@ -465,27 +446,6 @@ function updateDarkModeButton(enabled) {
   }
 }
 
-function normalizeAemSensitivePath(value) {
-  const raw = (value || "").trim();
-
-  if (!raw) return "";
-
-  const normalized = raw.replaceAll("\\", "/");
-
-  if (normalized.startsWith("aem-sensitive/")) {
-    return normalized;
-  }
-
-  const marker = "/aem-sensitive/";
-  const markerIndex = normalized.indexOf(marker);
-
-  if (markerIndex < 0) {
-    return "";
-  }
-
-  return `aem-sensitive/${normalized.slice(markerIndex + marker.length)}`;
-}
-
 function setFrameSource(frame, src, message) {
   if (!src) {
     frame.removeAttribute("src");
@@ -522,17 +482,12 @@ function updatePageInputLabels() {
   let leftText = "EN page";
   let rightText = "FR page";
 
-  if (env === "aem-sensitive") {
-    leftText = "EN AEM URL";
-    rightText = "FR AEM URL";
-  }
-
   if (env === "canada-ca-url") {
     leftText = "EN Canada.ca URL";
     rightText = "FR Canada.ca URL";
   }
 
-  if (singleViewEnabled && env !== "aem-sensitive" && env !== "canada-ca-url") {
+  if (singleViewEnabled && !selectedEnvUsesTextInputs(env)) {
     leftText = "Page";
   }
 

@@ -26,7 +26,9 @@ Create an issue for a selected block, add a title and comment, identify the revi
 
 ### Flexible content sources
 
-Review pages from the configured Budget and Fiscal Update folders, local files, AEM sensitive URLs, or public Canada.ca URLs. Canada.ca pages are downloaded to a local cache before review.
+Review pages from local files, team-configured folder presets, pasted HTML, or public Canada.ca URLs. Canada.ca pages are downloaded to a local cache before review.
+
+Use the settings button beside the Environment dropdown to create a team preset. A preset can point directly at a folder of HTML pages or discover named collection folders. It can detect HTML in each collection root and in any number of configured relative subfolders, including nested paths such as `campaign/pages`. Presets can be grouped in the dropdown and exported as JSON for another user to import. Local preset definitions are stored in `data/environment-presets.json`.
 
 For local files, place page pairs under a named folder in `data/local-files/`, for example:
 

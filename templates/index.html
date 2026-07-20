@@ -66,13 +66,20 @@
     <form class="toolbar" method="get" action="/">
       <div id="envSelectGroup">
         <label for="env">Environment</label>
-        <select id="env" name="env">
-          {% for source in source_options %}
-          <option value="{{ source.key }}" {% if source.key==source_env %}selected{% endif %}>
-            {{ source.label }}
-          </option>
-          {% endfor %}
-        </select>
+        <div class="environment-select-row">
+          <select id="env" name="env">
+            {% for group in source_options|groupby('group') %}
+            <optgroup label="{{ group.grouper }}">
+              {% for source in group.list %}
+              <option value="{{ source.key }}" data-source-type="{{ source.type }}" {% if source.key==source_env %}selected{% endif %}>{{ source.label }}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+          <button type="button" id="openEnvironmentDialog" class="environment-settings-button" title="Manage environments" aria-label="Manage environments">
+            <span aria-hidden="true">&#9881;</span>
+          </button>
+        </div>
       </div>
 
       <div id="yearSelectGroup">
@@ -95,7 +102,7 @@
       <div>
         <label for="left" id="leftSelectLabel">
           {% if is_url_input %}
-            {% if source_env == 'canada-ca-url' %}EN Canada.ca URL{% else %}EN AEM URL{% endif %}
+            EN Canada.ca URL
           {% else %}
             EN page
           {% endif %}
@@ -103,7 +110,7 @@
 
         {% if is_url_input %}
         <input id="left" name="left" type="text" value="{{ left_input_value }}"
-          placeholder="{% if source_env == 'canada-ca-url' %}Paste EN Canada.ca URL{% else %}Paste EN AEM sensitive URL{% endif %}">
+          placeholder="Paste EN Canada.ca URL">
         {% else %}
         <select id="left" name="left">
           {% for file in en_files %}
@@ -119,7 +126,7 @@
       <div id="rightSelectGroup">
         <label for="right">
           {% if is_url_input %}
-            {% if source_env == 'canada-ca-url' %}FR Canada.ca URL{% else %}FR AEM URL{% endif %}
+            FR Canada.ca URL
           {% else %}
             FR page
           {% endif %}
@@ -127,7 +134,7 @@
 
         {% if is_url_input %}
         <input id="right" name="right" type="text" value="{{ right_input_value }}"
-          placeholder="{% if source_env == 'canada-ca-url' %}Paste FR Canada.ca URL{% else %}Paste FR AEM sensitive URL{% endif %}">
+          placeholder="Paste FR Canada.ca URL">
         {% else %}
         <select id="right" name="right">
           {% for file in fr_files %}
@@ -183,6 +190,82 @@
       </div>
     </form>
   </header>
+
+  <dialog id="environmentDialog" class="environment-dialog">
+    <div class="environment-dialog-content">
+      <header class="environment-dialog-heading">
+        <div class="environment-dialog-icon" aria-hidden="true">&#9881;</div>
+        <div>
+          <h2>Environment presets</h2>
+          <p>Configure reusable content sources and share them with your team.</p>
+        </div>
+        <button type="button" id="closeEnvironmentDialog" class="environment-dialog-close" aria-label="Close environment presets">&times;</button>
+      </header>
+
+      <section class="environment-section" aria-labelledby="savedPresetsHeading">
+        <div class="environment-section-heading">
+          <div>
+            <h3 id="savedPresetsHeading">Saved presets</h3>
+            <p>{{ environment_presets|length }} team preset{% if environment_presets|length != 1 %}s{% endif %} available</p>
+          </div>
+          <label class="environment-button environment-button-secondary environment-import-button">Import JSON<input id="environmentPresetImport" type="file" accept="application/json,.json" hidden></label>
+        </div>
+        <div id="environmentPresetList" class="environment-preset-list">
+          {% for preset in environment_presets %}
+          <div class="environment-preset-row" data-preset-id="{{ preset.id }}" data-preset='{{ preset|tojson|forceescape }}'>
+            <div class="environment-preset-mark" aria-hidden="true">{{ preset.label[:1]|upper }}</div>
+            <span class="environment-preset-details"><strong>{{ preset.label }}</strong><small>{{ preset.group }}</small><code title="{{ preset.root }}">{{ preset.root }}</code></span>
+            <div class="environment-preset-actions">
+              <button type="button" class="environment-button environment-button-secondary" data-export-preset="{{ preset.id }}">Export</button>
+              <button type="button" class="environment-button environment-button-danger" data-delete-preset="{{ preset.id }}">Delete</button>
+            </div>
+          </div>
+          {% else %}
+          <div class="environment-empty-message"><strong>No team presets yet</strong><span>Create one below or import a JSON preset from your team.</span></div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <form id="environmentPresetForm">
+        <div class="environment-section-heading">
+          <div>
+            <h3>Create a preset</h3>
+            <p>Connect Paralang to a local or shared folder structure.</p>
+          </div>
+        </div>
+        <div class="environment-form-grid">
+          <label><span>Name</span><input name="label" required maxlength="80" placeholder="Department website"></label>
+          <label><span>Preset ID</span><input name="id" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="department-website"><small>Lowercase letters, numbers, and hyphens.</small></label>
+          <label><span>Group</span><input name="group" maxlength="80" value="Team presets"><small>Used as a header in the Environment menu.</small></label>
+          <label><span>Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
+          <label><span>Folder layout</span><select name="collection_mode"><option value="named-folders">Named subfolders</option><option value="direct">Pages directly in root</option></select></label>
+          <label><span>Content selector</span><input name="content_selector" value=".content-area" maxlength="200"><small>CSS selector for the primary page content.</small></label>
+        </div>
+        <div class="environment-detection-options">
+          <label class="environment-checkbox"><input type="checkbox" name="include_root_html"><span><strong>Detect files in each root</strong><small>Include HTML files directly inside the selected folder.</small></span></label>
+          <label class="environment-checkbox"><input type="checkbox" id="detectAdditionalFolders"><span><strong>Detect additional folders</strong><small>Search one or more relative subfolder paths.</small></span></label>
+        </div>
+        <div id="additionalFoldersFields" class="additional-folders-fields">
+          <div class="additional-folders-heading">
+            <span>Additional folder paths</span>
+            <button type="button" id="addAdditionalFolder" class="environment-button environment-button-secondary">+ Add folder</button>
+          </div>
+          <div id="additionalFoldersList">
+            <div class="additional-folder-row">
+              <input type="text" name="additional_folder" value="report-rapport" maxlength="200" aria-label="Additional folder path">
+              <button type="button" class="environment-button environment-button-quiet" data-remove-additional-folder aria-label="Remove folder">Remove</button>
+            </div>
+          </div>
+          <small>Enter paths relative to each root. Nested paths such as <code>campaign/pages</code> are supported.</small>
+        </div>
+        <div id="environmentPresetMessage" class="paste-html-message" role="alert" hidden></div>
+        <div class="environment-form-actions">
+          <button type="reset" class="environment-button environment-button-secondary">Reset</button>
+          <button type="submit" class="environment-button primary-action">Create preset</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
   {% if source_env == 'pasted-html' %}
   <dialog id="pasteHtmlDialog" class="paste-html-dialog">
@@ -489,6 +572,7 @@
   <script src="{{ url_for('static', filename='js/view-mode.js') }}"></script>
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/environment-presets.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
