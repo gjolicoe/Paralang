@@ -64,31 +64,27 @@
       <span id="darkModeIcon" class="icon-toggle-btn__icon" aria-hidden="true"></span>
     </button>
     <form class="toolbar" method="get" action="/">
-      <div id="envSelectGroup">
+      <div class="toolbar-source-controls">
+        <div id="envSelectGroup">
         <label for="env">Environment</label>
-        <div class="environment-select-row">
-          <select id="env" name="env">
-            {% for group in source_options|groupby('group') %}
-            <optgroup label="{{ group.grouper }}">
-              {% for source in group.list %}
-              <option value="{{ source.key }}" data-source-type="{{ source.type }}" {% if source.key==source_env %}selected{% endif %}>{{ source.label }}</option>
-              {% endfor %}
-            </optgroup>
+        <select id="env" name="env">
+          {% for group in source_options|groupby('group') %}
+          <optgroup label="{{ group.grouper }}">
+            {% for source in group.list %}
+            <option value="{{ source.key }}" data-source-type="{{ source.type }}" {% if source.key==source_env %}selected{% endif %}>{{ source.label }}</option>
             {% endfor %}
-          </select>
-          <button type="button" id="openEnvironmentDialog" class="environment-settings-button" title="Manage environments" aria-label="Manage environments">
-            <span aria-hidden="true">&#9881;</span>
-          </button>
+          </optgroup>
+          {% endfor %}
+        </select>
         </div>
-      </div>
 
-      <div id="yearSelectGroup">
+        <div id="yearSelectGroup">
         {% if source_env == 'pasted-html' %}
         <label for="openPasteDialog">Content</label>
         <button type="button" id="openPasteDialog" class="primary-action">Paste HTML</button>
         <input type="hidden" id="year" name="year" value="_">
         {% else %}
-        <label for="year">Year</label>
+        <label for="year">Folder</label>
         <select id="year" name="year">
           {% for available_year in available_years %}
           <option value="{{ available_year }}" {% if available_year==year %}selected{% endif %}>
@@ -97,9 +93,10 @@
           {% endfor %}
         </select>
         {% endif %}
+        </div>
       </div>
 
-      <div>
+      <div class="left-page-selection">
         <label for="left" id="leftSelectLabel">
           {% if is_url_input %}
             EN Canada.ca URL
@@ -123,7 +120,7 @@
         <input type="hidden" id="leftResolvedFile" value="{{ left_file }}">
       </div>
 
-      <div id="rightSelectGroup">
+      <div id="rightSelectGroup" class="right-page-selection">
         <label for="right">
           {% if is_url_input %}
             FR Canada.ca URL
@@ -147,20 +144,26 @@
         <input type="hidden" id="rightResolvedFile" value="{{ right_file }}">
       </div>
 
-      <div>
+      <div class="toolbar-actions">
         <button type="submit" class="primary-action">Load</button>
-      </div>
-
-      <div class="toolbar-menu-wrapper">
+        <div class="toolbar-menu-wrapper">
         <button type="button"
                 id="layoutMenuButton"
                 class="toolbar-menu-button"
                 aria-haspopup="true"
                 aria-expanded="false">
-          Layout ▾
+          Workspace &#9662;
         </button>
 
         <div id="layoutMenu" class="toolbar-menu" hidden>
+          <div class="toolbar-menu-heading">Sources</div>
+          <button type="button" id="openEnvironmentDialog" class="toolbar-menu-action">
+            <span aria-hidden="true">&#9881;</span>
+            Manage environments
+          </button>
+
+          <div class="toolbar-menu-divider"></div>
+          <div class="toolbar-menu-heading">View</div>
           <label class="toolbar-menu-item">
             <input type="checkbox" id="layoutMenuMaps">
             <span>Show structure maps</span>
@@ -184,9 +187,10 @@
           <div class="toolbar-menu-divider"></div>
 
           <button type="button" id="layoutMenuReset" class="toolbar-menu-reset">
-            Reset layout
+            Reset workspace layout
           </button>
         </div>
+      </div>
       </div>
     </form>
   </header>
@@ -283,6 +287,7 @@
           <label for="frPastedHtml">French HTML</label>
           <textarea id="frPastedHtml" required spellcheck="false" placeholder="Paste French HTML here..."></textarea>
         </div>
+      </div>
       </div>
       <fieldset class="paste-storage-options">
         <legend>Save location</legend>

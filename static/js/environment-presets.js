@@ -28,7 +28,13 @@
     return result.preset;
   }
 
-  openButton.addEventListener("click", () => dialog.showModal());
+  openButton.addEventListener("click", () => {
+    const workspaceMenu = document.getElementById("layoutMenu");
+    const workspaceButton = document.getElementById("layoutMenuButton");
+    if (workspaceMenu) workspaceMenu.hidden = true;
+    if (workspaceButton) workspaceButton.setAttribute("aria-expanded", "false");
+    dialog.showModal();
+  });
   closeButton.addEventListener("click", () => dialog.close());
 
   function updateAdditionalFoldersVisibility() {
