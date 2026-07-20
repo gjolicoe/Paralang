@@ -703,6 +703,10 @@ function renderIssues(issues) {
 
   const noIssuesMessage = document.getElementById("noIssuesMessage");
 
+  window.PARALANG_PREFLIGHT_ISSUES = issues.filter(
+    issue => issue.issue_source === "automated"
+  );
+
   issues.forEach(issue => {
     const row = renderIssueRow(issue);
 
@@ -715,6 +719,7 @@ function renderIssues(issues) {
 
   updateIssuePanelHeaderCounts();
   updateNoIssuesMessage();
+  highlightTableNumberMismatches();
 }
 
 async function rerunAutomatedIssuesCheck() {

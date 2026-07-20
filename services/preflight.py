@@ -1,4 +1,62 @@
 from difflib import SequenceMatcher
+from decimal import Decimal, InvalidOperation
+import re
+
+
+def parse_table_number(text, language):
+    """Return a locale-aware Decimal when the entire cell is a number/currency."""
+    value = (text or "").strip().replace("\u00a0", " ").replace("\u202f", " ")
+    if not value:
+        return None
+
+    negative = value.startswith("(") and value.endswith(")")
+    if negative:
+        value = value[1:-1].strip()
+
+    # Permit currency markers, signs, whitespace and locale separators only.
+    value = re.sub(r"(?:CAD|USD|EUR|CA|US)", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"[$€£]", "", value).strip()
+    if not re.fullmatch(r"[+-]?[\d\s.,']+", value):
+        return None
+
+    value = value.replace(" ", "").replace("'", "")
+    if language == "fr":
+        value = value.replace(".", "").replace(",", ".")
+    else:
+        value = value.replace(",", "")
+
+    try:
+        number = Decimal(value)
+        return -number if negative else number
+    except InvalidOperation:
+        return None
+
+
+def numeric_cell_mismatch_issues(left, right):
+    if not left or not right or left.get("tag") != "tr" or right.get("tag") != "tr":
+        return []
+
+    issues = []
+    for cell_index, (left_text, right_text) in enumerate(
+        zip(left.get("cells", []), right.get("cells", []))
+    ):
+        left_number = parse_table_number(left_text, "en")
+        right_number = parse_table_number(right_text, "fr")
+        if left_number is None or right_number is None or left_number == right_number:
+            continue
+
+        issues.append({
+            "opcode": "table-number-mismatch",
+            "left": left,
+            "right": right,
+            "left_cell_index": cell_index,
+            "right_cell_index": cell_index,
+            "severity": "warning",
+            "label": "Table number mismatch",
+            "detail": f"Table values differ: English {left_text}; French {right_text}."
+        })
+
+    return issues
 
 def comparable_token(block):
     if not block:
@@ -132,6 +190,15 @@ def diff_comparable_blocks(left_blocks, right_blocks):
 
         for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
             if opcode == "equal":
+                for left, right in zip(
+                    left_section["blocks"][i1:i2],
+                    right_section["blocks"][j1:j2]
+                ):
+                    for numeric_issue in numeric_cell_mismatch_issues(left, right):
+                        issues.append({
+                            "index": len(issues) + 1,
+                            **numeric_issue
+                        })
                 continue
 
             left_slice = left_section["blocks"][i1:i2]

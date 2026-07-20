@@ -40,8 +40,14 @@ yearSelect.addEventListener("change", () => {
     document.querySelector(".toolbar").submit();
 });
 
-leftFrame.addEventListener("load", frameLoaded);
-rightFrame.addEventListener("load", frameLoaded);
+leftFrame.addEventListener("load", event => {
+    frameLoaded(event);
+    highlightTableNumberMismatches();
+});
+rightFrame.addEventListener("load", event => {
+    frameLoaded(event);
+    highlightTableNumberMismatches();
+});
 
 document.getElementById("rightBack").addEventListener("click", () => {
     manualRightSyncOffset -= 1;

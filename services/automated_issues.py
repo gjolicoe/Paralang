@@ -57,6 +57,10 @@ def build_automated_issue_records(source_env, year, left_file, right_file):
             "block_index": target.get("index"),
             "block_signature": target.get("nav_signature", ""),
             "block_hash": "",
+            "left_block_index": left.get("index") if left else None,
+            "right_block_index": right.get("index") if right else None,
+            "left_cell_index": issue.get("left_cell_index"),
+            "right_cell_index": issue.get("right_cell_index"),
             "severity": issue.get("severity", "warning"),
             "title": issue.get("label", "Automated issue"),
             "comment": issue.get("detail", ""),
@@ -83,6 +87,11 @@ def automated_scan_is_stale(source_env, year, left_file, right_file):
         existing_automated,
         key=lambda issue: issue.get("created_at", "")
     )
+
+    # Records created before cell-level table checks do not contain these
+    # coordinates and must be regenerated once after upgrading.
+    if "left_block_index" not in latest_issue:
+        return True
 
     left_path = get_resolved_source_file_path(source_env, year, left_file)
     right_path = get_resolved_source_file_path(source_env, year, right_file)

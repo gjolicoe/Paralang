@@ -329,6 +329,12 @@ def extract_comparable_blocks(filename, source_env, year):
             "occurrence": occurrence
         })
 
+        if tag == "tr":
+            blocks[-1]["cells"] = [
+                get_direct_text(cell)
+                for cell in element.find_all(["th", "td"], recursive=False)
+            ]
+
     return blocks
 
 
