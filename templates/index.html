@@ -189,6 +189,7 @@
           <button type="button" id="layoutMenuReset" class="toolbar-menu-reset">
             Reset workspace layout
           </button>
+
         </div>
       </div>
       </div>
@@ -266,6 +267,70 @@
         <div class="environment-form-actions">
           <button type="reset" class="environment-button environment-button-secondary">Reset</button>
           <button type="submit" class="environment-button primary-action">Create preset</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="feedbackDialog" class="environment-dialog feedback-dialog" aria-labelledby="feedbackDialogTitle">
+    <div class="environment-dialog-content">
+      <header class="environment-dialog-heading">
+        <div class="environment-dialog-icon feedback-dialog-icon" aria-hidden="true">&#9993;</div>
+        <div>
+          <h2 id="feedbackDialogTitle">Send feedback</h2>
+          <p>Tell us what happened in your own words. No technical details needed.</p>
+        </div>
+        <button type="button" id="closeFeedbackDialog" class="environment-dialog-close" aria-label="Close feedback form">&times;</button>
+      </header>
+
+      <form id="feedbackForm" class="feedback-form">
+        <fieldset class="feedback-type-fieldset">
+          <legend>What would you like to tell us?</legend>
+          <div class="feedback-type-options">
+            <label class="feedback-type-option">
+              <input type="radio" name="feedback_type" value="bug" checked>
+              <span class="feedback-type-mark" aria-hidden="true">!</span>
+              <span><strong>Something didn't work</strong><small>Report unexpected behaviour or an error.</small></span>
+            </label>
+            <label class="feedback-type-option">
+              <input type="radio" name="feedback_type" value="confusing">
+              <span class="feedback-type-mark" aria-hidden="true">?</span>
+              <span><strong>Something was confusing</strong><small>Tell us what was unclear or difficult.</small></span>
+            </label>
+            <label class="feedback-type-option">
+              <input type="radio" name="feedback_type" value="suggestion">
+              <span class="feedback-type-mark" aria-hidden="true">+</span>
+              <span><strong>I have a suggestion</strong><small>Share an idea that could improve Paralang.</small></span>
+            </label>
+            <label class="feedback-type-option">
+              <input type="radio" name="feedback_type" value="other">
+              <span class="feedback-type-mark" aria-hidden="true">&#8230;</span>
+              <span><strong>Something else</strong><small>Send a comment, question, or other feedback.</small></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="feedback-fields">
+          <label class="feedback-field">
+            <span id="feedbackPrimaryLabel">What were you trying to do?</span>
+            <small id="feedbackPrimaryHelp">Briefly describe what you were doing.</small>
+            <textarea id="feedbackPrimary" name="primary" required maxlength="1200" rows="4"></textarea>
+          </label>
+          <label id="feedbackSecondaryField" class="feedback-field">
+            <span id="feedbackSecondaryLabel">What happened instead?</span>
+            <small id="feedbackSecondaryHelp">Tell us what went wrong. You can add a screenshot in Outlook.</small>
+            <textarea id="feedbackSecondary" name="secondary" maxlength="1200" rows="3"></textarea>
+          </label>
+        </div>
+
+        <aside class="feedback-email-note">
+          <span class="feedback-email-note-icon" aria-hidden="true">&#9993;</span>
+          <span><strong>We'll prepare the email for you.</strong><small>Outlook will open with your answers filled in. Review the message, add a screenshot if helpful, and select Send.</small></span>
+        </aside>
+
+        <div class="environment-form-actions feedback-form-actions">
+          <button type="button" id="cancelFeedback" class="environment-button environment-button-secondary">Cancel</button>
+          <button type="submit" class="environment-button primary-action">Continue to Outlook</button>
         </div>
       </form>
     </div>
@@ -424,6 +489,10 @@
         <iframe id="rightFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste a FR page and press Load.</p>"></iframe>
         {% endif %}
+        <button type="button" id="openFeedbackDialog" class="feedback-pill" aria-haspopup="dialog">
+          <span class="feedback-pill-icon" aria-hidden="true">&#9993;</span>
+          <span>Send feedback</span>
+        </button>
       </section>
 
       <div class="code-resizer code-resizer-right"
@@ -554,6 +623,7 @@
     window.PARALANG_IS_URL_INPUT = {{ is_url_input | tojson }};
     window.PARALANG_USER_ISSUES = {{ user_issues|tojson }};
     window.PARALANG_APP_INSTANCE_ID = {{ app_instance_id | tojson }};
+    window.PARALANG_FEEDBACK_EMAIL = "gabriel.jolicoeur-mccharles@fin.gc.ca";
   </script>
 
   <script src="{{ url_for('static', filename='js/state.js') }}"></script>
@@ -579,6 +649,7 @@
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
   <script src="{{ url_for('static', filename='js/environment-presets.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>

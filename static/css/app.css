@@ -560,12 +560,87 @@ body.dark-mode .environment-checkbox small { color: #b8c0cc; }
 body.dark-mode .additional-folders-fields > small { color: #b8c0cc; }
 .environment-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--toolbar-control-border); }
 
+.feedback-dialog { width: min(720px, calc(100vw - 32px)); }
+.feedback-dialog-icon { background: #eaf7ef; color: #176b3a; }
+body.dark-mode .feedback-dialog-icon { background: #173b2a; color: #b9f1cf; }
+.feedback-form { padding: 22px 24px 24px; }
+.feedback-type-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.feedback-type-fieldset legend { margin-bottom: 10px; padding: 0; font-size: 14px; font-weight: 700; }
+.feedback-type-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.feedback-type-option { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: center; min-width: 0; padding: 11px 12px; border: 1px solid var(--toolbar-control-border); border-radius: 9px; background: rgba(127, 127, 127, .025); cursor: pointer; transition: border-color .15s ease, background .15s ease, box-shadow .15s ease; }
+.feedback-type-option:hover { border-color: var(--toolbar-control-border-hover); background: var(--toolbar-control-bg-hover); }
+.feedback-type-option:has(input:checked) { border-color: #79bc95; background: #f2fbf5; box-shadow: 0 0 0 1px rgba(23, 107, 58, .08); }
+body.dark-mode .feedback-type-option:has(input:checked) { border-color: #3d9361; background: #173b2a; }
+.feedback-type-option:has(input:focus-visible) { outline: 3px solid rgba(23, 107, 58, .22); outline-offset: 1px; }
+.feedback-type-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.feedback-type-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: #eef1f4; color: #475467; font-size: 15px; font-weight: 700; }
+.feedback-type-option:has(input:checked) .feedback-type-mark { background: #dcefe3; color: #176b3a; }
+body.dark-mode .feedback-type-mark { background: #343b46; color: #d0d5dd; }
+body.dark-mode .feedback-type-option:has(input:checked) .feedback-type-mark { background: #24503a; color: #d9f7e5; }
+.feedback-type-option > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.feedback-type-option strong { font-size: 13px; line-height: 1.2; }
+.feedback-type-option small { color: #667085; font-size: 11px; line-height: 1.25; }
+body.dark-mode .feedback-type-option small { color: #b8c0cc; }
+.feedback-fields { display: grid; gap: 15px; margin-top: 20px; }
+.feedback-field { display: grid; gap: 5px; font-size: 13px; font-weight: 700; }
+.feedback-field[hidden] { display: none; }
+.feedback-field small { color: #667085; font-size: 11px; font-weight: 400; }
+body.dark-mode .feedback-field small { color: #b8c0cc; }
+.feedback-field textarea { width: 100%; min-height: 76px; resize: none; box-sizing: border-box; padding: 10px 11px; border: 1px solid var(--toolbar-control-border); border-radius: 8px; background: var(--toolbar-control-bg); color: inherit; font: 13px/1.4 inherit; }
+.feedback-field textarea:focus { outline: 3px solid rgba(23, 107, 58, .22); outline-offset: 1px; border-color: #3d9361; }
+.feedback-email-note { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 17px; padding: 11px 12px; border: 1px solid #b7dec6; border-radius: 9px; background: #f2fbf5; color: #215c38; }
+body.dark-mode .feedback-email-note { border-color: #315f45; background: #183326; color: #c8efd6; }
+.feedback-email-note-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #dcefe3; font-size: 16px; }
+body.dark-mode .feedback-email-note-icon { background: #24503a; }
+.feedback-email-note > span:last-child { display: grid; gap: 2px; }
+.feedback-email-note strong { font-size: 12px; }
+.feedback-email-note small { color: #47725a; font-size: 11px; line-height: 1.3; }
+body.dark-mode .feedback-email-note small { color: #a8d5b8; }
+.feedback-form-actions { margin-top: 17px; }
+.feedback-dialog .primary-action { border-color: #79bc95; background: #eaf7ef; color: #176b3a; }
+.feedback-dialog .primary-action:hover { border-color: #4d9f6f; background: #dcefe3; }
+body.dark-mode .feedback-dialog .primary-action { border-color: #3d9361; background: #173b2a; color: #b9f1cf; }
+body.dark-mode .feedback-dialog .primary-action:hover { border-color: #62b982; background: #1f4a34; }
+
+.right-page { position: relative; }
+.feedback-pill {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px 5px 7px;
+  border: 1px solid #79bc95;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .96);
+  color: #176b3a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, .18), 0 1px 3px rgba(15, 23, 42, .1);
+  backdrop-filter: blur(8px);
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .1s ease;
+}
+.feedback-pill:hover { border-color: #4d9f6f; background: #f2fbf5; box-shadow: 0 7px 22px rgba(15, 23, 42, .22), 0 2px 4px rgba(15, 23, 42, .12); transform: translateY(-1px); }
+.feedback-pill:active { transform: translateY(0); }
+.feedback-pill:focus-visible { outline: 3px solid rgba(23, 107, 58, .28); outline-offset: 2px; }
+.feedback-pill-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #dcefe3; font-size: 14px; }
+body.dark-mode .feedback-pill { border-color: #3d9361; background: rgba(23, 59, 42, .96); color: #b9f1cf; box-shadow: 0 5px 20px rgba(0, 0, 0, .4); }
+body.dark-mode .feedback-pill:hover { background: #1f4a34; border-color: #62b982; }
+body.dark-mode .feedback-pill-icon { background: #24503a; }
+
 @media (max-width: 700px) {
   .environment-dialog { width: calc(100vw - 20px); }
   .environment-dialog-heading, .environment-section, #environmentPresetForm { padding-left: 16px; padding-right: 16px; }
   .environment-form-grid, .environment-detection-options { grid-template-columns: 1fr; }
   .environment-preset-row { grid-template-columns: 38px minmax(0, 1fr); }
   .environment-preset-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .feedback-form { padding-left: 16px; padding-right: 16px; }
+  .feedback-type-options { grid-template-columns: 1fr; }
 }
 
 .paste-html-dialog {
