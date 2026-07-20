@@ -10,8 +10,12 @@ function clearSelectedOutline(frame) {
         el.style.outlineOffset = "";
         el.style.borderRadius = "";
         el.style.boxShadow = "";
+        el.style.transform = el.dataset.paralangPreviousTransform || "";
+        el.style.transformOrigin = el.dataset.paralangPreviousTransformOrigin || "";
         el.style.position = "";
         el.style.zIndex = "";
+        el.removeAttribute("data-paralang-previous-transform");
+        el.removeAttribute("data-paralang-previous-transform-origin");
         el.removeAttribute("data-paralang-selected");
     });
 
@@ -97,6 +101,15 @@ function highlightElement(el, color = "cornflowerblue") {
         ? (isDarkMode ? "#ffb347" : "#ff9900")
         : "#1f5aa6";
 
+    el.dataset.paralangPreviousTransform = el.style.transform;
+    el.dataset.paralangPreviousTransformOrigin = el.style.transformOrigin;
+    const selectionScale = el.tagName.toLowerCase() === "tr"
+        ? "scaleY(1.035)"
+        : "scale(1.035)";
+    el.style.transform = [el.style.transform, selectionScale]
+        .filter(Boolean)
+        .join(" ");
+    el.style.transformOrigin = "center center";
     el.setAttribute("data-paralang-selected", "true");
 
     const showOutline = highlightModeEnabled || isWarning;

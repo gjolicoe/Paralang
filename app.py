@@ -417,6 +417,39 @@ def page_view(source_env, year, filename):
                 box-sizing: border-box;
             }
 
+            /* Fit tables to the page-view width without adding a nested
+               horizontal scroll area. Automatic layout preserves useful
+               content-based column proportions while cells may wrap. */
+            :is(.content-area, .paralang-content-scope, main) .table-responsive {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: visible !important;
+            }
+
+            :is(.content-area, .paralang-content-scope, main) table {
+                width: 100% !important;
+                max-width: 100% !important;
+                table-layout: auto !important;
+            }
+
+            :is(.content-area, .paralang-content-scope, main) :is(th, td) {
+                min-width: 0 !important;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+                word-break: normal;
+            }
+
+            :is(.content-area, .paralang-content-scope, main) :is(th, td) :is(pre, code) {
+                max-width: 100%;
+                white-space: pre-wrap !important;
+                overflow-wrap: anywhere;
+            }
+
+            :is(.content-area, .paralang-content-scope, main) :is(th, td) :is(img, svg) {
+                max-width: 100% !important;
+                height: auto;
+            }
+
             [data-paralang-selected="true"] {
                 outline-offset: 6px !important;
                 box-sizing: border-box !important;
