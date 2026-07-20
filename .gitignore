@@ -4,8 +4,8 @@ pasted-html/**
 data/local-files/**
 .cache/
 
-# Local Codex validation tests (keep out of normal commits)
-/tests/test_pasted_html_*.py
+# Local validation tests (keep out of normal commits)
+/tests/
 
 # Local review state
 /data/paralang-issues.json
