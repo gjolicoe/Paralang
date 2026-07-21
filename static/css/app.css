@@ -103,7 +103,13 @@ body.dark-mode {
 .toolbar-source-controls, .toolbar-actions { display: contents; }
 .toolbar-source-controls #envSelectGroup { grid-column: 1; min-width: 0; padding-right: 5px; }
 .toolbar-source-controls #yearSelectGroup { grid-column: 2; min-width: 0; padding: 0 5px; }
-.toolbar-source-controls #openPasteDialog { width: 100%; }
+.toolbar-source-controls #openPasteDialog { 
+  width: 100%;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 11px;
+  letter-spacing: 0;
+}
 .left-page-selection { grid-column: 3; min-width: 0; padding: 0 5px; box-sizing: border-box; }
 .right-page-selection { grid-column: 4; min-width: 0; padding: 0 5px; box-sizing: border-box; }
 .toolbar-actions > .primary-action { grid-column: 5; margin-left: 5px; }
