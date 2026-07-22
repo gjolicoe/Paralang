@@ -52,10 +52,7 @@
   }
 
   function updateQuestions() {
-    const source = questions[selectedType()] || questions.bug;
-    const question = Object.fromEntries(
-      Object.entries(source).map(([key, value]) => [key, t(value)])
-    );
+    const question = questions[selectedType()] || questions.bug;
     primaryLabel.textContent = question.primaryLabel;
     primaryHelp.textContent = question.primaryHelp;
     secondaryLabel.textContent = question.secondaryLabel;

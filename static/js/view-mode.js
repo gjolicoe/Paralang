@@ -453,8 +453,7 @@ function updateDarkModeButton(enabled) {
 function setFrameSource(frame, src, message) {
   if (!src) {
     frame.removeAttribute("src");
-    const localizedMessage = window.ParalangI18n?.translateText(message) || message;
-    frame.srcdoc = `<p style="font-family: sans-serif; padding: 2rem;">${localizedMessage}</p>`;
+    frame.srcdoc = `<p style="font-family: sans-serif; padding: 2rem;">${message}</p>`;
     return;
   }
 

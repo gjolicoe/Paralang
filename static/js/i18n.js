@@ -6,7 +6,12 @@
   const stored = (() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
   })();
-  const language = supported.has(stored) ? stored : "en";
+  let language = supported.has(stored) ? stored : "en";
+  const originalText = new WeakMap();
+  const appliedText = new WeakMap();
+  const originalAttributes = new WeakMap();
+  const appliedAttributes = new WeakMap();
+  const originalValues = new WeakMap();
 
   const fr = {
     "Enable dark mode": "Activer le mode sombre",
@@ -272,15 +277,26 @@
   }
 
   function translateTextNode(node) {
-    const original = node.nodeValue;
+    const current = node.nodeValue;
+    const lastApplied = appliedText.get(node);
+
+    if (!originalText.has(node) || (lastApplied !== undefined && current !== lastApplied)) {
+      originalText.set(node, current);
+    }
+
+    const original = originalText.get(node);
     const trimmed = original.trim();
     if (!trimmed) return;
-    const translated = translateText(trimmed);
-    if (translated !== trimmed) node.nodeValue = original.replace(trimmed, translated);
+    const target = language === "fr"
+      ? original.replace(trimmed, translateText(trimmed))
+      : original;
+
+    appliedText.set(node, target);
+    if (current !== target) node.nodeValue = target;
   }
 
   function translateElement(root) {
-    if (language !== "fr" || !root) return;
+    if (!root) return;
     if (root.nodeType === Node.TEXT_NODE) {
       translateTextNode(root);
       return;
@@ -299,18 +315,53 @@
       if (element.closest("[data-i18n-skip]")) continue;
       for (const attribute of ["aria-label", "title", "placeholder", "label"]) {
         if (!element.hasAttribute(attribute)) continue;
-        const original = element.getAttribute(attribute);
-        const translated = translateText(original);
-        if (translated !== original) element.setAttribute(attribute, translated);
+        const current = element.getAttribute(attribute);
+        let originals = originalAttributes.get(element);
+        let applied = appliedAttributes.get(element);
+        if (!originals) originalAttributes.set(element, originals = new Map());
+        if (!applied) appliedAttributes.set(element, applied = new Map());
+        if (!originals.has(attribute) || (applied.has(attribute) && current !== applied.get(attribute))) {
+          originals.set(attribute, current);
+        }
+        const original = originals.get(attribute);
+        const target = language === "fr" ? translateText(original) : original;
+        applied.set(attribute, target);
+        if (target !== current) element.setAttribute(attribute, target);
       }
-      if (element.hasAttribute("data-i18n-value")) element.value = translateText(element.value);
+      if (element.hasAttribute("data-i18n-value")) {
+        if (!originalValues.has(element)) originalValues.set(element, element.value);
+        element.value = language === "fr"
+          ? translateText(originalValues.get(element))
+          : originalValues.get(element);
+      }
     }
   }
 
+  function updateLanguageToggle() {
+    const toggle = document.getElementById("toggleLanguage");
+    if (!toggle) return;
+    toggle.textContent = language.toUpperCase();
+    toggle.setAttribute("aria-label", language === "en" ? "Passer à l’interface française" : "Switch to the English interface");
+    toggle.title = toggle.getAttribute("aria-label");
+  }
+
   function setLanguage(next) {
-    if (!supported.has(next)) return;
+    if (!supported.has(next) || next === language) return;
+    language = next;
     try { localStorage.setItem(STORAGE_KEY, next); } catch { /* preferences are optional */ }
-    window.location.reload();
+    document.documentElement.lang = language;
+    window.PARALANG_UI_LANGUAGE = language;
+    window.ParalangI18n.language = language;
+    translateElement(document);
+    updateLanguageToggle();
+
+    document.querySelectorAll("iframe").forEach(frame => {
+      try {
+        const childApi = frame.contentWindow?.ParalangI18n;
+        if (childApi && childApi !== window.ParalangI18n) childApi.setLanguage(language);
+        else if (frame.hasAttribute("srcdoc")) translateElement(frame.contentDocument);
+      } catch { /* Cross-origin frame content is intentionally left unchanged. */ }
+    });
   }
 
   document.documentElement.lang = language;
@@ -328,9 +379,7 @@
     translateElement(document);
     const toggle = document.getElementById("toggleLanguage");
     if (toggle) {
-      toggle.textContent = language.toUpperCase();
-      toggle.setAttribute("aria-label", language === "en" ? "Passer à l’interface française" : "Switch to the English interface");
-      toggle.title = toggle.getAttribute("aria-label");
+      updateLanguageToggle();
       toggle.addEventListener("click", () => setLanguage(language === "en" ? "fr" : "en"));
     }
     const observer = new MutationObserver(records => {
