@@ -1705,4 +1705,9 @@ body.dark-mode .right-code-panel {
     grid-column: 2;
     grid-row: 2;
   }
+
+  body.hide-maps .layout,
+  body.hide-maps.single-view .layout {
+    grid-template-columns: 0px 1fr;
+  }
 }
