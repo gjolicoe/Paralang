@@ -6,10 +6,6 @@ function clearSelectedOutline(frame) {
     });
 
     doc.querySelectorAll("[data-paralang-selected='true']").forEach(el => {
-        el.style.outline = "";
-        el.style.outlineOffset = "";
-        el.style.borderRadius = "";
-        el.style.boxShadow = "";
         el.style.transform = el.dataset.paralangPreviousTransform || "";
         el.style.transformOrigin = el.dataset.paralangPreviousTransformOrigin || "";
         el.style.position = "";
@@ -27,18 +23,16 @@ function clearSelectedOutline(frame) {
 function getListItemContentBounds(el) {
     if (!el || el.tagName.toLowerCase() !== "li") return null;
 
-    const nestedLists = Array.from(el.children).filter(child => {
+    const nestedList = Array.from(el.children).find(child => {
         const tag = child.tagName.toLowerCase();
         return tag === "ul" || tag === "ol";
     });
 
-    if (!nestedLists.length) return null;
+    if (!nestedList) return null;
 
     const doc = el.ownerDocument;
     const childNodes = Array.from(el.childNodes);
-    const firstNestedListIndex = childNodes.findIndex(node => {
-        return nestedLists.includes(node);
-    });
+    const firstNestedListIndex = childNodes.indexOf(nestedList);
     const contentNodes = childNodes.slice(0, firstNestedListIndex);
 
     if (!contentNodes.length) return null;
@@ -54,14 +48,10 @@ function getListItemContentBounds(el) {
     if (!rects.length) return null;
 
     return rects.reduce((result, rect) => ({
-        left: Math.min(result.left, rect.left),
         top: Math.min(result.top, rect.top),
-        right: Math.max(result.right, rect.right),
         bottom: Math.max(result.bottom, rect.bottom)
     }), {
-        left: Infinity,
         top: Infinity,
-        right: -Infinity,
         bottom: -Infinity
     });
 }
@@ -77,14 +67,17 @@ function highlightBounds(doc, bounds, color) {
         : "rgba(31, 90, 166, 0.24)";
 
     outline.style.boxSizing = "border-box";
-    outline.style.left = `${bounds.left - 5}px`;
-    outline.style.top = `${bounds.top - 4}px`;
-    outline.style.width = `${bounds.right - bounds.left + 10}px`;
-    outline.style.height = `${bounds.bottom - bounds.top + 8}px`;
-    outline.style.border = `2px solid ${color}`;
-    outline.style.borderRadius = "3px";
+    outline.style.left = "0";
+    outline.style.right = "0";
+    outline.style.top = `${bounds.top - 8}px`;
+    outline.style.height = `${bounds.bottom - bounds.top + 16}px`;
+    outline.style.borderTop = `2px solid ${color}`;
+    outline.style.borderBottom = `2px solid ${color}`;
     outline.style.background = "transparent";
-    outline.style.boxShadow = `0 3px 10px ${shadow}`;
+    outline.style.boxShadow = [
+        `0 -2px 7px ${shadow}`,
+        `0 2px 7px ${shadow}`
+    ].join(", ");
     outline.style.zIndex = "2147483647";
     doc.body.appendChild(outline);
 }
@@ -100,31 +93,29 @@ function highlightElement(el, color = "cornflowerblue") {
     const professionalColor = isWarning
         ? (isDarkMode ? "#ffb347" : "#ff9900")
         : "#1f5aa6";
+    const listItemContentBounds = getListItemContentBounds(el);
+    const unscaledBounds = listItemContentBounds || el.getBoundingClientRect();
 
     el.dataset.paralangPreviousTransform = el.style.transform;
     el.dataset.paralangPreviousTransformOrigin = el.style.transformOrigin;
-    const selectionScale = el.tagName.toLowerCase() === "tr"
-        ? "scaleY(1.035)"
-        : "scale(1.035)";
+    const selectionScale = listItemContentBounds
+        ? ""
+        : el.tagName.toLowerCase() === "tr"
+            ? "scaleY(1.035)"
+            : "scale(1.035)";
     el.style.transform = [el.style.transform, selectionScale]
         .filter(Boolean)
         .join(" ");
-    el.style.transformOrigin = "center center";
+    if (selectionScale) {
+        el.style.transformOrigin = "left center";
+    }
     el.setAttribute("data-paralang-selected", "true");
 
     const showOutline = highlightModeEnabled || isWarning;
 
     if (showOutline) {
-        const bounds = getListItemContentBounds(el)
-            || el.getBoundingClientRect();
-
-        highlightBounds(el.ownerDocument, bounds, professionalColor);
+        highlightBounds(el.ownerDocument, unscaledBounds, professionalColor);
     }
-
-    el.style.outline = "";
-    el.style.outlineOffset = "";
-    el.style.borderRadius = "";
-    el.style.boxShadow = "";
 
     el.style.position = "relative";
     el.style.zIndex = "5";
