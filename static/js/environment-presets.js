@@ -76,6 +76,7 @@
       if (firstInput) firstInput.value = "report-rapport";
       showMessage("");
       updateAdditionalFoldersVisibility();
+      window.ParalangI18n?.translateElement(form);
     }, 0);
   });
   updateAdditionalFoldersVisibility();

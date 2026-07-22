@@ -673,14 +673,14 @@ function renderIssueRow(issue) {
   row.innerHTML = `
     <div class="diff-index">${sourceLabel}</div>
 
-    <div class="diff-left">
+    <div class="diff-left"${issue.issue_source === "user" ? " data-i18n-skip" : ""}>
       <strong>${escapeHtml(issue.title)}</strong><br>
-      ${escapeHtml(issue.comment)}
+      <span>${escapeHtml(issue.comment)}</span>
     </div>
 
     <div class="diff-right">
       <span>Status: ${escapeHtml(issue.status)}</span><br>
-      <span>By: ${escapeHtml(issue.created_by)}</span>
+      <span>By: <span${issue.issue_source === "user" ? " data-i18n-skip" : ""}>${escapeHtml(issue.created_by)}</span></span>
     </div>
 
     <button class="issue-fixed-btn"

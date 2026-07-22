@@ -14,6 +14,8 @@
 
   if (!dialog || !openButton || !form) return;
 
+  const t = value => window.ParalangI18n?.translateText(value) || value;
+
   const questions = {
     bug: {
       type: "Something didn't work",
@@ -50,7 +52,10 @@
   }
 
   function updateQuestions() {
-    const question = questions[selectedType()] || questions.bug;
+    const source = questions[selectedType()] || questions.bug;
+    const question = Object.fromEntries(
+      Object.entries(source).map(([key, value]) => [key, t(value)])
+    );
     primaryLabel.textContent = question.primaryLabel;
     primaryHelp.textContent = question.primaryHelp;
     secondaryLabel.textContent = question.secondaryLabel;
@@ -101,15 +106,19 @@
     event.preventDefault();
     if (!form.reportValidity()) return;
 
-    const question = questions[selectedType()] || questions.bug;
+    const source = questions[selectedType()] || questions.bug;
+    const question = Object.fromEntries(
+      Object.entries(source).map(([key, value]) => [key, t(value)])
+    );
     const id = reportId();
     const primary = primaryInput.value.trim();
     const secondary = secondaryInput.disabled ? "" : secondaryInput.value.trim();
-    const subject = `Paralang feedback: ${question.type} [${id}]`;
+    const subjectPrefix = window.PARALANG_UI_LANGUAGE === "fr" ? "Commentaires sur Paralang" : "Paralang feedback";
+    const subject = `${subjectPrefix}: ${question.type} [${id}]`;
     const lines = [
-      "Hello,",
+      t("Hello,"),
       "",
-      `Feedback type: ${question.type}`,
+      `${t("Feedback type:")} ${question.type}`,
       "",
       question.primaryLabel,
       primary,
@@ -117,17 +126,17 @@
     ];
 
     if (question.secondaryLabel && secondary) {
-      lines.push(question.secondaryLabel.replace(" (optional)", ""), secondary, "");
+      lines.push(question.secondaryLabel.replace(/ \((?:optional|facultatif)\)/, ""), secondary, "");
     }
 
     lines.push(
-      "--- Automatically added by Paralang ---",
-      `Paralang version: ${appVersion()}`,
-      `Computer platform: ${platformDescription()}`,
-      `Date and time: ${new Date().toLocaleString()}`,
-      `Report ID: ${id}`,
+      t("--- Automatically added by Paralang ---"),
+      `${t("Paralang version:")} ${appVersion()}`,
+      `${t("Computer platform:")} ${platformDescription()}`,
+      `${t("Date and time:")} ${new Date().toLocaleString(window.PARALANG_UI_LANGUAGE === "fr" ? "fr-CA" : "en-CA")}`,
+      `${t("Report ID:")} ${id}`,
       "",
-      "You can attach a screenshot to this email if it would help explain the report."
+      t("You can attach a screenshot to this email if it would help explain the report.")
     );
 
     const recipient = window.PARALANG_FEEDBACK_EMAIL || "";

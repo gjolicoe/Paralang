@@ -378,7 +378,11 @@ function loadSingleViewState() {
   setSingleView(localStorage.getItem(singleViewKey) === "true");
 }
 
-function frameLoaded() {
+function frameLoaded(event) {
+  const loadedFrame = event?.currentTarget;
+  if (loadedFrame?.hasAttribute("srcdoc")) {
+    window.ParalangI18n?.translateElement(loadedFrame.contentDocument);
+  }
   clearComparableElementsCache(leftFrame);
   clearComparableElementsCache(rightFrame);
   clearSyncMapCache();
@@ -449,7 +453,8 @@ function updateDarkModeButton(enabled) {
 function setFrameSource(frame, src, message) {
   if (!src) {
     frame.removeAttribute("src");
-    frame.srcdoc = `<p style="font-family: sans-serif; padding: 2rem;">${message}</p>`;
+    const localizedMessage = window.ParalangI18n?.translateText(message) || message;
+    frame.srcdoc = `<p style="font-family: sans-serif; padding: 2rem;">${localizedMessage}</p>`;
     return;
   }
 

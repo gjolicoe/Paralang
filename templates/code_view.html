@@ -1,8 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Code view</title>
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/code-view.css') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +25,7 @@
       since the html file is over 10,000 lines.
     </div>
   {% endif %}
-  <div class="code-view">
+  <div class="code-view" data-i18n-skip>
     {% for line in highlighted_lines %}
       <div class="code-line"
      data-line="{{ line.number }}"

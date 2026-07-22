@@ -1,11 +1,12 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <title>Paralang</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <link rel="icon" type="image/x-icon" href="./../static/favicon.ico">
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,6 +60,8 @@
 
   <header>
     <p class="pageTitle"><strong>PARA<span>LANG</span></strong>&nbsp;<small>v0.11.2</small></p>
+    <button type="button" id="toggleLanguage" class="language-toggle icon-toggle-btn" aria-label="Passer à l’interface française"
+      title="Passer à l’interface française">EN</button>
     <button type="button" id="toggleDarkMode" class="dark-mode-toggle icon-toggle-btn" aria-label="Enable dark mode"
       title="Enable dark mode">
       <span id="darkModeIcon" class="icon-toggle-btn__icon" aria-hidden="true"></span>
@@ -166,12 +169,12 @@
           <div class="toolbar-menu-heading">View</div>
           <label class="toolbar-menu-item">
             <input type="checkbox" id="layoutMenuMaps">
-            <span>Show structure maps</span>
+            <span>Structure maps</span>
           </label>
 
           <label class="toolbar-menu-item">
             <input type="checkbox" id="layoutMenuIssues">
-            <span>Show issues panel</span>
+            <span>Issues panel</span>
           </label>
 
           <label class="toolbar-menu-item">
@@ -241,7 +244,7 @@
         <div class="environment-form-grid">
           <label><span>Name</span><input name="label" required maxlength="80" placeholder="Department website"></label>
           <label><span>Preset ID</span><input name="id" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="department-website"><small>Lowercase letters, numbers, and hyphens.</small></label>
-          <label><span>Group</span><input name="group" maxlength="80" value="Team presets"><small>Used as a header in the Environment menu.</small></label>
+          <label><span>Group</span><input name="group" maxlength="80" value="Team presets" data-i18n-value><small>Used as a header in the Environment menu.</small></label>
           <label><span>Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
           <label><span>Folder layout</span><select name="collection_mode"><option value="named-folders">Named subfolders</option><option value="direct">Pages directly in root</option></select></label>
           <label><span>Content selector</span><input name="content_selector" value=".content-area" maxlength="200"><small>CSS selector for the primary page content.</small></label>
@@ -445,7 +448,7 @@
         onclick="scrollToHeading('leftFrame', {{ heading.index }})">
         <span class="heading-main-line">
           <span class="heading-level">H{{ heading.level }}</span>
-          <span class="heading-text">{{ heading.text }}</span>
+          <span class="heading-text" data-i18n-skip>{{ heading.text }}</span>
         </span>
         <span class="heading-section-count {% if heading.section_count_mismatch %}is-count-mismatch{% endif %}">
           {{ heading.section_count }} elements
@@ -519,7 +522,7 @@
         onclick="scrollToHeading('rightFrame', {{ heading.index }})">
         <span class="heading-main-line">
           <span class="heading-level">H{{ heading.level }}</span>
-          <span class="heading-text">{{ heading.text }}</span>
+          <span class="heading-text" data-i18n-skip>{{ heading.text }}</span>
         </span>
         <span class="heading-section-count {% if heading.section_count_mismatch %}is-count-mismatch{% endif %}">
           {{ heading.section_count }} elements
@@ -559,13 +562,13 @@
           <div class="diff-index">User</div>
 
           <div class="diff-left">
-            <strong>{{ issue.title }}</strong><br>
-            {{ issue.comment }}
+            <strong data-i18n-skip>{{ issue.title }}</strong><br>
+            <span data-i18n-skip>{{ issue.comment }}</span>
           </div>
 
           <div class="diff-right">
             <span>Status: {{ issue.status }}</span><br>
-            <span>By: {{ issue.created_by }}</span>
+            <span>By: <span data-i18n-skip>{{ issue.created_by }}</span></span>
           </div>
 
           <button class="issue-fixed-btn"
@@ -590,12 +593,12 @@
 
           <div class="diff-left">
             <strong>{{ issue.title }}</strong><br>
-            {{ issue.comment }}
+            <span>{{ issue.comment }}</span>
           </div>
 
           <div class="diff-right">
             <span>Status: {{ issue.status }}</span><br>
-            <span>By: {{ issue.created_by }}</span>
+            <span>By: <span>{{ issue.created_by }}</span></span>
           </div>
 
           <button class="issue-fixed-btn"

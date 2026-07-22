@@ -112,7 +112,16 @@ body.dark-mode {
 }
 .left-page-selection { grid-column: 3; min-width: 0; padding: 0 5px; box-sizing: border-box; }
 .right-page-selection { grid-column: 4; min-width: 0; padding: 0 5px; box-sizing: border-box; }
-.toolbar-actions > .primary-action { grid-column: 5; margin-left: 5px; }
+.toolbar-actions > .primary-action {
+  grid-column: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  padding-right: 8px;
+  padding-left: 8px;
+  text-align: center;
+}
 .toolbar-actions > .toolbar-menu-wrapper { grid-column: 6; padding-left: 8px; }
 
 body.single-view .left-page-selection { grid-column: 3 / 5; }
@@ -909,6 +918,19 @@ body.is-resizing-diff .drag-cover {
 
 body.hide-maps .layout {
   grid-template-columns: 0px var(--left-page-width) var(--right-page-width) 0px;
+}
+
+.language-toggle {
+  position: absolute;
+  top: 20px;
+  right: 64px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 body.hide-maps.single-view .layout {
