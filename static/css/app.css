@@ -115,13 +115,7 @@ body.dark-mode {
 .toolbar-actions > .primary-action { grid-column: 5; margin-left: 5px; }
 .toolbar-actions > .toolbar-menu-wrapper { grid-column: 6; padding-left: 8px; }
 
-body.single-view .toolbar {
-  grid-template-columns: minmax(140px, .8fr) 90px minmax(300px, 2.7fr) 70px auto;
-}
-
-body.single-view .left-page-selection { grid-column: 3; padding-right: 5px; }
-body.single-view .toolbar-actions > .primary-action { grid-column: 4; }
-body.single-view .toolbar-actions > .toolbar-menu-wrapper { grid-column: 5; }
+body.single-view .left-page-selection { grid-column: 3 / 5; }
 
 .toolbar label {
   display: block;
@@ -1474,7 +1468,6 @@ body.dark-mode .diff-row.user-issue {
    ========================================================= */
 
 body.single-view {
-  --right-map-width: 0px;
   --diff-height: 0px;
 }
 
@@ -1494,11 +1487,6 @@ body.single-view .layout {
 
 body.single-view .left-page {
   border-right: 0;
-}
-
-body.single-view #rightSelectGroup {
-  visibility: hidden;
-  pointer-events: none;
 }
 
 body.single-view .left-floating-controls {

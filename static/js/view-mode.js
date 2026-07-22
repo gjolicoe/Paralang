@@ -477,6 +477,7 @@ function updatePageInputLabels() {
   const env = getSelectedEnv();
 
   const leftLabel = document.getElementById("leftSelectLabel");
+  const leftInput = document.getElementById("left");
   const rightLabel = document.querySelector("#rightSelectGroup label");
 
   let leftText = "EN page";
@@ -487,12 +488,18 @@ function updatePageInputLabels() {
     rightText = "FR Canada.ca URL";
   }
 
-  if (singleViewEnabled && !selectedEnvUsesTextInputs(env)) {
-    leftText = "Page";
+  if (singleViewEnabled) {
+    leftText = selectedEnvUsesTextInputs(env) ? "Canada.ca URL" : "Page";
   }
 
   if (leftLabel) {
     leftLabel.textContent = leftText;
+  }
+
+  if (leftInput?.matches('input[type="text"]')) {
+    leftInput.placeholder = singleViewEnabled
+      ? "Paste Canada.ca URL"
+      : "Paste EN Canada.ca URL";
   }
 
   if (rightLabel) {
