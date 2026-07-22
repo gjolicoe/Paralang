@@ -150,8 +150,8 @@ def api_pasted_html():
     })
 
 
-def rewrite_local_stylesheet_paths(soup):
-    """Point local-file stylesheet references at Paralang's static CSS folder."""
+def rewrite_local_stylesheet_paths(soup, bundled_only=False):
+    """Point bundled stylesheet references at Paralang's static CSS folder."""
     for link in soup.find_all("link", href=True):
         rel_values = link.get("rel", [])
         if isinstance(rel_values, str):
@@ -169,6 +169,8 @@ def rewrite_local_stylesheet_paths(soup):
 
         stylesheet_name = Path(parsed.path.replace("\\", "/")).name
         if not stylesheet_name:
+            continue
+        if bundled_only and stylesheet_name != "theme.min.css":
             continue
 
         rewritten_href = f"/static/css/{stylesheet_name}"
@@ -362,8 +364,10 @@ def page_view(source_env, year, filename):
         theme_stylesheet["href"] = "/static/css/theme.min.css"
         soup.head.append(theme_stylesheet)
 
-    if source_env == LOCAL_FILES_ENV or is_custom_environment(source_env):
+    if source_env == LOCAL_FILES_ENV:
         rewrite_local_stylesheet_paths(soup)
+    elif is_custom_environment(source_env):
+        rewrite_local_stylesheet_paths(soup, bundled_only=True)
 
     parsing_env = PASTED_HTML_ENV if is_pasted_content else source_env
     content_area, container_selector = get_primary_content_container_for_source(soup, parsing_env)
