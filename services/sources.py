@@ -289,6 +289,10 @@ def is_url_input_environment(source_env):
     )
 
 
+def is_custom_environment(source_env):
+    return source_env in SOURCE_ENVIRONMENTS and source_env not in BUILTIN_SOURCE_ENVIRONMENTS
+
+
 def is_allowed_canada_ca_url(url):
     parsed = urlparse((url or "").strip())
 

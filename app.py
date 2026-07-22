@@ -22,6 +22,7 @@ from services.sources import (
     read_environment_presets,
     save_environment_preset,
     delete_environment_preset,
+    is_custom_environment,
 )
 from services.pasted_html_cache import (
     cleanup_expired,
@@ -361,7 +362,7 @@ def page_view(source_env, year, filename):
         theme_stylesheet["href"] = "/static/css/theme.min.css"
         soup.head.append(theme_stylesheet)
 
-    if source_env == LOCAL_FILES_ENV:
+    if source_env == LOCAL_FILES_ENV or is_custom_environment(source_env):
         rewrite_local_stylesheet_paths(soup)
 
     parsing_env = PASTED_HTML_ENV if is_pasted_content else source_env
