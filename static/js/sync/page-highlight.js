@@ -6,12 +6,8 @@ function clearSelectedOutline(frame) {
     });
 
     doc.querySelectorAll("[data-paralang-selected='true']").forEach(el => {
-        el.style.transform = el.dataset.paralangPreviousTransform || "";
-        el.style.transformOrigin = el.dataset.paralangPreviousTransformOrigin || "";
         el.style.position = "";
         el.style.zIndex = "";
-        el.removeAttribute("data-paralang-previous-transform");
-        el.removeAttribute("data-paralang-previous-transform-origin");
         el.removeAttribute("data-paralang-outline-color");
         el.removeAttribute("data-paralang-selected");
     });
@@ -64,11 +60,6 @@ function highlightBounds(doc, bounds, treatment) {
     outline.style.pointerEvents = "none";
     const isGradient = typeof treatment === "object";
     const color = isGradient ? treatment.start : treatment;
-    const shadowColor = isGradient
-        ? treatment.shadow
-        : color === "#ff9900" || color === "#ffb347"
-            ? "rgba(255, 153, 0, 0.3)"
-            : "rgba(102, 86, 181, 0.26)";
     const pixelRatio = doc.defaultView?.devicePixelRatio || 1;
     const snapToDevicePixel = value => Math.round(value * pixelRatio) / pixelRatio;
     const outlineTop = snapToDevicePixel(bounds.top - 8);
@@ -93,11 +84,37 @@ function highlightBounds(doc, bounds, treatment) {
         outline.style.background = "transparent";
     }
     outline.style.boxShadow = "none";
-    outline.style.filter = [
-        `drop-shadow(0 0 2px ${shadowColor})`,
-        `drop-shadow(0 0 5px ${shadowColor})`,
-        `drop-shadow(0 0 9px ${shadowColor})`
-    ].join(" ");
+    outline.style.filter = "none";
+
+    const glowFill = isGradient
+        ? `linear-gradient(90deg, ${treatment.start}, ${treatment.end})`
+        : color;
+    const addOuterGlow = side => {
+        const glow = doc.createElement("div");
+        glow.setAttribute("data-paralang-selection-glow", side);
+        glow.style.position = "absolute";
+        glow.style.left = "0";
+        glow.style.right = "0";
+        glow.style.height = "11px";
+        glow.style.pointerEvents = "none";
+        glow.style.background = glowFill;
+        glow.style.opacity = isGradient ? "0.32" : "0.3";
+
+        if (side === "top") {
+            glow.style.bottom = "100%";
+            glow.style.maskImage = "linear-gradient(to top, black, transparent)";
+            glow.style.webkitMaskImage = "linear-gradient(to top, black, transparent)";
+        } else {
+            glow.style.top = "100%";
+            glow.style.maskImage = "linear-gradient(to bottom, black, transparent)";
+            glow.style.webkitMaskImage = "linear-gradient(to bottom, black, transparent)";
+        }
+
+        outline.appendChild(glow);
+    };
+
+    addOuterGlow("top");
+    addOuterGlow("bottom");
     outline.style.zIndex = "2147483647";
     doc.body.appendChild(outline);
 }
@@ -118,34 +135,16 @@ function highlightElement(el, color = "#8172d0") {
         ? (isDarkMode ? "#ffb347" : "#ff9900")
         : {
             start: isRightFrame ? purpleLight : purpleDark,
-            end: isRightFrame ? purpleDark : purpleLight,
-            shadow: isDarkMode
-                ? "rgba(184, 171, 240, 0.34)"
-                : "rgba(102, 86, 181, 0.3)"
+            end: isRightFrame ? purpleDark : purpleLight
         };
-    const listItemContentBounds = getListItemContentBounds(el);
-    const unscaledBounds = listItemContentBounds || el.getBoundingClientRect();
-
-    el.dataset.paralangPreviousTransform = el.style.transform;
-    el.dataset.paralangPreviousTransformOrigin = el.style.transformOrigin;
-    const selectionScale = listItemContentBounds
-        ? ""
-        : el.tagName.toLowerCase() === "tr"
-            ? "scaleY(1.035)"
-            : "scale(1.035)";
-    el.style.transform = [el.style.transform, selectionScale]
-        .filter(Boolean)
-        .join(" ");
-    if (selectionScale) {
-        el.style.transformOrigin = "left center";
-    }
+    const bounds = getListItemContentBounds(el) || el.getBoundingClientRect();
     el.setAttribute("data-paralang-selected", "true");
     el.dataset.paralangOutlineColor = color;
 
     const showOutline = highlightModeEnabled || isWarning;
 
     if (showOutline) {
-        highlightBounds(el.ownerDocument, unscaledBounds, outlineTreatment);
+        highlightBounds(el.ownerDocument, bounds, outlineTreatment);
     }
 
     el.style.position = "relative";
@@ -294,10 +293,7 @@ function refreshSelectedOutlineForTheme(frame) {
         ? (isDarkMode ? "#ffb347" : "#ff9900")
         : {
             start: isRightFrame ? purpleLight : purpleDark,
-            end: isRightFrame ? purpleDark : purpleLight,
-            shadow: isDarkMode
-                ? "rgba(184, 171, 240, 0.34)"
-                : "rgba(102, 86, 181, 0.3)"
+            end: isRightFrame ? purpleDark : purpleLight
         };
     const bounds = getListItemContentBounds(selected) || selected.getBoundingClientRect();
 

@@ -126,6 +126,30 @@ def save_environment_preset(value):
     return normalized
 
 
+def update_environment_preset(preset_id, value):
+    if preset_id in BUILTIN_SOURCE_ENVIRONMENTS:
+        raise ValueError("Built-in environment presets cannot be edited.")
+
+    normalized = validate_environment_preset(value)
+    if normalized["id"] != preset_id:
+        raise ValueError("Preset ID cannot be changed while editing.")
+
+    with _PRESET_LOCK:
+        presets = read_environment_presets()
+        updated = False
+        next_presets = []
+        for item in presets:
+            if item["id"] == preset_id:
+                next_presets.append(normalized)
+                updated = True
+            else:
+                next_presets.append(item)
+        if not updated:
+            raise ValueError("Preset not found.")
+        write_environment_presets(next_presets)
+    return normalized
+
+
 def delete_environment_preset(preset_id):
     if preset_id in BUILTIN_SOURCE_ENVIRONMENTS:
         return False

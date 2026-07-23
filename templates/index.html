@@ -248,6 +248,7 @@
             <div class="environment-preset-mark" aria-hidden="true">{{ preset.label[:1]|upper }}</div>
             <span class="environment-preset-details"><strong>{{ preset.label }}</strong><small>{{ preset.group }}</small><code title="{{ preset.root }}">{{ preset.root }}</code></span>
             <div class="environment-preset-actions">
+              <button type="button" class="environment-button environment-button-secondary" data-edit-preset="{{ preset.id }}">Edit</button>
               <button type="button" class="environment-button environment-button-secondary" data-export-preset="{{ preset.id }}">Export</button>
               <button type="button" class="environment-button environment-button-danger" data-delete-preset="{{ preset.id }}">Delete</button>
             </div>
@@ -261,8 +262,8 @@
       <form id="environmentPresetForm">
         <div class="environment-section-heading">
           <div>
-            <h3>Create a preset</h3>
-            <p>Connect Paralang to a local or shared folder structure.</p>
+            <h3 id="environmentPresetFormTitle">Create a preset</h3>
+            <p id="environmentPresetFormDescription">Connect Paralang to a local or shared folder structure.</p>
           </div>
         </div>
         <div class="environment-form-grid">
@@ -292,8 +293,8 @@
         </div>
         <div id="environmentPresetMessage" class="paste-html-message" role="alert" hidden></div>
         <div class="environment-form-actions">
-          <button type="reset" class="environment-button environment-button-secondary">Reset</button>
-          <button type="submit" class="environment-button primary-action">Create preset</button>
+          <button type="reset" id="environmentPresetReset" class="environment-button environment-button-secondary">Reset</button>
+          <button type="submit" id="environmentPresetSubmit" class="environment-button primary-action">Create preset</button>
         </div>
       </form>
     </div>

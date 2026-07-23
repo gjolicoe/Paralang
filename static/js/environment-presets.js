@@ -9,6 +9,11 @@
   const additionalFoldersFields = document.getElementById("additionalFoldersFields");
   const additionalFoldersList = document.getElementById("additionalFoldersList");
   const addAdditionalFolder = document.getElementById("addAdditionalFolder");
+  const formTitle = document.getElementById("environmentPresetFormTitle");
+  const formDescription = document.getElementById("environmentPresetFormDescription");
+  const resetButton = document.getElementById("environmentPresetReset");
+  const submitButton = document.getElementById("environmentPresetSubmit");
+  let editingPresetId = null;
 
   if (!dialog || !openButton || !form) return;
 
@@ -17,9 +22,20 @@
     message.hidden = !text;
   }
 
-  async function savePreset(preset) {
-    const response = await fetch("/api/environment-presets", {
-      method: "POST",
+  function translate(text) {
+    return window.ParalangI18n?.translateText(text) || text;
+  }
+
+  function restoreDefaultGroup() {
+    form.elements.group.value = translate("Team presets");
+  }
+
+  async function savePreset(preset, existingId = null) {
+    const endpoint = existingId
+      ? `/api/environment-presets/${encodeURIComponent(existingId)}`
+      : "/api/environment-presets";
+    const response = await fetch(endpoint, {
+      method: existingId ? "PUT" : "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(preset)
     });
@@ -41,7 +57,7 @@
     additionalFoldersFields.hidden = !detectAdditionalFolders.checked;
   }
 
-  function appendAdditionalFolder(value = "") {
+  function appendAdditionalFolder(value = "", focus = true) {
     const row = document.createElement("div");
     row.className = "additional-folder-row";
     const input = document.createElement("input");
@@ -58,7 +74,47 @@
     remove.setAttribute("aria-label", "Remove folder");
     row.append(input, remove);
     additionalFoldersList.appendChild(row);
-    input.focus();
+    if (focus) input.focus();
+  }
+
+  function setFormMode(preset = null) {
+    editingPresetId = preset?.id || null;
+    const editing = Boolean(editingPresetId);
+    form.classList.toggle("is-editing", editing);
+    formTitle.textContent = translate(editing ? "Edit preset" : "Create a preset");
+    formDescription.textContent = translate(editing
+      ? "Update this content source without recreating it."
+      : "Connect Paralang to a local or shared folder structure.");
+    submitButton.textContent = translate(editing ? "Save changes" : "Create preset");
+    resetButton.textContent = translate(editing ? "Cancel editing" : "Reset");
+    form.elements.id.readOnly = editing;
+
+    if (!editing) {
+      window.ParalangI18n?.translateElement(form);
+      restoreDefaultGroup();
+      return;
+    }
+
+    form.elements.label.value = preset.label || "";
+    form.elements.id.value = preset.id || "";
+    form.elements.group.value = preset.group || "";
+    form.elements.root.value = preset.root || "";
+    form.elements.collection_mode.value = preset.collection_mode || "named-folders";
+    form.elements.content_selector.value = preset.content_selector || ".content-area";
+    form.elements.include_root_html.checked = Boolean(preset.include_root_html);
+
+    const folders = Array.isArray(preset.additional_folders)
+      ? preset.additional_folders
+      : [];
+    detectAdditionalFolders.checked = folders.length > 0;
+    additionalFoldersList.replaceChildren();
+    (folders.length ? folders : ["report-rapport"]).forEach(value => {
+      appendAdditionalFolder(value, false);
+    });
+    updateAdditionalFoldersVisibility();
+    showMessage("");
+    form.scrollIntoView({behavior: "smooth", block: "start"});
+    form.elements.label.focus({preventScroll: true});
   }
 
   detectAdditionalFolders.addEventListener("change", updateAdditionalFoldersVisibility);
@@ -76,7 +132,7 @@
       if (firstInput) firstInput.value = "report-rapport";
       showMessage("");
       updateAdditionalFoldersVisibility();
-      window.ParalangI18n?.translateElement(form);
+      setFormMode();
     }, 0);
   });
   updateAdditionalFoldersVisibility();
@@ -98,7 +154,7 @@
         additional_folders: detectAdditionalFolders.checked
           ? data.getAll("additional_folder").map(value => value.trim()).filter(Boolean)
           : []
-      });
+      }, editingPresetId);
       window.location.reload();
     } catch (error) {
       showMessage(error.message);
@@ -108,6 +164,14 @@
   dialog.addEventListener("click", async event => {
     const deleteButton = event.target.closest("[data-delete-preset]");
     const exportButton = event.target.closest("[data-export-preset]");
+    const editButton = event.target.closest("[data-edit-preset]");
+    if (editButton) {
+      const row = editButton.closest("[data-preset]");
+      const preset = JSON.parse(row.dataset.preset);
+      form.reset();
+      window.setTimeout(() => setFormMode(preset), 0);
+      return;
+    }
     if (deleteButton) {
       const presetId = deleteButton.dataset.deletePreset;
       if (!window.confirm(`Delete the ${presetId} environment preset?`)) return;

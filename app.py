@@ -21,6 +21,7 @@ from services.sources import (
     PASTED_HTML_ENV,
     read_environment_presets,
     save_environment_preset,
+    update_environment_preset,
     delete_environment_preset,
     is_custom_environment,
 )
@@ -79,6 +80,18 @@ def api_create_environment_preset():
     except ValueError as error:
         return jsonify({"ok": False, "error": str(error)}), 400
     return jsonify({"ok": True, "preset": preset}), 201
+
+
+@app.put("/api/environment-presets/<preset_id>")
+def api_update_environment_preset(preset_id):
+    try:
+        preset = update_environment_preset(
+            preset_id,
+            request.get_json(silent=True) or {},
+        )
+    except ValueError as error:
+        return jsonify({"ok": False, "error": str(error)}), 400
+    return jsonify({"ok": True, "preset": preset})
 
 
 @app.delete("/api/environment-presets/<preset_id>")

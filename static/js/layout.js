@@ -262,7 +262,16 @@ function syncLayoutMenuState() {
   }
 
   if (issuesCheckbox) {
-    issuesCheckbox.checked = !document.body.classList.contains("hide-diff");
+    issuesCheckbox.disabled = singleViewEnabled;
+    issuesCheckbox.checked =
+      !singleViewEnabled && !document.body.classList.contains("hide-diff");
+    const issuesLabel = issuesCheckbox.closest(".toolbar-menu-item");
+    if (issuesLabel) {
+      issuesLabel.title = singleViewEnabled
+        ? window.ParalangI18n?.translateText("Issues panel is unavailable in single view.") ||
+          "Issues panel is unavailable in single view."
+        : "";
+    }
   }
 
   if (singleViewCheckbox) {
