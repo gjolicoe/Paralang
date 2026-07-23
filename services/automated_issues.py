@@ -13,7 +13,7 @@ from services.review_storage import (
 )
 
 
-AUTOMATED_CHECK_VERSION = 2
+AUTOMATED_CHECK_VERSION = 3
 
 
 def build_automated_issue_records(source_env, year, left_file, right_file):

@@ -59,23 +59,43 @@ def numeric_cell_mismatch_issues(left, right):
     return issues
 
 
+def numeric_alignment_token(block, language):
+    if block.get("tag") != "tr":
+        return block.get("signature", "")
+
+    numbers = []
+    for cell_index, cell in enumerate(block.get("cells", [])):
+        number = parse_table_number(cell, language)
+        if number is not None:
+            numbers.append((cell_index, str(number.normalize())))
+
+    # Matching values are much stronger row anchors than repeated structural
+    # signatures, while nonnumeric/header rows retain normal structure tokens.
+    return ("tr-numbers", tuple(numbers)) if numbers else block.get("signature", "")
+
+
 def diff_table_numbers(left_blocks, right_blocks):
-    """Compare rows positionally within each table's header-delimited runs."""
-    def row_key(block):
-        if block.get("tag") != "tr" or block.get("table_index", -1) < 0:
-            return None
-        return (
-            block["table_index"],
-            block.get("table_section_index", 0),
-            block.get("table_row_in_section", 0),
+    """Align numeric rows by their locale-normalized values and compare them."""
+    issues = []
+    left_sections = split_into_sections(left_blocks)
+    right_sections = split_into_sections(right_blocks)
+
+    for section_index in range(min(len(left_sections), len(right_sections))):
+        left = left_sections[section_index]["blocks"]
+        right = right_sections[section_index]["blocks"]
+        matcher = SequenceMatcher(
+            None,
+            [numeric_alignment_token(block, "en") for block in left],
+            [numeric_alignment_token(block, "fr") for block in right],
+            autojunk=False,
         )
 
-    left_rows = {row_key(block): block for block in left_blocks if row_key(block) is not None}
-    right_rows = {row_key(block): block for block in right_blocks if row_key(block) is not None}
-    issues = []
+        for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
+            if opcode not in {"equal", "replace"}:
+                continue
 
-    for key in sorted(left_rows.keys() & right_rows.keys()):
-        issues.extend(numeric_cell_mismatch_issues(left_rows[key], right_rows[key]))
+            for left_block, right_block in zip(left[i1:i2], right[j1:j2]):
+                issues.extend(numeric_cell_mismatch_issues(left_block, right_block))
 
     return issues
 

@@ -294,9 +294,6 @@ def extract_comparable_blocks(filename, source_env, year):
 
     blocks = []
     tag_counts = {}
-    tables = content_area.find_all("table")
-    table_section_indexes = {}
-    table_section_row_indexes = {}
 
     for element in content_area.select(",".join(selector)):
         tag = element.name.lower()
@@ -334,29 +331,10 @@ def extract_comparable_blocks(filename, source_env, year):
 
         if tag == "tr":
             cells = element.find_all(["th", "td"], recursive=False)
-            table = element.find_parent("table")
-            table_index = next(
-                (index for index, candidate in enumerate(tables) if candidate is table),
-                -1
-            )
-            section_index = table_section_indexes.get(table_index, 0)
-            row_in_section = table_section_row_indexes.get(table_index, 0)
-
             blocks[-1]["cells"] = [
                 get_direct_text(cell)
                 for cell in cells
             ]
-            blocks[-1]["table_index"] = table_index
-            blocks[-1]["table_section_index"] = section_index
-            blocks[-1]["table_row_in_section"] = row_in_section
-
-            # A single cell (normally with colspan) is a strong bilingual
-            # alignment anchor. Start a fresh positional run after it.
-            if len(cells) == 1:
-                table_section_indexes[table_index] = section_index + 1
-                table_section_row_indexes[table_index] = 0
-            else:
-                table_section_row_indexes[table_index] = row_in_section + 1
 
     return blocks
 
