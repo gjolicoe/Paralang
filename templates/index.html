@@ -82,6 +82,10 @@
     </div>
     <button type="button" id="toggleLanguage" class="language-toggle icon-toggle-btn" data-i18n-skip aria-label="Passer à l’interface française"
       title="Passer à l’interface française">EN</button>
+    <button type="button" id="openFeedbackDialog" class="feedback-pill feedback-pill-header" aria-haspopup="dialog">
+      <span class="feedback-pill-icon" aria-hidden="true">&#9993;</span>
+      <span>Send feedback</span>
+    </button>
     <button type="button" id="toggleDarkMode" class="dark-mode-toggle icon-toggle-btn" aria-label="Enable dark mode"
       title="Enable dark mode">
       <span id="darkModeIcon" class="icon-toggle-btn__icon" aria-hidden="true"></span>
@@ -512,10 +516,6 @@
         <iframe id="rightFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste a FR page and press Load.</p>"></iframe>
         {% endif %}
-        <button type="button" id="openFeedbackDialog" class="feedback-pill" aria-haspopup="dialog">
-          <span class="feedback-pill-icon" aria-hidden="true">&#9993;</span>
-          <span>Send feedback</span>
-        </button>
       </section>
 
       <div class="code-resizer code-resizer-right"
