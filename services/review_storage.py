@@ -166,6 +166,7 @@ def build_issue(issue_data, default_source="user", default_side="", default_crea
         "right_block_index": issue_data.get("right_block_index"),
         "left_cell_index": issue_data.get("left_cell_index"),
         "right_cell_index": issue_data.get("right_cell_index"),
+        "automated_check_version": issue_data.get("automated_check_version"),
         "severity": issue_data.get("severity", "warning"),
         "status": "open",
         "title": issue_data.get("title", "").strip(),

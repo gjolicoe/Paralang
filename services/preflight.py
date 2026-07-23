@@ -58,6 +58,27 @@ def numeric_cell_mismatch_issues(left, right):
 
     return issues
 
+
+def diff_table_numbers(left_blocks, right_blocks):
+    """Compare rows positionally within each table's header-delimited runs."""
+    def row_key(block):
+        if block.get("tag") != "tr" or block.get("table_index", -1) < 0:
+            return None
+        return (
+            block["table_index"],
+            block.get("table_section_index", 0),
+            block.get("table_row_in_section", 0),
+        )
+
+    left_rows = {row_key(block): block for block in left_blocks if row_key(block) is not None}
+    right_rows = {row_key(block): block for block in right_blocks if row_key(block) is not None}
+    issues = []
+
+    for key in sorted(left_rows.keys() & right_rows.keys()):
+        issues.extend(numeric_cell_mismatch_issues(left_rows[key], right_rows[key]))
+
+    return issues
+
 def comparable_token(block):
     if not block:
         return ""
@@ -152,6 +173,12 @@ def diff_comparable_blocks(left_blocks, right_blocks):
     max_sections = max(len(left_sections), len(right_sections))
     issues = []
 
+    for numeric_issue in diff_table_numbers(left_blocks, right_blocks):
+        issues.append({
+            "index": len(issues) + 1,
+            **numeric_issue
+        })
+
     for i in range(max_sections):
         left_section = left_sections[i] if i < len(left_sections) else None
         right_section = right_sections[i] if i < len(right_sections) else None
@@ -190,15 +217,6 @@ def diff_comparable_blocks(left_blocks, right_blocks):
 
         for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
             if opcode == "equal":
-                for left, right in zip(
-                    left_section["blocks"][i1:i2],
-                    right_section["blocks"][j1:j2]
-                ):
-                    for numeric_issue in numeric_cell_mismatch_issues(left, right):
-                        issues.append({
-                            "index": len(issues) + 1,
-                            **numeric_issue
-                        })
                 continue
 
             left_slice = left_section["blocks"][i1:i2]

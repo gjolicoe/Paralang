@@ -13,6 +13,9 @@ from services.review_storage import (
 )
 
 
+AUTOMATED_CHECK_VERSION = 2
+
+
 def build_automated_issue_records(source_env, year, left_file, right_file):
     def is_heading_tag(tag):
         return tag in {"h1", "h2", "h3", "h4", "h5", "h6"}
@@ -61,6 +64,7 @@ def build_automated_issue_records(source_env, year, left_file, right_file):
             "right_block_index": right.get("index") if right else None,
             "left_cell_index": issue.get("left_cell_index"),
             "right_cell_index": issue.get("right_cell_index"),
+            "automated_check_version": AUTOMATED_CHECK_VERSION,
             "severity": issue.get("severity", "warning"),
             "title": issue.get("label", "Automated issue"),
             "comment": issue.get("detail", ""),
@@ -88,9 +92,9 @@ def automated_scan_is_stale(source_env, year, left_file, right_file):
         key=lambda issue: issue.get("created_at", "")
     )
 
-    # Records created before cell-level table checks do not contain these
-    # coordinates and must be regenerated once after upgrading.
-    if "left_block_index" not in latest_issue:
+    # Regenerate records when alignment behavior changes so cached scans do
+    # not retain issue coordinates produced by an older checker.
+    if latest_issue.get("automated_check_version") != AUTOMATED_CHECK_VERSION:
         return True
 
     left_path = get_resolved_source_file_path(source_env, year, left_file)
