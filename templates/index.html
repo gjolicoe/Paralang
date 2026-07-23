@@ -5,7 +5,8 @@
   <meta charset="utf-8">
   <title>Paralang</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-  <link rel="icon" type="image/x-icon" href="./../static/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="alternate icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,7 +60,26 @@
   </script>
 
   <header>
-    <p class="pageTitle"><strong>PARA<span>LANG</span></strong>&nbsp;<small>v0.11.2</small></p>
+    <div class="pageTitle" aria-label="Paralang version 0.11.2">
+      <svg class="paralang-mark" viewBox="0 0 80 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="paralang-header-iris" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop class="paralang-gradient-iris-start" offset="0%"/>
+            <stop class="paralang-gradient-iris-end" offset="100%"/>
+          </linearGradient>
+          <linearGradient id="paralang-header-tangerine" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop class="paralang-gradient-tangerine-start" offset="0%"/>
+            <stop class="paralang-gradient-tangerine-end" offset="100%"/>
+          </linearGradient>
+        </defs>
+        <rect x="7" y="10" width="28" height="58" rx="8" fill="url(#paralang-header-iris)"/>
+        <rect x="45" y="10" width="28" height="58" rx="8" fill="url(#paralang-header-tangerine)"/>
+        <path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9"
+          fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <strong>Paralang</strong>
+      <small>v0.11.2</small>
+    </div>
     <button type="button" id="toggleLanguage" class="language-toggle icon-toggle-btn" data-i18n-skip aria-label="Passer à l’interface française"
       title="Passer à l’interface française">EN</button>
     <button type="button" id="toggleDarkMode" class="dark-mode-toggle icon-toggle-btn" aria-label="Enable dark mode"

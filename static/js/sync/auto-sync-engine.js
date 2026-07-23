@@ -12,7 +12,7 @@ function syncToElement(index) {
         const leftIndex = Math.max(0, Math.min(index, leftCount - 1));
 
         selectedElementIndex = leftIndex;
-        scrollFrameToElement(leftFrame, leftIndex, "cornflowerblue");
+        scrollFrameToElement(leftFrame, leftIndex, "#8172d0");
         syncCodePanelsToCurrentSelection();
         updateStructureMapActiveHeading();
         return;
@@ -33,12 +33,12 @@ function syncToElement(index) {
 
     const outOfSync = areCurrentBlocksOutOfSync(leftIndex, rightIndex);
 
-    scrollFrameToElement(leftFrame, leftIndex, "cornflowerblue");
+    scrollFrameToElement(leftFrame, leftIndex, "#8172d0");
 
     scrollFrameToElement(
         rightFrame,
         rightIndex,
-        outOfSync ? "rgba(220, 53, 69, 0.95)" : "cornflowerblue"
+        outOfSync ? "rgba(220, 53, 69, 0.95)" : "#8172d0"
     );
 
     updateSyncOffsetLabel();

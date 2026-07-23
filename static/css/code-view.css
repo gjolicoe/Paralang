@@ -77,13 +77,13 @@ body {
 }
 
 .code-line-selected {
-  border-left: 3px solid var(--paralang-code-outline, cornflowerblue);
-  border-right: 3px solid var(--paralang-code-outline, cornflowerblue);
+  border-left: 3px solid var(--paralang-code-outline, #a99de7);
+  border-right: 3px solid var(--paralang-code-outline, #a99de7);
   box-sizing: border-box;
 }
 
 .code-line-selected-first {
-  border-top: 3px solid var(--paralang-code-outline, cornflowerblue);
+  border-top: 3px solid var(--paralang-code-outline, #a99de7);
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
@@ -94,13 +94,13 @@ body {
 }
 
 .code-line-selected-last {
-  border-bottom: 3px solid var(--paralang-code-outline, cornflowerblue);
+  border-bottom: 3px solid var(--paralang-code-outline, #a99de7);
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
 
 .code-line-selected-single {
-  border: 3px solid var(--paralang-code-outline, cornflowerblue);
+  border: 3px solid var(--paralang-code-outline, #a99de7);
   border-radius: 4px;
 }
 

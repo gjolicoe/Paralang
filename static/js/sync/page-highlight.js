@@ -12,6 +12,7 @@ function clearSelectedOutline(frame) {
         el.style.zIndex = "";
         el.removeAttribute("data-paralang-previous-transform");
         el.removeAttribute("data-paralang-previous-transform-origin");
+        el.removeAttribute("data-paralang-outline-color");
         el.removeAttribute("data-paralang-selected");
     });
 
@@ -56,33 +57,52 @@ function getListItemContentBounds(el) {
     });
 }
 
-function highlightBounds(doc, bounds, color) {
+function highlightBounds(doc, bounds, treatment) {
     const outline = doc.createElement("div");
     outline.setAttribute("data-paralang-selection-outline", "true");
     outline.style.position = "fixed";
     outline.style.pointerEvents = "none";
-    const isWarning = color === "#ff9900" || color === "#ffb347";
-    const shadow = isWarning
-        ? "rgba(255, 153, 0, 0.28)"
-        : "rgba(31, 90, 166, 0.24)";
+    const isGradient = typeof treatment === "object";
+    const color = isGradient ? treatment.start : treatment;
+    const shadowColor = isGradient
+        ? treatment.shadow
+        : color === "#ff9900" || color === "#ffb347"
+            ? "rgba(255, 153, 0, 0.3)"
+            : "rgba(102, 86, 181, 0.26)";
+    const pixelRatio = doc.defaultView?.devicePixelRatio || 1;
+    const snapToDevicePixel = value => Math.round(value * pixelRatio) / pixelRatio;
+    const outlineTop = snapToDevicePixel(bounds.top - 8);
+    const outlineBottom = snapToDevicePixel(bounds.bottom + 8);
+    const lineThickness = Math.max(1, Math.round(2 * pixelRatio)) / pixelRatio;
 
     outline.style.boxSizing = "border-box";
     outline.style.left = "0";
     outline.style.right = "0";
-    outline.style.top = `${bounds.top - 8}px`;
-    outline.style.height = `${bounds.bottom - bounds.top + 16}px`;
-    outline.style.borderTop = `2px solid ${color}`;
-    outline.style.borderBottom = `2px solid ${color}`;
-    outline.style.background = "transparent";
-    outline.style.boxShadow = [
-        `0 -2px 7px ${shadow}`,
-        `0 2px 7px ${shadow}`
-    ].join(", ");
+    outline.style.top = `${outlineTop}px`;
+    outline.style.height = `${outlineBottom - outlineTop}px`;
+    if (isGradient) {
+        const gradient = `linear-gradient(90deg, ${treatment.start}, ${treatment.end})`;
+        outline.style.border = "0";
+        outline.style.background = [
+            `${gradient} top / 100% ${lineThickness}px no-repeat`,
+            `${gradient} bottom / 100% ${lineThickness}px no-repeat`
+        ].join(", ");
+    } else {
+        outline.style.borderTop = `${lineThickness}px solid ${color}`;
+        outline.style.borderBottom = `${lineThickness}px solid ${color}`;
+        outline.style.background = "transparent";
+    }
+    outline.style.boxShadow = "none";
+    outline.style.filter = [
+        `drop-shadow(0 0 2px ${shadowColor})`,
+        `drop-shadow(0 0 5px ${shadowColor})`,
+        `drop-shadow(0 0 9px ${shadowColor})`
+    ].join(" ");
     outline.style.zIndex = "2147483647";
     doc.body.appendChild(outline);
 }
 
-function highlightElement(el, color = "cornflowerblue") {
+function highlightElement(el, color = "#8172d0") {
     if (!el) return;
 
     const warningColor = "rgba(220, 53, 69, 0.95)";
@@ -90,9 +110,19 @@ function highlightElement(el, color = "cornflowerblue") {
     const isDarkMode = el.ownerDocument.documentElement.classList.contains(
         "paralang-dark-mode"
     );
-    const professionalColor = isWarning
+    const frameId = el.ownerDocument.defaultView?.frameElement?.id || "";
+    const isRightFrame = frameId === "rightFrame";
+    const purpleDark = isDarkMode ? "#8172d0" : "#3b2e7e";
+    const purpleLight = isDarkMode ? "#b8abf0" : "#7566c5";
+    const outlineTreatment = isWarning
         ? (isDarkMode ? "#ffb347" : "#ff9900")
-        : "#1f5aa6";
+        : {
+            start: isRightFrame ? purpleLight : purpleDark,
+            end: isRightFrame ? purpleDark : purpleLight,
+            shadow: isDarkMode
+                ? "rgba(184, 171, 240, 0.34)"
+                : "rgba(102, 86, 181, 0.3)"
+        };
     const listItemContentBounds = getListItemContentBounds(el);
     const unscaledBounds = listItemContentBounds || el.getBoundingClientRect();
 
@@ -110,11 +140,12 @@ function highlightElement(el, color = "cornflowerblue") {
         el.style.transformOrigin = "left center";
     }
     el.setAttribute("data-paralang-selected", "true");
+    el.dataset.paralangOutlineColor = color;
 
     const showOutline = highlightModeEnabled || isWarning;
 
     if (showOutline) {
-        highlightBounds(el.ownerDocument, unscaledBounds, professionalColor);
+        highlightBounds(el.ownerDocument, unscaledBounds, outlineTreatment);
     }
 
     el.style.position = "relative";
@@ -237,4 +268,38 @@ function disableReviewDisplayControlsForSingleView() {
     if (!singleViewEnabled) {
         clearFocusMode(rightFrame);
     }
+}
+
+function refreshSelectedOutlineForTheme(frame) {
+    const doc = frame?.contentDocument || frame?.contentWindow?.document;
+    if (!doc) return;
+
+    doc.querySelectorAll("[data-paralang-selection-outline='true']").forEach(outline => {
+        outline.remove();
+    });
+
+    const selected = doc.querySelector("[data-paralang-selected='true']");
+    if (!selected) return;
+
+    const color = selected.dataset.paralangOutlineColor || "#8172d0";
+    const warningColor = "rgba(220, 53, 69, 0.95)";
+    const isWarning = color === warningColor;
+    if (!highlightModeEnabled && !isWarning) return;
+    const isDarkMode = doc.documentElement.classList.contains("paralang-dark-mode");
+    const frameId = doc.defaultView?.frameElement?.id || "";
+    const isRightFrame = frameId === "rightFrame";
+    const purpleDark = isDarkMode ? "#8172d0" : "#3b2e7e";
+    const purpleLight = isDarkMode ? "#b8abf0" : "#7566c5";
+    const treatment = isWarning
+        ? (isDarkMode ? "#ffb347" : "#ff9900")
+        : {
+            start: isRightFrame ? purpleLight : purpleDark,
+            end: isRightFrame ? purpleDark : purpleLight,
+            shadow: isDarkMode
+                ? "rgba(184, 171, 240, 0.34)"
+                : "rgba(102, 86, 181, 0.3)"
+        };
+    const bounds = getListItemContentBounds(selected) || selected.getBoundingClientRect();
+
+    highlightBounds(doc, bounds, treatment);
 }

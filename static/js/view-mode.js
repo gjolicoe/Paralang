@@ -92,6 +92,11 @@ function setDarkMode(enabled) {
 
   applyDarkModeToFrame(leftFrame, enabled);
   applyDarkModeToFrame(rightFrame, enabled);
+
+  if (typeof refreshSelectedOutlineForTheme === "function") {
+    refreshSelectedOutlineForTheme(leftFrame);
+    refreshSelectedOutlineForTheme(rightFrame);
+  }
 }
 
 function loadDarkMode() {

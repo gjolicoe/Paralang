@@ -1,6 +1,7 @@
 """Portable GUI launcher and process controller for Paralang."""
 
 from pathlib import Path
+import math
 import os
 import socket
 import subprocess
@@ -17,8 +18,16 @@ SERVER_URL = "http://127.0.0.1:5000"
 LOG_DIR = PROJECT_DIR / ".cache" / "launcher"
 STDOUT_LOG = LOG_DIR / "paralang.stdout.log"
 STDERR_LOG = LOG_DIR / "paralang.stderr.log"
-ICON_PATH = PROJECT_DIR / "static" / "favicon.ico"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+IRIS = "#3b2e7e"
+IRIS_DEEP = "#2f2567"
+TANGERINE = "#ff7a3d"
+INK = "#29234b"
+SURFACE = "#fff8f3"
+CARD = "#ffffff"
+MUTED = "#746d80"
+BORDER = "#ded8e6"
 
 
 class ParalangLauncher:
@@ -32,28 +41,52 @@ class ParalangLauncher:
         root.title("Paralang")
         root.resizable(False, False)
         root.protocol("WM_DELETE_WINDOW", self.stop)
-        if ICON_PATH.is_file():
-            try:
-                root.iconbitmap(default=str(ICON_PATH))
-            except tk.TclError:
-                pass
+        root.configure(background=SURFACE)
+        self.app_icon = self.create_app_icon(root)
+        try:
+            root.iconphoto(True, self.app_icon)
+        except tk.TclError:
+            pass
 
-        frame = tk.Frame(root, padx=24, pady=20)
+        frame = tk.Frame(root, padx=30, pady=26, bg=SURFACE)
         frame.pack()
 
-        self.create_logo(frame).pack()
-        self.status = tk.StringVar(value="Starting the local server...")
-        tk.Label(frame, textvariable=self.status, font=("Segoe UI", 10)).pack(pady=(10, 4))
-        tk.Label(frame, text=SERVER_URL, font=("Segoe UI", 10)).pack(pady=(0, 14))
+        self.create_logo(frame).pack(pady=(0, 18))
 
-        buttons = tk.Frame(frame)
-        buttons.pack()
+        status_card = tk.Frame(
+            frame,
+            padx=18,
+            pady=14,
+            bg=CARD,
+            highlightthickness=1,
+            highlightbackground=BORDER,
+        )
+        status_card.pack(fill=tk.X, pady=(0, 18))
+        self.status = tk.StringVar(value="Starting the local server...")
+        tk.Label(
+            status_card,
+            textvariable=self.status,
+            font=("Segoe UI", 10, "bold"),
+            fg=INK,
+            bg=CARD,
+        ).pack()
+        tk.Label(
+            status_card,
+            text=SERVER_URL,
+            font=("Consolas", 9),
+            fg=MUTED,
+            bg=CARD,
+        ).pack(pady=(5, 0))
+
+        buttons = tk.Frame(frame, bg=SURFACE)
+        buttons.pack(fill=tk.X)
         self.open_button = tk.Button(
             buttons,
             text="Open Browser",
-            width=14,
+            width=15,
             state=tk.DISABLED,
             command=self.open_browser,
+            **self.secondary_button_style(),
         )
         self.open_button.pack(side=tk.LEFT, padx=(0, 8))
         self.refresh_button = tk.Button(
@@ -62,21 +95,102 @@ class ParalangLauncher:
             width=18,
             state=tk.DISABLED,
             command=self.refresh_application,
+            **self.primary_button_style(),
         )
         self.refresh_button.pack(side=tk.LEFT, padx=(0, 8))
-        tk.Button(buttons, text="Stop Paralang", width=14, command=self.stop).pack(side=tk.LEFT)
+        tk.Button(
+            buttons,
+            text="Stop Paralang",
+            width=14,
+            command=self.stop,
+            **self.secondary_button_style(),
+        ).pack(side=tk.LEFT)
 
         root.after(100, self.start)
 
     @staticmethod
-    def create_logo(parent):
-        font = tkfont.Font(family="Arial", size=20, weight="bold")
-        para_width = font.measure("PARA")
-        lang_width = font.measure("LANG")
-        badge_padding = 7
-        badge_width = lang_width + (badge_padding * 2)
-        height = font.metrics("linespace") + 14
-        width = para_width + badge_width + 3
+    def blend(first, second, amount):
+        start = tuple(int(first[index:index + 2], 16) for index in (1, 3, 5))
+        end = tuple(int(second[index:index + 2], 16) for index in (1, 3, 5))
+        values = tuple(round(value + (end[i] - value) * amount) for i, value in enumerate(start))
+        return "#{:02x}{:02x}{:02x}".format(*values)
+
+    @staticmethod
+    def rounded_inset(radius, distance):
+        """Return the horizontal inset for a true circular rounded corner."""
+        if distance >= radius:
+            return 0
+        offset = radius - distance - 0.5
+        return round(radius - math.sqrt(max(0, (radius * radius) - (offset * offset))))
+
+    @classmethod
+    def draw_gradient_panel(cls, canvas, x1, y1, x2, y2, start, end, radius=8):
+        height = y2 - y1
+        for row in range(height):
+            distance = min(row, height - row - 1)
+            inset = cls.rounded_inset(radius, distance)
+            color = cls.blend(start, end, row / max(1, height - 1))
+            canvas.create_line(x1 + inset, y1 + row, x2 - inset, y1 + row, fill=color, width=1)
+
+    @classmethod
+    def create_app_icon(cls, root):
+        image = tk.PhotoImage(master=root, width=64, height=64)
+        panels = (
+            (4, 6, 30, 58, "#493b8d", "#8e5063"),
+            (34, 6, 60, 58, "#b45c5b", "#e96a2f"),
+        )
+        for x1, y1, x2, y2, start, end in panels:
+            height = y2 - y1
+            for row in range(height):
+                distance = min(row, height - row - 1)
+                inset = cls.rounded_inset(6, distance)
+                color = cls.blend(start, end, row / max(1, height - 1))
+                image.put(color, to=(x1 + inset, y1 + row, x2 - inset, y1 + row + 1))
+        for x1, x2 in ((11, 23), (41, 53)):
+            image.put("#ffffff", to=(x1, 21, x2, 24))
+            image.put("#ffffff", to=(x1, 31, x2, 34))
+            image.put("#ffffff", to=(x1, 41, x2 - 3, 44))
+        return image
+
+    @staticmethod
+    def primary_button_style():
+        return {
+            "font": ("Segoe UI", 9, "bold"),
+            "relief": tk.FLAT,
+            "borderwidth": 0,
+            "padx": 10,
+            "pady": 8,
+            "bg": IRIS,
+            "fg": "white",
+            "activebackground": IRIS_DEEP,
+            "activeforeground": "white",
+            "disabledforeground": "#aaa4b2",
+            "cursor": "hand2",
+        }
+
+    @staticmethod
+    def secondary_button_style():
+        return {
+            "font": ("Segoe UI", 9, "bold"),
+            "relief": tk.FLAT,
+            "borderwidth": 1,
+            "padx": 10,
+            "pady": 8,
+            "bg": CARD,
+            "fg": INK,
+            "activebackground": "#eeeaf8",
+            "activeforeground": IRIS,
+            "disabledforeground": "#aaa4b2",
+            "cursor": "hand2",
+        }
+
+    @classmethod
+    def create_logo(cls, parent):
+        font = tkfont.Font(family="Segoe UI", size=22, weight="bold")
+        word_width = font.measure("Paralang")
+        height = 58
+        mark_width = 54
+        width = mark_width + word_width + 12
 
         canvas = tk.Canvas(
             parent,
@@ -84,44 +198,23 @@ class ParalangLauncher:
             height=height,
             highlightthickness=0,
             borderwidth=0,
+            bg=SURFACE,
         )
         canvas.logo_font = font
         center_y = height / 2
+        cls.draw_gradient_panel(canvas, 2, 5, 24, 53, "#493b8d", "#8e5063", 6)
+        cls.draw_gradient_panel(canvas, 30, 5, 52, 53, "#b45c5b", "#e96a2f", 6)
+        for x1, x2 in ((8, 18), (36, 46)):
+            canvas.create_line(x1, 19, x2, 19, fill="white", width=3, capstyle=tk.ROUND)
+            canvas.create_line(x1, 29, x2, 29, fill="white", width=3, capstyle=tk.ROUND)
+            canvas.create_line(x1, 39, x2 - 2, 39, fill="white", width=3, capstyle=tk.ROUND)
         canvas.create_text(
-            para_width,
-            center_y,
-            text="PARA",
+            mark_width + 10,
+            center_y - 1,
+            text="Paralang",
             font=font,
-            fill="black",
-            anchor=tk.E,
-        )
-
-        x1 = para_width + 3
-        y1 = 3
-        x2 = width
-        y2 = height - 3
-        radius = 10
-        canvas.create_polygon(
-            x1 + radius, y1,
-            x2 - radius, y1,
-            x2, y1 + radius,
-            x2, y2 - radius,
-            x2 - radius, y2,
-            x1 + radius, y2,
-            x1, y2 - radius,
-            x1, y1 + radius,
-            smooth=True,
-            splinesteps=36,
-            fill="#6495ED",
-            outline="",
-        )
-        canvas.create_text(
-            x1 + (badge_width / 2),
-            center_y,
-            text="LANG",
-            font=font,
-            fill="white",
-            anchor=tk.CENTER,
+            fill=INK,
+            anchor=tk.W,
         )
         return canvas
 

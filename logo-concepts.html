@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paralang — logo explorations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #24364b;
+      --blue: #5b83d7;
+      --violet: #7768c5;
+      --teal: #2f9c95;
+      --ink: #1d2938;
+      --muted: #667085;
+      --line: #dfe5ec;
+      --paper: #f7f9fc;
+      --white: #fff;
+      --shadow: 0 18px 55px rgba(36, 54, 75, .10);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(91,131,215,.12), transparent 28rem),
+        radial-gradient(circle at 95% 18%, rgba(119,104,197,.10), transparent 26rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: "Atkinson Hyperlegible", Arial, sans-serif;
+    }
+    button { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .hero { padding: 70px 0 44px; }
+    .eyebrow { color: var(--blue); font-size: 13px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 12px 0 12px; color: var(--navy); font-size: clamp(38px, 7vw, 72px); line-height: .98; letter-spacing: -.045em; }
+    .intro { max-width: 680px; margin: 0; color: var(--muted); font-size: 19px; line-height: 1.55; }
+    .note { display: inline-flex; gap: 9px; align-items: center; margin-top: 25px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.72); color: var(--muted); font-size: 13px; }
+    .note i { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+
+    .palette-lab { padding: 12px 0 70px; }
+    .section-heading { display: flex; justify-content: space-between; gap: 30px; align-items: end; margin-bottom: 24px; }
+    .section-heading h2 { margin: 0 0 7px; font-size: 34px; }
+    .section-heading p { max-width: 650px; margin: 0; color: var(--muted); line-height: 1.5; }
+    .palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .palette-card { --a: #5b83d7; --b: #7768c5; --type: #24364b; --ad: #75a0f0; --bd: #9585e5; --typed: #f7f9fc; --surfaced: #182334; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: white; box-shadow: 0 10px 30px rgba(36,54,75,.07); }
+    .palette-preview { display: grid; grid-template-columns: 1fr 1fr; min-height: 170px; padding: 0; background: white; }
+    .palette-mode { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 175px; padding: 38px 22px 26px; background: var(--surface, #fff); color: var(--type); }
+    .palette-mode + .palette-mode { border-left: 1px solid rgba(128,140,155,.2); }
+    .palette-mode-label { position: absolute; top: 12px; left: 14px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+    .palette-mode.dark-sample { background: var(--surfaced); color: var(--typed); }
+    .palette-mode.dark-sample .palette-mode-label { color: rgba(255,255,255,.58); }
+    .palette-mode .logo { color: var(--type); }
+    .palette-mode.dark-sample .logo { color: var(--typed); }
+    .palette-preview svg { width: 68px; height: 68px; }
+    .palette-preview .wordmark { font-size: 40px; }
+    .palette-preview rect:first-child { fill: var(--a); }
+    .palette-preview rect:nth-child(2) { fill: var(--b); }
+    .palette-mode.dark-sample rect:first-child { fill: var(--ad); }
+    .palette-mode.dark-sample rect:nth-child(2) { fill: var(--bd); }
+    .palette-meta { display: grid; grid-template-columns: minmax(145px, 1fr) auto auto; gap: 18px; align-items: center; padding: 15px 17px; border-top: 1px solid var(--line); }
+    .palette-name b { display: block; color: var(--navy); }
+    .palette-name small { color: var(--muted); }
+    .scheme-swatches { display: flex; gap: 13px; }
+    .swatch-set { display: grid; grid-template-columns: repeat(3, 20px); gap: 5px; }
+    .swatch-set em { grid-column: 1 / -1; color: #8a96a6; font-size: 9px; font-style: normal; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .swatch { width: 25px; height: 25px; border: 1px solid rgba(0,0,0,.08); border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 2px rgba(255,255,255,.32); }
+    .app-icon-pair { display: flex; gap: 7px; }
+    .app-icon { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(128,140,155,.25); border-radius: 9px; background: var(--surface); }
+    .app-icon.dark-icon { background: var(--surfaced); }
+    .app-icon svg { width: 27px; height: 27px; }
+    .app-icon rect:first-child { fill: var(--a); }.app-icon rect:nth-child(2) { fill: var(--b); }
+    .app-icon.dark-icon rect:first-child { fill: var(--ad); }.app-icon.dark-icon rect:nth-child(2) { fill: var(--bd); }
+    .palette-1 { --a:#7f1734;--b:#e9a23b;--type:#351d24;--surface:#fff9ee;--ad:#d65a77;--bd:#ffc45e;--typed:#fff8ed;--surfaced:#28171c; }
+    .palette-2 { --a:#16615d;--b:#79b791;--type:#173b3a;--surface:#f3faf6;--ad:#42a49c;--bd:#9dd4ae;--typed:#effcf7;--surfaced:#102927; }
+    .palette-3 { --a:#536b3d;--b:#c96846;--type:#293426;--surface:#faf8ee;--ad:#8eaa70;--bd:#e88964;--typed:#f8faef;--surfaced:#1d261c; }
+    .palette-4 { --a:#3b2e7e;--b:#ff7a3d;--type:#29234b;--surface:#fff8f3;--ad:#8172d0;--bd:#ff9a6c;--typed:#faf7ff;--surfaced:#1d1934; }
+    .palette-5 { --a:#493628;--b:#e8a6a1;--type:#332820;--surface:#fff9f6;--ad:#9b7a64;--bd:#f2c0bc;--typed:#fff8f5;--surfaced:#241b17; }
+    .palette-6 { --a:#1e3a34;--b:#58d6b0;--type:#1b302c;--surface:#f2fbf7;--ad:#557b72;--bd:#78e8c6;--typed:#f0fff9;--surfaced:#142521; }
+    .palette-7 { --a:#30343f;--b:#b8a1d9;--type:#252832;--surface:#f8f6fb;--ad:#778092;--bd:#cbb6eb;--typed:#faf8ff;--surfaced:#1d2028; }
+    .palette-8 { --a:#475569;--b:#ef5b4c;--type:#283440;--surface:#f7f8f9;--ad:#91a0b4;--bd:#ff8175;--typed:#f8fafc;--surfaced:#1d2631; }
+    .palette-9 { --a:#68752c;--b:#65b8c4;--type:#343b23;--surface:#fafbea;--ad:#a7b653;--bd:#8ed8e1;--typed:#fbfcec;--surfaced:#242819; }
+    .palette-10 { --a:#705c4b;--b:#c9ae8b;--type:#342b25;--surface:#faf7f2;--ad:#a98c73;--bd:#dfc7a8;--typed:#faf7f1;--surfaced:#211c18; }
+
+    .concepts { display: grid; gap: 30px; padding-bottom: 72px; }
+    .concept { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); }
+    .concept-top { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .75fr); min-height: 330px; }
+    .stage { display: grid; place-items: center; min-height: 330px; padding: 45px; background: #fff; }
+    .stage.dark { background: #182334; color: white; }
+    .details { padding: 36px; border-left: 1px solid var(--line); background: linear-gradient(145deg, #fbfcfe, #f3f6fa); }
+    .number { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--navy); color: #fff; font-weight: 700; }
+    h2 { margin: 23px 0 7px; color: var(--navy); font-size: 26px; letter-spacing: -.02em; }
+    .tagline { margin: 0 0 19px; color: var(--blue); font-weight: 700; }
+    .details p { color: var(--muted); line-height: 1.5; }
+    .traits { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+    .traits span { padding: 6px 9px; border: 1px solid #d9e1ea; border-radius: 7px; background: white; color: #536174; font-size: 12px; font-weight: 700; }
+    .applications { display: grid; grid-template-columns: 1fr 1fr 170px; border-top: 1px solid var(--line); }
+    .application { min-height: 110px; padding: 17px 20px; border-right: 1px solid var(--line); }
+    .application:last-child { border-right: 0; }
+    .application-label { display: block; margin-bottom: 15px; color: #8a96a6; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .mock-header { display: flex; align-items: center; height: 48px; padding: 0 14px; border: 1px solid #d8dee6; border-radius: 9px; background: #f5f5f5; }
+    .mock-header.dark { border-color: #3b4657; background: #252a32; color: white; }
+    .mock-header .mini-logo { transform: scale(.72); transform-origin: left center; }
+    .favicon-row { display: flex; gap: 12px; align-items: center; }
+    .favicon-box { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #d8dee6; border-radius: 9px; background: #fff; }
+    .favicon-box.dark { border-color: #3c4653; background: #202a38; }
+
+    .logo { display: inline-flex; align-items: center; gap: 15px; color: var(--navy); }
+    .dark .logo, .mock-header.dark .logo { color: white; }
+    .wordmark { font-size: clamp(36px, 5vw, 57px); font-weight: 700; letter-spacing: -.045em; line-height: 1; }
+    .wordmark small { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .025em; }
+    .dark .wordmark small { color: #aeb9c8; }
+    .logo svg { flex: none; width: 78px; height: 78px; overflow: visible; }
+    .mini-logo { gap: 8px; }
+    .mini-logo svg { width: 38px; height: 38px; }
+    .mini-logo .wordmark { font-size: 25px; }
+    .mini-logo .wordmark small { display: none; }
+    .favicon-box svg { width: 28px; height: 28px; }
+
+    .concept-4 .wordmark { display: flex; align-items: center; gap: 0; font-size: clamp(32px, 5vw, 54px); letter-spacing: -.035em; text-transform: uppercase; }
+    .concept-4 .para { padding: 8px 9px 8px 13px; border-radius: 11px 0 0 11px; background: var(--navy); color: white; }
+    .concept-4 .lang { position: relative; padding: 8px 13px 8px 9px; border-radius: 0 11px 11px 0; background: var(--blue); color: white; }
+    .concept-4 .lang:before { content: ""; position: absolute; top: 8px; bottom: 8px; left: -1px; width: 2px; background: rgba(255,255,255,.75); }
+    .concept-4 .mini-logo .wordmark { font-size: 20px; }
+
+    .comparison { padding: 55px 0 80px; border-top: 1px solid var(--line); background: rgba(255,255,255,.55); }
+    .comparison h2 { margin: 0 0 25px; font-size: 32px; }
+    .strip { display: grid; grid-template-columns: repeat(5, 1fr); overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: white; box-shadow: var(--shadow); }
+    .strip-item { display: grid; place-items: center; min-height: 150px; padding: 20px; border-right: 1px solid var(--line); text-align: center; }
+    .strip-item:last-child { border: 0; }
+    .strip-item svg { width: 50px; height: 50px; margin-bottom: 10px; }
+    .strip-item b { display: block; color: var(--navy); }
+    .strip-item small { color: var(--muted); }
+
+    @media (max-width: 780px) {
+      .concept-top { grid-template-columns: 1fr; }
+      .details { border-top: 1px solid var(--line); border-left: 0; }
+      .applications { grid-template-columns: 1fr; }
+      .application { border-right: 0; border-bottom: 1px solid var(--line); }
+      .application:last-child { border-bottom: 0; }
+      .strip { grid-template-columns: 1fr 1fr; }
+      .strip-item { border-bottom: 1px solid var(--line); }
+      .palette-grid { grid-template-columns: 1fr; }
+      .section-heading { display: block; }
+      .palette-preview { grid-template-columns: 1fr; }
+      .palette-mode + .palette-mode { border-top: 1px solid rgba(128,140,155,.2); border-left: 0; }
+      .palette-meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero shell">
+    <div class="eyebrow">Paralang identity study · July 2026</div>
+    <h1>Five ways to say<br>“side by side.”</h1>
+    <p class="intro">Logo directions built around bilingual documents, structural alignment, and parallel review—plus ten less-corporate colour directions for the leading concept.</p>
+    <div class="note"><i></i> Concept page only — the current application is unchanged</div>
+  </header>
+
+  <section class="palette-lab shell">
+    <div class="section-heading"><div><div class="eyebrow">Colour study</div><h2>One mark, ten personalities.</h2></div><p>The simplified parallel-panel mark has no connecting lines: just two independent documents working as a pair. Each panel now uses a restrained diagonal gradient derived from its palette, in both light and dark mode.</p></div>
+    <div class="palette-grid">
+      <article class="palette-card palette-1"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>01 · Claret &amp; Saffron</b><small>Literary, warm, self-assured</small></div><div class="swatches"><i class="swatch" style="--swatch:#7f1734"></i><i class="swatch" style="--swatch:#e9a23b"></i><i class="swatch" style="--swatch:#351d24"></i></div></div></article>
+      <article class="palette-card palette-2"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>02 · Evergreen</b><small>Calm, trustworthy, natural</small></div><div class="swatches"><i class="swatch" style="--swatch:#16615d"></i><i class="swatch" style="--swatch:#79b791"></i><i class="swatch" style="--swatch:#173b3a"></i></div></div></article>
+      <article class="palette-card palette-3"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>03 · Moss &amp; Clay</b><small>Grounded, tactile, independent</small></div><div class="swatches"><i class="swatch" style="--swatch:#536b3d"></i><i class="swatch" style="--swatch:#c96846"></i><i class="swatch" style="--swatch:#293426"></i></div></div></article>
+      <article class="palette-card palette-4"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>04 · Iris &amp; Tangerine</b><small>Creative, spirited, contemporary</small></div><div class="swatches"><i class="swatch" style="--swatch:#3b2e7e"></i><i class="swatch" style="--swatch:#ff7a3d"></i><i class="swatch" style="--swatch:#29234b"></i></div></div></article>
+      <article class="palette-card palette-5"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>05 · Espresso &amp; Blush</b><small>Soft, personable, quietly refined</small></div><div class="swatches"><i class="swatch" style="--swatch:#493628"></i><i class="swatch" style="--swatch:#e8a6a1"></i><i class="swatch" style="--swatch:#332820"></i></div></div></article>
+      <article class="palette-card palette-6"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>06 · Pine &amp; Mint</b><small>Crisp, focused, quietly fresh</small></div><div class="swatches"><i class="swatch" style="--swatch:#1e3a34"></i><i class="swatch" style="--swatch:#58d6b0"></i><i class="swatch" style="--swatch:#1b302c"></i></div></div></article>
+      <article class="palette-card palette-7"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>07 · Ink &amp; Lilac</b><small>Quiet, intelligent, restrained</small></div><div class="swatches"><i class="swatch" style="--swatch:#30343f"></i><i class="swatch" style="--swatch:#b8a1d9"></i><i class="swatch" style="--swatch:#252832"></i></div></div></article>
+      <article class="palette-card palette-8"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>08 · Slate &amp; Poppy</b><small>Practical, direct, energetic</small></div><div class="swatches"><i class="swatch" style="--swatch:#475569"></i><i class="swatch" style="--swatch:#ef5b4c"></i><i class="swatch" style="--swatch:#283440"></i></div></div></article>
+      <article class="palette-card palette-9"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>09 · Olive &amp; Lagoon</b><small>Curious, balanced, unexpected</small></div><div class="swatches"><i class="swatch" style="--swatch:#68752c"></i><i class="swatch" style="--swatch:#65b8c4"></i><i class="swatch" style="--swatch:#343b23"></i></div></div></article>
+      <article class="palette-card palette-10"><div class="palette-preview"><div class="logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div><div class="palette-meta"><div class="palette-name"><b>10 · Walnut &amp; Parchment</b><small>Understated, warm, timeless</small></div><div class="swatches"><i class="swatch" style="--swatch:#705c4b"></i><i class="swatch" style="--swatch:#c9ae8b"></i><i class="swatch" style="--swatch:#342b25"></i></div></div></article>
+    </div>
+  </section>
+
+  <main class="concepts shell">
+    <article class="concept">
+      <div class="concept-top">
+        <div class="stage">
+          <div class="logo">
+            <svg viewBox="0 0 80 80" role="img" aria-label="Parallel document panels">
+              <rect x="7" y="10" width="28" height="58" rx="8" fill="#5b83d7"/>
+              <rect x="45" y="10" width="28" height="58" rx="8" fill="#7768c5"/>
+              <path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+            <div class="wordmark">Paralang<small>Bilingual review, perfectly aligned.</small></div>
+          </div>
+        </div>
+        <div class="details">
+          <div class="number">01</div><h2>Parallel panels</h2>
+          <p class="tagline">The product, distilled.</p>
+          <p>Two documents face each other as a clean, balanced pair. Direct, distinctive, and closely related to the actual workspace without unnecessary detail.</p>
+          <div class="traits"><span>Clear</span><span>Technical</span><span>Balanced</span><span>Recommended</span></div>
+        </div>
+      </div>
+      <div class="applications">
+        <div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8" fill="#5b83d7"/><rect x="45" y="10" width="28" height="58" rx="8" fill="#7768c5"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div></div>
+        <div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8" fill="#6f98ec"/><rect x="45" y="10" width="28" height="58" rx="8" fill="#8a7add"/><path d="M16 26h12M16 36h12M16 46h9M52 26h12M52 36h12M55 46h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div></div>
+        <div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8" fill="#5b83d7"/><rect x="45" y="10" width="28" height="58" rx="8" fill="#7768c5"/><path d="M16 29h12M16 42h12M52 29h12M52 42h12" stroke="white" stroke-width="5" stroke-linecap="round"/></svg></div><div class="favicon-box dark"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8" fill="#6f98ec"/><rect x="45" y="10" width="28" height="58" rx="8" fill="#8a7add"/></svg></div></div></div>
+      </div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage dark"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M10 66V15h23c13 0 22 8 22 20 0 6-2 10-6 14" fill="none" stroke="#6f98ec" stroke-width="10" stroke-linejoin="round"/><path d="M70 66V15H47c-13 0-22 8-22 20 0 6 2 10 6 14" fill="none" stroke="#8a7add" stroke-width="10" stroke-linejoin="round"/><circle cx="40" cy="36" r="7" fill="white"/></svg>
+        <div class="wordmark">Paralang<small>Two perspectives. One review.</small></div>
+      </div></div><div class="details"><div class="number">02</div><h2>Paired P monogram</h2><p class="tagline">More symbol, less diagram.</p><p>Two opposing letterforms meet around a shared centre. It feels established and brand-like while retaining the idea of a paired workspace.</p><div class="traits"><span>Confident</span><span>Abstract</span><span>Compact</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M10 66V15h23c13 0 22 8 22 20 0 6-2 10-6 14" fill="none" stroke="#5b83d7" stroke-width="10"/><path d="M70 66V15H47c-13 0-22 8-22 20 0 6 2 10 6 14" fill="none" stroke="#7768c5" stroke-width="10"/><circle cx="40" cy="36" r="7" fill="#24364b"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M10 66V15h23c13 0 22 8 22 20 0 6-2 10-6 14" fill="none" stroke="#6f98ec" stroke-width="10"/><path d="M70 66V15H47c-13 0-22 8-22 20 0 6 2 10 6 14" fill="none" stroke="#8a7add" stroke-width="10"/><circle cx="40" cy="36" r="7" fill="white"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M10 66V15h23c13 0 22 8 22 20" fill="none" stroke="#5b83d7" stroke-width="11"/><path d="M70 66V15H47c-13 0-22 8-22 20" fill="none" stroke="#7768c5" stroke-width="11"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M29 10H12v60h17M51 10h17v60H51" fill="none" stroke="#24364b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 26h24M25 40h30M28 54h24" stroke="#5b83d7" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="26" r="3" fill="#7768c5"/><circle cx="40" cy="40" r="3" fill="#7768c5"/><circle cx="40" cy="54" r="3" fill="#7768c5"/></svg>
+        <div class="wordmark">Paralang<small>Review between the lines.</small></div>
+      </div></div><div class="details"><div class="number">03</div><h2>Alignment brackets</h2><p class="tagline">Precise by design.</p><p>Document boundaries frame three matched rows. The visual language feels like code, structure maps, and comparison without becoming a literal interface icon.</p><div class="traits"><span>Precise</span><span>Minimal</span><span>Developer-friendly</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M29 10H12v60h17M51 10h17v60H51" fill="none" stroke="#24364b" stroke-width="7"/><path d="M28 26h24M25 40h30M28 54h24" stroke="#5b83d7" stroke-width="6" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M29 10H12v60h17M51 10h17v60H51" fill="none" stroke="white" stroke-width="7"/><path d="M28 26h24M25 40h30M28 54h24" stroke="#6f98ec" stroke-width="6" stroke-linecap="round"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M29 10H12v60h17M51 10h17v60H51" fill="none" stroke="#24364b" stroke-width="8"/><path d="M27 29h26M27 50h26" stroke="#5b83d7" stroke-width="7"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept concept-4">
+      <div class="concept-top"><div class="stage"><div class="wordmark"><span class="para">Para</span><span class="lang">lang</span></div></div><div class="details"><div class="number">04</div><h2>Split wordmark</h2><p class="tagline">An evolution, not a reset.</p><p>The existing PARA/LANG split becomes balanced and intentional. A central white register line suggests two sources meeting in one system.</p><div class="traits"><span>Familiar</span><span>Safe</span><span>Bold</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><div class="wordmark"><span class="para">Para</span><span class="lang">lang</span></div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><div class="wordmark"><span class="para">Para</span><span class="lang">lang</span></div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><rect x="8" y="12" width="64" height="56" rx="12" fill="#24364b"/><path d="M40 12h20c6.6 0 12 5.4 12 12v32c0 6.6-5.4 12-12 12H40z" fill="#5b83d7"/><path d="M40 22v36" stroke="white" stroke-width="3"/><path d="M20 30h12M20 42h12M48 30h12M48 42h12" stroke="white" stroke-width="5" stroke-linecap="round"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage dark"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M8 15c0-5 4-9 9-9h29c5 0 9 4 9 9v36c0 5-4 9-9 9H28L16 72V60c-4 0-8-4-8-9z" fill="#6f98ec"/><path d="M72 25c0-5-4-9-9-9H36c-5 0-9 4-9 9v34c0 5 4 9 9 9h25l11 8V25z" fill="#8a7add" fill-opacity=".93"/><path d="M37 32h23M37 43h23M37 54h16" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>
+        <div class="wordmark">Paralang<small>Documents in conversation.</small></div>
+      </div></div><div class="details"><div class="number">05</div><h2>Document dialogue</h2><p class="tagline">The friendliest option.</p><p>Overlapping page and speech forms make bilingual review feel collaborative. Softer and more human, with less emphasis on technical precision.</p><div class="traits"><span>Approachable</span><span>Collaborative</span><span>Expressive</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M8 15c0-5 4-9 9-9h29c5 0 9 4 9 9v36c0 5-4 9-9 9H28L16 72V60c-4 0-8-4-8-9z" fill="#5b83d7"/><path d="M72 25c0-5-4-9-9-9H36c-5 0-9 4-9 9v34c0 5 4 9 9 9h25l11 8V25z" fill="#7768c5" fill-opacity=".93"/><path d="M37 32h23M37 43h23M37 54h16" stroke="white" stroke-width="4"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M8 15c0-5 4-9 9-9h29c5 0 9 4 9 9v36c0 5-4 9-9 9H28L16 72V60c-4 0-8-4-8-9z" fill="#6f98ec"/><path d="M72 25c0-5-4-9-9-9H36c-5 0-9 4-9 9v34c0 5 4 9 9 9h25l11 8V25z" fill="#8a7add"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M8 15c0-5 4-9 9-9h29c5 0 9 4 9 9v36c0 5-4 9-9 9H28L16 72V60c-4 0-8-4-8-9z" fill="#5b83d7"/><path d="M72 25c0-5-4-9-9-9H36c-5 0-9 4-9 9v34c0 5 4 9 9 9h25l11 8V25z" fill="#7768c5"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M10 56V25c0-6 5-11 11-11h12v42H10z" fill="#5b83d7"/><path d="M70 56V25c0-6-5-11-11-11H47v42h23z" fill="#7768c5"/><path d="M27 56c0-12 5-20 13-20s13 8 13 20" fill="none" stroke="#24364b" stroke-width="7" stroke-linecap="round"/><path d="M17 27h10M53 27h10" stroke="white" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="36" r="4" fill="#2f9c95"/></svg>
+        <div class="wordmark">Paralang<small>Meaning crosses the gap.</small></div>
+      </div></div><div class="details"><div class="number">06</div><h2>Translation bridge</h2><p class="tagline">Connection with purpose.</p><p>Two language blocks are joined by a central arch. It suggests meaning travelling between sources while the green keystone represents a verified match.</p><div class="traits"><span>Connected</span><span>Memorable</span><span>Optimistic</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M10 56V25c0-6 5-11 11-11h12v42H10z" fill="#5b83d7"/><path d="M70 56V25c0-6-5-11-11-11H47v42h23z" fill="#7768c5"/><path d="M27 56c0-12 5-20 13-20s13 8 13 20" fill="none" stroke="#24364b" stroke-width="7"/><circle cx="40" cy="36" r="4" fill="#2f9c95"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M10 56V25c0-6 5-11 11-11h12v42H10z" fill="#6f98ec"/><path d="M70 56V25c0-6-5-11-11-11H47v42h23z" fill="#8a7add"/><path d="M27 56c0-12 5-20 13-20s13 8 13 20" fill="none" stroke="white" stroke-width="7"/><circle cx="40" cy="36" r="4" fill="#54c8bd"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M10 58V22h23v36z" fill="#5b83d7"/><path d="M70 58V22H47v36z" fill="#7768c5"/><path d="M27 58c0-13 5-22 13-22s13 9 13 22" fill="none" stroke="#24364b" stroke-width="8"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage dark"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M9 10h35c5 0 9 4 9 9v17H36v34H18c-5 0-9-4-9-9V10z" fill="#6f98ec"/><path d="M71 70H36c-5 0-9-4-9-9V44h17V10h18c5 0 9 4 9 9v51z" fill="#8a7add"/><path d="M18 24h21M18 34h12M50 47h12M41 57h21" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>
+        <div class="wordmark">Paralang<small>Every counterpart in its place.</small></div>
+      </div></div><div class="details"><div class="number">07</div><h2>Interlocking pages</h2><p class="tagline">Two halves, one system.</p><p>Opposing page shapes fit together like a precise joint. The shared centre makes pairing and structural correspondence the heart of the mark.</p><div class="traits"><span>Geometric</span><span>Unified</span><span>Distinctive</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M9 10h35c5 0 9 4 9 9v17H36v34H18c-5 0-9-4-9-9V10z" fill="#5b83d7"/><path d="M71 70H36c-5 0-9-4-9-9V44h17V10h18c5 0 9 4 9 9v51z" fill="#7768c5"/><path d="M18 24h21M41 57h21" stroke="white" stroke-width="4"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M9 10h35c5 0 9 4 9 9v17H36v34H18c-5 0-9-4-9-9V10z" fill="#6f98ec"/><path d="M71 70H36c-5 0-9-4-9-9V44h17V10h18c5 0 9 4 9 9v51z" fill="#8a7add"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M9 10h44v26H36v34H9z" fill="#5b83d7"/><path d="M71 70H27V44h17V10h27z" fill="#7768c5"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M13 63V17h20c12 0 20 7 20 18s-8 18-20 18H25" fill="none" stroke="#24364b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 27h32M34 40h32M34 53h32" stroke="#5b83d7" stroke-width="6" stroke-linecap="round"/><path d="M58 27v26" stroke="#7768c5" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="wordmark">Paralang<small>Parallel by nature.</small></div>
+      </div></div><div class="details"><div class="number">08</div><h2>Linework P</h2><p class="tagline">A letter built from alignment.</p><p>A strong P monogram opens into three parallel content lines. It combines the product initial with rows, columns, and the rhythm of reviewed text.</p><div class="traits"><span>Typographic</span><span>Modern</span><span>Scalable</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M13 63V17h20c12 0 20 7 20 18s-8 18-20 18H25" fill="none" stroke="#24364b" stroke-width="9"/><path d="M34 27h32M34 40h32M34 53h32" stroke="#5b83d7" stroke-width="6"/><path d="M58 27v26" stroke="#7768c5" stroke-width="5"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M13 63V17h20c12 0 20 7 20 18s-8 18-20 18H25" fill="none" stroke="white" stroke-width="9"/><path d="M34 27h32M34 40h32M34 53h32" stroke="#6f98ec" stroke-width="6"/><path d="M58 27v26" stroke="#8a7add" stroke-width="5"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M13 65V15h22c13 0 21 8 21 19s-8 19-21 19H25" fill="none" stroke="#24364b" stroke-width="10"/><path d="M39 27h28M39 42h28M39 57h28" stroke="#5b83d7" stroke-width="7"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage dark"><div class="logo">
+        <svg viewBox="0 0 80 80"><path d="M9 66V18c0-5 4-9 9-9h22v16H27v41H9z" fill="#6f98ec"/><path d="M40 9h18c8 0 14 6 14 14v12c0 9-7 16-16 16H40V35h14c2 0 4-2 4-4v-2c0-2-2-4-4-4H40V9z" fill="#8a7add"/><path d="M27 25l13 10v16L27 41z" fill="white" fill-opacity=".9"/></svg>
+        <div class="wordmark">Paralang<small>Paired, folded, fluent.</small></div>
+      </div></div><div class="details"><div class="number">09</div><h2>Folded P</h2><p class="tagline">A monogram with two voices.</p><p>Blue and violet ribbons fold into a single P. The central white facet makes the handoff between languages visible without relying on document imagery.</p><div class="traits"><span>Brand-like</span><span>Dimensional</span><span>Friendly</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M9 66V18c0-5 4-9 9-9h22v16H27v41H9z" fill="#5b83d7"/><path d="M40 9h18c8 0 14 6 14 14v12c0 9-7 16-16 16H40V35h14c2 0 4-2 4-4v-2c0-2-2-4-4-4H40V9z" fill="#7768c5"/><path d="M27 25l13 10v16L27 41z" fill="white"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><path d="M9 66V18c0-5 4-9 9-9h22v16H27v41H9z" fill="#6f98ec"/><path d="M40 9h18c8 0 14 6 14 14v12c0 9-7 16-16 16H40V35h14c2 0 4-2 4-4v-2c0-2-2-4-4-4H40V9z" fill="#8a7add"/><path d="M27 25l13 10v16L27 41z" fill="white"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><path d="M9 68V17c0-5 4-9 9-9h24v18H28v42z" fill="#5b83d7"/><path d="M40 8h19c8 0 14 6 14 14v13c0 10-8 17-17 17H40V34h14V26H40z" fill="#7768c5"/></svg></div></div></div></div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-top"><div class="stage"><div class="logo">
+        <svg viewBox="0 0 80 80"><rect x="8" y="9" width="23" height="62" rx="11.5" fill="#5b83d7"/><rect x="49" y="9" width="23" height="62" rx="11.5" fill="#7768c5"/><path d="M29 25h22M29 40h22M29 55h22" stroke="#24364b" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="25" r="4" fill="white"/><circle cx="40" cy="40" r="4" fill="white"/><circle cx="40" cy="55" r="4" fill="white"/></svg>
+        <div class="wordmark">Paralang<small>Every line has a counterpart.</small></div>
+      </div></div><div class="details"><div class="number">10</div><h2>Matched rails</h2><p class="tagline">The simplest expression of parallel.</p><p>Two vertical rails are joined by three precise matches. It keeps the symmetry of concept 01 but strips away the literal page shapes for a highly scalable mark.</p><div class="traits"><span>Minimal</span><span>Systematic</span><span>Highly scalable</span></div></div></div>
+      <div class="applications"><div class="application"><span class="application-label">In the light header</span><div class="mock-header"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><rect x="8" y="9" width="23" height="62" rx="11.5" fill="#5b83d7"/><rect x="49" y="9" width="23" height="62" rx="11.5" fill="#7768c5"/><path d="M29 25h22M29 40h22M29 55h22" stroke="#24364b" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="25" r="4" fill="white"/><circle cx="40" cy="40" r="4" fill="white"/><circle cx="40" cy="55" r="4" fill="white"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">In dark mode</span><div class="mock-header dark"><div class="logo mini-logo"><svg viewBox="0 0 80 80"><rect x="8" y="9" width="23" height="62" rx="11.5" fill="#6f98ec"/><rect x="49" y="9" width="23" height="62" rx="11.5" fill="#8a7add"/><path d="M29 25h22M29 40h22M29 55h22" stroke="white" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="25" r="4" fill="#182334"/><circle cx="40" cy="40" r="4" fill="#182334"/><circle cx="40" cy="55" r="4" fill="#182334"/></svg><div class="wordmark">Paralang</div></div></div></div><div class="application"><span class="application-label">App icon</span><div class="favicon-row"><div class="favicon-box"><svg viewBox="0 0 80 80"><rect x="8" y="8" width="24" height="64" rx="12" fill="#5b83d7"/><rect x="48" y="8" width="24" height="64" rx="12" fill="#7768c5"/><path d="M30 25h20M30 40h20M30 55h20" stroke="#24364b" stroke-width="7" stroke-linecap="round"/></svg></div></div></div></div>
+    </article>
+  </main>
+
+  <section class="comparison"><div class="shell"><h2>Icon lineup</h2><div class="strip">
+    <div class="strip-item"><svg viewBox="0 0 80 80"><rect x="7" y="10" width="28" height="58" rx="8" fill="#5b83d7"/><rect x="45" y="10" width="28" height="58" rx="8" fill="#7768c5"/></svg><div><b>Parallel panels</b><small>01</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M10 66V15h23c13 0 22 8 22 20" fill="none" stroke="#5b83d7" stroke-width="10"/><path d="M70 66V15H47c-13 0-22 8-22 20" fill="none" stroke="#7768c5" stroke-width="10"/></svg><div><b>Paired P</b><small>02</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M29 10H12v60h17M51 10h17v60H51" fill="none" stroke="#24364b" stroke-width="7"/><path d="M28 26h24M25 40h30M28 54h24" stroke="#5b83d7" stroke-width="6"/></svg><div><b>Brackets</b><small>03</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><rect x="8" y="12" width="64" height="56" rx="12" fill="#24364b"/><path d="M40 12h20c6.6 0 12 5.4 12 12v32c0 6.6-5.4 12-12 12H40z" fill="#5b83d7"/><path d="M40 22v36" stroke="white" stroke-width="3"/></svg><div><b>Split mark</b><small>04</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M8 15c0-5 4-9 9-9h29c5 0 9 4 9 9v36c0 5-4 9-9 9H28L16 72V60c-4 0-8-4-8-9z" fill="#5b83d7"/><path d="M72 25c0-5-4-9-9-9H36c-5 0-9 4-9 9v34c0 5 4 9 9 9h25l11 8V25z" fill="#7768c5"/></svg><div><b>Dialogue</b><small>05</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M10 58V22h23v36z" fill="#5b83d7"/><path d="M70 58V22H47v36z" fill="#7768c5"/><path d="M27 58c0-13 5-22 13-22s13 9 13 22" fill="none" stroke="#24364b" stroke-width="8"/></svg><div><b>Bridge</b><small>06</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M9 10h44v26H36v34H9z" fill="#5b83d7"/><path d="M71 70H27V44h17V10h27z" fill="#7768c5"/></svg><div><b>Interlock</b><small>07</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M13 65V15h22c13 0 21 8 21 19s-8 19-21 19H25" fill="none" stroke="#24364b" stroke-width="10"/><path d="M39 27h28M39 42h28M39 57h28" stroke="#5b83d7" stroke-width="7"/></svg><div><b>Linework P</b><small>08</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><path d="M9 68V17c0-5 4-9 9-9h24v18H28v42z" fill="#5b83d7"/><path d="M40 8h19c8 0 14 6 14 14v13c0 10-8 17-17 17H40V34h14V26H40z" fill="#7768c5"/></svg><div><b>Folded P</b><small>09</small></div></div>
+    <div class="strip-item"><svg viewBox="0 0 80 80"><rect x="8" y="8" width="24" height="64" rx="12" fill="#5b83d7"/><rect x="48" y="8" width="24" height="64" rx="12" fill="#7768c5"/><path d="M30 25h20M30 40h20M30 55h20" stroke="#24364b" stroke-width="7" stroke-linecap="round"/></svg><div><b>Matched rails</b><small>10</small></div></div>
+  </div></div></section>
+  <script>
+    (() => {
+      const icon = `<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="7" y="10" width="28" height="58" rx="8"/><rect x="45" y="10" width="28" height="58" rx="8"/><path d="M16 27h12M16 39h12M16 51h9M52 27h12M52 39h12M55 51h9" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>`;
+
+      const mix = (hex, target, amount) => {
+        const clean = hex.replace("#", "");
+        const source = [0, 2, 4].map(index => parseInt(clean.slice(index, index + 2), 16));
+        const destination = target === "white" ? [255, 255, 255] : [0, 0, 0];
+        return `#${source.map((channel, index) => Math.round(channel + (destination[index] - channel) * amount).toString(16).padStart(2, "0")).join("")}`;
+      };
+
+      const blend = (first, second, amount) => {
+        const channels = hex => {
+          const clean = hex.replace("#", "");
+          return [0, 2, 4].map(index => parseInt(clean.slice(index, index + 2), 16));
+        };
+        const start = channels(first);
+        const end = channels(second);
+        return `#${start.map((channel, index) => Math.round(channel + (end[index] - channel) * amount).toString(16).padStart(2, "0")).join("")}`;
+      };
+
+      let gradientIndex = 0;
+      const applyGradients = (svg, first, second, dark) => {
+        const id = `paralang-gradient-${gradientIndex++}`;
+        const firstStart = mix(first, "white", dark ? .14 : .08);
+        const firstEnd = blend(first, second, .42);
+        const secondStart = blend(first, second, .58);
+        const secondEnd = mix(second, dark ? "white" : "black", dark ? .08 : .10);
+        svg.insertAdjacentHTML("afterbegin", `<defs>
+          <linearGradient id="${id}-a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${firstStart}"/><stop offset="100%" stop-color="${firstEnd}"/></linearGradient>
+          <linearGradient id="${id}-b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${secondStart}"/><stop offset="100%" stop-color="${secondEnd}"/></linearGradient>
+        </defs>`);
+        const blocks = svg.querySelectorAll("rect");
+        if (blocks[0]) blocks[0].style.fill = `url(#${id}-a)`;
+        if (blocks[1]) blocks[1].style.fill = `url(#${id}-b)`;
+      };
+
+      document.querySelectorAll(".palette-card").forEach(card => {
+        const preview = card.querySelector(".palette-preview");
+        const logo = preview.querySelector(".logo");
+        const lightLogo = logo.outerHTML;
+        const darkLogo = logo.outerHTML;
+        preview.innerHTML = `
+          <div class="palette-mode light-sample"><span class="palette-mode-label">Light mode</span>${lightLogo}</div>
+          <div class="palette-mode dark-sample"><span class="palette-mode-label">Dark mode</span>${darkLogo}</div>`;
+
+        const style = getComputedStyle(card);
+        const value = name => style.getPropertyValue(name).trim();
+        const swatches = card.querySelector(".swatches");
+        swatches.className = "scheme-swatches";
+        swatches.innerHTML = `
+          <div class="swatch-set"><em>Light</em><i class="swatch" style="--swatch:${value("--a")}" title="${value("--a")}"></i><i class="swatch" style="--swatch:${value("--b")}" title="${value("--b")}"></i><i class="swatch" style="--swatch:${value("--type")}" title="${value("--type")}"></i></div>
+          <div class="swatch-set"><em>Dark</em><i class="swatch" style="--swatch:${value("--ad")}" title="${value("--ad")}"></i><i class="swatch" style="--swatch:${value("--bd")}" title="${value("--bd")}"></i><i class="swatch" style="--swatch:${value("--typed")}" title="${value("--typed")}"></i></div>`;
+
+        const icons = document.createElement("div");
+        icons.className = "app-icon-pair";
+        icons.setAttribute("aria-label", "Light and dark app icons");
+        icons.innerHTML = `<span class="app-icon" title="Light app icon">${icon}</span><span class="app-icon dark-icon" title="Dark app icon">${icon}</span>`;
+        card.querySelector(".palette-meta").append(icons);
+
+        applyGradients(card.querySelector(".light-sample svg"), value("--a"), value("--b"), false);
+        applyGradients(card.querySelector(".dark-sample svg"), value("--ad"), value("--bd"), true);
+        applyGradients(card.querySelector(".app-icon:not(.dark-icon) svg"), value("--a"), value("--b"), false);
+        applyGradients(card.querySelector(".dark-icon svg"), value("--ad"), value("--bd"), true);
+      });
+    })();
+  </script>
+</body>
+</html>

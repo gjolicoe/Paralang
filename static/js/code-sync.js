@@ -1,4 +1,4 @@
-function scrollCodeFrameToBlock(frame, blockIndex, outlineColor = "cornflowerblue") {
+function scrollCodeFrameToBlock(frame, blockIndex, outlineColor = "#a99de7") {
     if (!frame || blockIndex < 0) return false;
 
     const doc = frame.contentDocument || frame.contentWindow.document;
@@ -78,7 +78,7 @@ function normalizeComparableSignature(value) {
         .toLowerCase();
 }
 
-function scrollCodeFrameToSignature(frame, signature, outlineColor = "cornflowerblue", preferredBlockIndex = null) {
+function scrollCodeFrameToSignature(frame, signature, outlineColor = "#a99de7", preferredBlockIndex = null) {
     if (!frame || !signature) return false;
 
     const doc = frame.contentDocument || frame.contentWindow.document;
@@ -222,7 +222,7 @@ function syncCodePanelsToCurrentSelection() {
     const leftBlockSynced = scrollCodeFrameToBlock(
         leftCodeFrame,
         leftIndex,
-        "cornflowerblue"
+        "#a99de7"
     );
 
     if (!leftBlockSynced) {
@@ -231,7 +231,7 @@ function syncCodePanelsToCurrentSelection() {
         scrollCodeFrameToSignature(
             leftCodeFrame,
             leftSignature,
-            "cornflowerblue",
+            "#a99de7",
             leftIndex
         );
     }
@@ -240,7 +240,7 @@ function syncCodePanelsToCurrentSelection() {
         const outOfSync = areCurrentBlocksOutOfSync(leftIndex, rightIndex);
         const rightColor = outOfSync
             ? "rgba(220, 53, 69, 0.95)"
-            : "cornflowerblue";
+            : "#a99de7";
 
         const rightBlockSynced = scrollCodeFrameToBlock(
             rightCodeFrame,
