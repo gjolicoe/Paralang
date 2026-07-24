@@ -42,21 +42,23 @@ yearSelect.addEventListener("change", () => {
 
 leftFrame.addEventListener("load", event => {
     frameLoaded(event);
-    highlightTableNumberMismatches();
+    refreshClientTableNumberIssues();
 });
 rightFrame.addEventListener("load", event => {
     frameLoaded(event);
-    highlightTableNumberMismatches();
+    refreshClientTableNumberIssues();
 });
 
 document.getElementById("rightBack").addEventListener("click", () => {
     manualRightSyncOffset -= 1;
     syncToElement(selectedElementIndex);
+    refreshClientTableNumberIssues();
 });
 
 document.getElementById("rightForward").addEventListener("click", () => {
     manualRightSyncOffset += 1;
     syncToElement(selectedElementIndex);
+    refreshClientTableNumberIssues();
 });
 
 document.getElementById("resetSyncOffset").addEventListener("click", () => {
@@ -64,6 +66,7 @@ document.getElementById("resetSyncOffset").addEventListener("click", () => {
     theoreticalRightSyncOffset = 0;
     lastAutoSyncedRightIndex = selectedElementIndex;
     syncToElement(selectedElementIndex);
+    refreshClientTableNumberIssues();
 });
 
 document.getElementById("toggleAutoSync").addEventListener("click", () => {
@@ -77,6 +80,7 @@ document.getElementById("toggleAutoSync").addEventListener("click", () => {
     clearSyncMapCache();
 
     syncToElement(selectedElementIndex);
+    refreshClientTableNumberIssues();
 });
 
 document.getElementById("toggleFocusMode").addEventListener("click", () => {

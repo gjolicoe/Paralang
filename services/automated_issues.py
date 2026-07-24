@@ -13,7 +13,7 @@ from services.review_storage import (
 )
 
 
-AUTOMATED_CHECK_VERSION = 3
+AUTOMATED_CHECK_VERSION = 4
 
 
 def build_automated_issue_records(source_env, year, left_file, right_file):
@@ -37,6 +37,12 @@ def build_automated_issue_records(source_env, year, left_file, right_file):
     records = []
 
     for issue in preflight_issues:
+        # Numeric table pairing uses the browser's resolved scroll-sync map,
+        # including the current manual offset. The server cannot reproduce
+        # that live state, so these issues are generated client-side.
+        if issue.get("opcode") == "table-number-mismatch":
+            continue
+
         left = issue.get("left")
         right = issue.get("right")
 

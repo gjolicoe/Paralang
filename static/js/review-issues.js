@@ -699,15 +699,25 @@ function renderIssues(issues) {
 
   if (!diffPanel) return;
 
+  latestStoredIssues = issues.filter(issue => {
+    return issue.title !== "Table number mismatch"
+      && !String(issue.id || "").startsWith("client_table_number_");
+  });
+
+  const renderedIssues = [
+    ...latestStoredIssues,
+    ...clientTableNumberIssues
+  ];
+
   removeAllStoredIssueRows();
 
   const noIssuesMessage = document.getElementById("noIssuesMessage");
 
-  window.PARALANG_PREFLIGHT_ISSUES = issues.filter(
+  window.PARALANG_PREFLIGHT_ISSUES = renderedIssues.filter(
     issue => issue.issue_source === "automated"
   );
 
-  issues.forEach(issue => {
+  renderedIssues.forEach(issue => {
     const row = renderIssueRow(issue);
 
     if (noIssuesMessage) {
