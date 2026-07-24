@@ -1,6 +1,6 @@
 from pathlib import Path
-from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.parse import urljoin, urlparse
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 import hashlib
 import json
 import re
@@ -14,6 +14,8 @@ DATA_ROOT = PROJECT_ROOT / "data"
 ENVIRONMENT_PRESETS_PATH = DATA_ROOT / "environment-presets.json"
 LOCAL_FILES_ROOT = DATA_ROOT / "local-files"
 URL_CACHE_ROOT = PROJECT_ROOT / ".cache" / "canada-ca-pages"
+MAX_CANADA_CA_PAGE_BYTES = 100 * 1024 * 1024
+MAX_CANADA_CA_REDIRECTS = 10
 
 LOCAL_FILES_ROOT.mkdir(parents=True, exist_ok=True)
 URL_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
@@ -323,10 +325,59 @@ def is_allowed_canada_ca_url(url):
     if parsed.scheme != "https":
         return False
 
-    if parsed.netloc.lower() != "www.canada.ca":
+    if (
+        parsed.hostname != "www.canada.ca"
+        or parsed.port not in {None, 443}
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
         return False
 
     return bool(re.match(r"^/(en|fr)/", parsed.path))
+
+
+class CanadaCaRedirectHandler(HTTPRedirectHandler):
+    """Follow redirects only while every hop remains an allowed Canada.ca page."""
+
+    def __init__(self, max_redirects=MAX_CANADA_CA_REDIRECTS):
+        super().__init__()
+        self.max_redirects = max_redirects
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirect_count = getattr(req, "_paralang_redirect_count", 0) + 1
+        resolved_url = urljoin(req.full_url, newurl)
+        if redirect_count > self.max_redirects:
+            raise ValueError("Canada.ca returned too many redirects.")
+        if not is_allowed_canada_ca_url(resolved_url):
+            raise ValueError("Canada.ca redirected to a URL outside the approved Canada.ca paths.")
+
+        redirected = super().redirect_request(req, fp, code, msg, headers, resolved_url)
+        if redirected is not None:
+            redirected._paralang_redirect_count = redirect_count
+        return redirected
+
+
+def read_limited_response(response, maximum_bytes=MAX_CANADA_CA_PAGE_BYTES):
+    content_length = response.headers.get("Content-Length")
+    if content_length:
+        try:
+            declared_length = int(content_length)
+        except (TypeError, ValueError):
+            declared_length = None
+        if declared_length is not None and declared_length > maximum_bytes:
+            raise ValueError("The Canada.ca page exceeds the 100 MB download limit.")
+
+    chunks = []
+    total = 0
+    while True:
+        chunk = response.read(min(1024 * 1024, maximum_bytes - total + 1))
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > maximum_bytes:
+            raise ValueError("The Canada.ca page exceeds the 100 MB download limit.")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def get_canada_ca_cache_key(url):
@@ -382,16 +433,20 @@ def fetch_canada_ca_url_to_cache(url):
         }
     )
 
-    with urlopen(request, timeout=20) as response:
-        raw = response.read()
+    opener = build_opener(CanadaCaRedirectHandler())
+    with opener.open(request, timeout=20) as response:
+        final_url = response.geturl()
+        if not is_allowed_canada_ca_url(final_url):
+            raise ValueError("The final download URL is outside the approved Canada.ca paths.")
+        raw = read_limited_response(response)
 
     html = raw.decode("utf-8", errors="ignore")
-    html = inject_base_href(html, url)
+    html = inject_base_href(html, final_url)
 
     cached_path.write_text(html, encoding="utf-8")
 
     metadata = {
-        "source_url": url
+        "source_url": final_url
     }
 
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")

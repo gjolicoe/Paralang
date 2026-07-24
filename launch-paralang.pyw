@@ -14,6 +14,7 @@ import webbrowser
 
 PROJECT_DIR = Path(__file__).resolve().parent
 APP_PATH = PROJECT_DIR / "app.py"
+REQUIREMENTS_PATH = PROJECT_DIR / "requirements.txt"
 SERVER_URL = "http://127.0.0.1:5000"
 LOG_DIR = PROJECT_DIR / ".cache" / "launcher"
 STDOUT_LOG = LOG_DIR / "paralang.stdout.log"
@@ -237,8 +238,12 @@ class ParalangLauncher:
             return True
 
         self.status.set("Installing required Python packages...")
+        if not REQUIREMENTS_PATH.is_file():
+            self.fail(f"requirements.txt was not found in:\n{PROJECT_DIR}")
+            return False
+
         install_check = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "flask", "beautifulsoup4"],
+            [sys.executable, "-m", "pip", "install", "-r", str(REQUIREMENTS_PATH)],
             cwd=PROJECT_DIR,
             capture_output=True,
             text=True,
@@ -248,7 +253,8 @@ class ParalangLauncher:
             self.fail(
                 "Required Python packages could not be installed automatically.\n\n"
                 f"Python: {sys.executable}\n\n"
-                "Install them manually with:\npython -m pip install flask beautifulsoup4\n\n"
+                "Install them manually with:\n"
+                "python -m pip install -r requirements.txt\n\n"
                 f"Installer output:\n{install_check.stderr.strip() or install_check.stdout.strip()}"
             )
             return False

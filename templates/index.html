@@ -9,10 +9,6 @@
   <link rel="alternate icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;600;700&display=swap"
-    rel="stylesheet">
 </head>
 
 <body class="{% if is_url_input %}url-input-env{% endif %} {% if source_env == 'pasted-html' %}pasted-html-env{% endif %}">
@@ -487,7 +483,7 @@
       <section class="panel left-page">
         {% if left_file %}
         <iframe id="leftFrame" src="/page/{{ source_env }}/{{ year }}/{{ left_file }}"
-          {% if source_env == 'pasted-html' %}sandbox="allow-same-origin"{% endif %}></iframe>
+          sandbox="allow-same-origin"></iframe>
         {% else %}
         <iframe id="leftFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste an EN page and press Load.</p>"></iframe>
@@ -512,7 +508,7 @@
       <section class="panel right-page">
         {% if right_file %}
         <iframe id="rightFrame" src="/page/{{ source_env }}/{{ year }}/{{ right_file }}"
-          {% if source_env == 'pasted-html' %}sandbox="allow-same-origin"{% endif %}></iframe>
+          sandbox="allow-same-origin"></iframe>
         {% else %}
         <iframe id="rightFrame"
           srcdoc="<p style='font-family: sans-serif; padding: 2rem;'>Choose or paste a FR page and press Load.</p>"></iframe>

@@ -81,7 +81,13 @@ python launch-paralang.pyw
 
 On Windows, you can also double-click `launch-paralang.pyw` when `.pyw` files are associated with Python.
 
-The launcher checks for Flask and Beautiful Soup and installs them with `pip` if needed. It then starts Paralang at <http://127.0.0.1:5000>, opens the site in your browser, and leaves a small control window running. Use **Refresh Application** to restart the local server and automatically reload open Paralang pages after code changes. Use **Open Browser** to reopen the site and **Stop Paralang** (or close the control window) to stop the server cleanly.
+The launcher checks for Flask and Beautiful Soup and installs the pinned packages in `requirements.txt` with `pip` if needed. It then starts Paralang at <http://127.0.0.1:5000>, opens the site in your browser, and leaves a small control window running. Use **Refresh Application** to restart the local server and automatically reload open Paralang pages after code changes. Use **Open Browser** to reopen the site and **Stop Paralang** (or close the control window) to stop the server cleanly.
+
+## Protected-content safeguards
+
+Paralang runs only on `127.0.0.1`. Reviewed HTML is displayed in a sandbox with scripts, forms, embedded frames, plug-ins, and browser network APIs disabled. HTTPS stylesheets, fonts, and images remain available, but page requests use a `no-referrer` policy so the remote server is not sent the Paralang URL or local filename.
+
+Canada.ca URL imports may follow redirects only when every redirect remains under `https://www.canada.ca/en/` or `https://www.canada.ca/fr/`. Pasted HTML requests and Canada.ca page downloads are limited to 100 MB each. Content stored in `data/` and `.cache/` remains local and uses the workstation or shared drive's existing access controls.
 
 If startup fails, diagnostic output is available in `.cache/launcher/`.
 

@@ -58,7 +58,58 @@ from services.automated_issues import (
 )
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
 APP_INSTANCE_ID = uuid4().hex
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "[::1]"}
+DOCUMENT_CSP = "; ".join([
+    "default-src 'none'",
+    "style-src 'self' 'unsafe-inline' https:",
+    "img-src 'self' data: https:",
+    "font-src 'self' data: https:",
+    "script-src 'none'",
+    "connect-src 'none'",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "media-src 'none'",
+    "worker-src 'none'",
+    "form-action 'none'",
+    "base-uri 'self' https://www.canada.ca",
+])
+
+
+def is_local_request_url(value):
+    parsed = urlsplit(value or "")
+    return (
+        parsed.scheme in {"http", "https"}
+        and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+    )
+
+
+@app.before_request
+def restrict_request_to_local_app():
+    host = request.host.split(":", 1)[0] if not request.host.startswith("[") else request.host.split("]", 1)[0] + "]"
+    if host.lower() not in LOCAL_HOSTS:
+        abort(403)
+
+    if request.method not in {"GET", "HEAD", "OPTIONS"}:
+        origin = request.headers.get("Origin")
+        if origin and not is_local_request_url(origin):
+            abort(403)
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    )
+    if request.endpoint == "page_view" or (
+        request.endpoint == "source" and response.mimetype == "text/html"
+    ):
+        response.headers["Content-Security-Policy"] = DOCUMENT_CSP
+    return response
 
 
 @app.get("/api/app-instance")
@@ -357,17 +408,31 @@ def page_view(source_env, year, filename):
     soup = BeautifulSoup(raw_html, "html.parser")
 
     is_pasted_content = source_env == PASTED_HTML_ENV or is_managed_pasted_html(requested)
+
+    # Reviewed documents are data, never executable application code.
+    for unsafe in soup.find_all(["script", "iframe", "object", "embed", "applet"]):
+        unsafe.decompose()
+    for meta in soup.find_all("meta"):
+        if str(meta.get("http-equiv", "")).strip().lower() == "refresh":
+            meta.decompose()
+    for form in soup.find_all("form"):
+        form.unwrap()
+    for element in soup.find_all(True):
+        for attribute in list(element.attrs):
+            value = element.get(attribute)
+            attribute_name = attribute.lower()
+            if (
+                attribute_name.startswith("on")
+                or attribute_name in {"action", "formaction"}
+                or (
+                    attribute_name in {"href", "src", "xlink:href"}
+                    and isinstance(value, str)
+                    and value.strip().lower().startswith(("javascript:", "vbscript:"))
+                )
+            ):
+                del element.attrs[attribute]
+
     if is_pasted_content:
-        for unsafe in soup.find_all(["script", "iframe", "object", "embed"]):
-            unsafe.decompose()
-        for element in soup.find_all(True):
-            for attribute in list(element.attrs):
-                value = element.get(attribute)
-                if attribute.lower().startswith("on") or (
-                    attribute.lower() in {"href", "src", "action", "formaction"}
-                    and isinstance(value, str) and value.strip().lower().startswith("javascript:")
-                ):
-                    del element.attrs[attribute]
 
         if not soup.head:
             soup.insert(0, soup.new_tag("head"))
@@ -672,4 +737,4 @@ def ensure_automated_issues_exist(source_env, year, left_file, right_file):
     )
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, use_reloader=False)
+    app.run(host="127.0.0.1", debug=False, port=5000, use_reloader=False)
