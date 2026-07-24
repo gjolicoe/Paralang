@@ -6,8 +6,6 @@ function clearSelectedOutline(frame) {
     });
 
     doc.querySelectorAll("[data-paralang-selected='true']").forEach(el => {
-        el.style.position = "";
-        el.style.zIndex = "";
         el.removeAttribute("data-paralang-outline-color");
         el.removeAttribute("data-paralang-selected");
     });
@@ -146,9 +144,6 @@ function highlightElement(el, color = "#8172d0") {
     if (showOutline) {
         highlightBounds(el.ownerDocument, bounds, outlineTreatment);
     }
-
-    el.style.position = "relative";
-    el.style.zIndex = "5";
 
     if (focusModeEnabled) {
         applyFocusMode(el);
