@@ -35,20 +35,24 @@ def content_digest(content):
 
 def extract_name_text(content):
     soup = BeautifulSoup(content or "", "html.parser")
-    for candidate in [soup.title, soup.find("h1"), soup.find("h2")]:
+    # Prefer the page's visible primary heading over often-generic document titles.
+    for candidate in [soup.find("h1"), soup.title]:
         if not candidate:
             continue
         text = " ".join(candidate.get_text(" ", strip=True).split())
         if text:
             return html_module.unescape(text)
 
-    if soup.body:
-        for value in soup.body.stripped_strings:
-            if value.parent and value.parent.name in {"script", "style", "noscript"}:
-                continue
-            text = " ".join(str(value).split())
-            if text:
-                return html_module.unescape(text)
+    visible_source = soup.body or soup
+    for value in visible_source.stripped_strings:
+        parent = getattr(value, "parent", None)
+        if parent and parent.name in {"script", "style", "noscript"}:
+            continue
+        text = " ".join(str(value).split())
+        if text:
+            # A short phrase makes a useful filename without letting a long
+            # paragraph consume the entire filename limit.
+            return html_module.unescape(" ".join(text.split()[:5]))
     return "pasted-html"
 
 
