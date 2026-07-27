@@ -1188,6 +1188,129 @@ body.dark-mode .additional-folders-fields>small {
   width: min(720px, calc(100vw - 32px));
 }
 
+.issue-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+
+.issue-dialog-icon {
+  font-weight: 800;
+}
+
+.issue-form {
+  padding: 22px 24px 24px;
+}
+
+.issue-form-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.issue-form-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.issue-form-fields small {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.issue-form-fields input:not([type="radio"]),
+.issue-form-fields textarea {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: 7px;
+  background: var(--toolbar-control-bg);
+  color: inherit;
+  font: 500 13px/1.4 inherit;
+}
+
+.issue-form-fields input:not([type="radio"]) {
+  height: 38px;
+}
+
+.issue-form-fields textarea {
+  resize: none;
+}
+
+.issue-side-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.issue-side-fieldset legend {
+  margin-bottom: 7px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.issue-side-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.issue-side-option {
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: flex-start;
+  gap: 10px !important;
+  padding: 11px;
+  border: 1px solid var(--toolbar-control-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.issue-side-option:hover {
+  border-color: var(--toolbar-control-border-hover);
+  background: var(--toolbar-control-bg-hover);
+}
+
+.issue-side-option:has(input:checked) {
+  border-color: var(--brand-iris);
+  background: rgba(102, 86, 181, .08);
+}
+
+.issue-side-option input {
+  width: auto;
+  height: auto;
+  margin: 3px 0 0;
+  accent-color: var(--brand-iris);
+}
+
+.issue-side-option span {
+  display: grid;
+  gap: 3px;
+}
+
+.issue-side-option strong {
+  font-size: 13px;
+}
+
+.issue-form-fields input:not([type="radio"]):focus,
+.issue-form-fields textarea:focus {
+  outline: 3px solid rgba(102, 86, 181, .24);
+  outline-offset: 1px;
+  border-color: var(--toolbar-control-focus);
+}
+
+.issue-form-fields > label:first-child {
+  width: min(320px, 100%);
+}
+
+body.dark-mode .issue-form-fields small {
+  color: #b8c0cc;
+}
+
 .feedback-dialog-icon {
   background: linear-gradient(135deg, #e6defa 0%, #ffe3d5 100%);
   color: var(--brand-iris);
@@ -1569,7 +1692,9 @@ body.dark-mode .feedback-pill-icon {
   }
 
   .environment-form-grid,
-  .environment-detection-options {
+  .environment-detection-options,
+  .issue-form-fields,
+  .issue-side-options {
     grid-template-columns: 1fr;
   }
 

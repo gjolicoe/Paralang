@@ -91,47 +91,32 @@ function getReviewUserName() {
   return localStorage.getItem("paralangReviewUserName") || "";
 }
 
-function askForReviewUserName() {
-  const currentName = getReviewUserName();
+let pendingIssueBlockData = null;
+let pendingIssueSide = "left";
 
-  const name = prompt(
-    "Enter your name for QA notes:",
-    currentName || ""
-  );
-
-  if (!name) {
-    return "";
-  }
-
-  const cleanedName = name.trim();
-
-  if (!cleanedName) {
-    return "";
-  }
-
-  localStorage.setItem("paralangReviewUserName", cleanedName);
-
-  return cleanedName;
+function showIssueFormMessage(text) {
+  const message = document.getElementById("issueFormMessage");
+  if (!message) return;
+  message.textContent = text;
+  message.hidden = !text;
 }
 
-function getOrAskReviewUserName() {
-  const savedName = getReviewUserName();
-
-  if (savedName) {
-    return savedName;
-  }
-
-  return askForReviewUserName();
+function closeIssueDialog() {
+  const dialog = document.getElementById("issueDialog");
+  if (dialog?.open) dialog.close();
 }
 
-function changeReviewUserName() {
-  const updatedName = askForReviewUserName();
+function updatePendingIssueSide(form, updateComment = true) {
+  pendingIssueSide = form.elements.issue_side.value === "right"
+    ? "right"
+    : "left";
+  pendingIssueBlockData = getCurrentSelectedBlockData(pendingIssueSide);
 
-  if (!updatedName) {
-    return;
+  if (updateComment) {
+    form.elements.comment.value = pendingIssueBlockData?.preview || "";
   }
 
-  alert(`Reviewer name updated to: ${updatedName}`);
+  showIssueFormMessage(pendingIssueBlockData ? "" : "No selected block found.");
 }
 
 function getCurrentReviewSide() {
@@ -208,29 +193,35 @@ function getSimpleTextHash(value) {
   return String(hash);
 }
 
-async function createUserMarkedIssue() {
-  const userName = getOrAskReviewUserName();
+function openIssueDialog() {
+  const dialog = document.getElementById("issueDialog");
+  const form = document.getElementById("issueForm");
+  if (!dialog || !form) return;
 
-  if (!userName) {
-    askForReviewUserName();
+  form.reset();
+  form.elements.reviewer_name.value = getReviewUserName();
+  form.elements.issue_side.value = getCurrentReviewSide();
+  updatePendingIssueSide(form);
+  dialog.showModal();
+  form.elements.title.focus();
+}
+
+async function createUserMarkedIssue(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submitButton = document.getElementById("submitIssueButton");
+
+  if (!form.reportValidity()) return;
+  if (!pendingIssueBlockData) {
+    showIssueFormMessage("No selected block found.");
     return;
   }
 
-  const side = getCurrentReviewSide();
-  const blockData = getCurrentSelectedBlockData(side);
-
-  if (!blockData) {
-    alert("No selected block found.");
-    return;
-  }
-
-  const title = prompt("Issue title:", "Review this block");
-
-  if (!title) {
-    return;
-  }
-
-  const comment = prompt("Comment:", blockData.preview || "");
+  const userName = form.elements.reviewer_name.value.trim();
+  const title = form.elements.title.value.trim();
+  const comment = form.elements.comment.value.trim();
+  const side = pendingIssueSide;
+  const blockData = pendingIssueBlockData;
 
   const payload = {
     source_env: getSelectedEnv(),
@@ -244,26 +235,36 @@ async function createUserMarkedIssue() {
     block_hash: blockData.block_hash,
     severity: "warning",
     title: title,
-    comment: comment || "",
+    comment,
     created_by: userName
   };
 
-  const response = await fetch("/api/issues", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
+  showIssueFormMessage("");
+  submitButton.disabled = true;
 
-  const result = await response.json();
+  try {
+    const response = await fetch("/api/issues", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
 
-  if (!response.ok || !result.ok) {
-    alert(result.error || "Could not create issue.");
-    return;
+    if (!response.ok || !result.ok) {
+      showIssueFormMessage(result.error || "Could not create issue.");
+      return;
+    }
+
+    localStorage.setItem("paralangReviewUserName", userName);
+    closeIssueDialog();
+    await refreshUserIssuesFromServer();
+  } catch (error) {
+    showIssueFormMessage("Could not create issue.");
+  } finally {
+    submitButton.disabled = false;
   }
-
-  await refreshUserIssuesFromServer();
 }
 
 function getComparableElementsIncludingClosedDetails(frame) {
@@ -466,16 +467,22 @@ function scrollToUserMarkedIssue(side, blockIndex, blockSignature = "") {
 
 function setupReviewIssueControls() {
   const markIssueButton = document.getElementById("markIssueButton");
+  const issueForm = document.getElementById("issueForm");
 
   if (markIssueButton) {
-    markIssueButton.addEventListener("click", createUserMarkedIssue);
+    markIssueButton.addEventListener("click", openIssueDialog);
   }
 
-  const changeReviewerNameButton = document.getElementById("changeReviewerNameButton");
-
-  if (changeReviewerNameButton) {
-    changeReviewerNameButton.addEventListener("click", changeReviewUserName);
-  }
+  issueForm?.addEventListener("submit", createUserMarkedIssue);
+  issueForm?.addEventListener("change", event => {
+    if (event.target.name === "issue_side") {
+      updatePendingIssueSide(issueForm);
+    }
+  });
+  document.getElementById("closeIssueDialog")
+    ?.addEventListener("click", closeIssueDialog);
+  document.getElementById("cancelIssueDialog")
+    ?.addEventListener("click", closeIssueDialog);
 
   const rerunButton = document.getElementById("rerunAutomatedIssuesButton");
 
@@ -609,7 +616,6 @@ function updateReviewIssueButtonsState() {
   const disabled = reviewIssuesDisabledForEnvironment(getSelectedEnv());
 
   const markIssueButton = document.getElementById("markIssueButton");
-  const changeReviewerNameButton = document.getElementById("changeReviewerNameButton");
 
   const rerunButton = document.getElementById("rerunAutomatedIssuesButton");
 
@@ -618,13 +624,6 @@ function updateReviewIssueButtonsState() {
     markIssueButton.title = disabled
       ? "Issue marking is disabled for URL-based environments."
       : "Mark the currently selected block as an issue";
-  }
-
-  if (changeReviewerNameButton) {
-    changeReviewerNameButton.disabled = disabled;
-    changeReviewerNameButton.title = disabled
-      ? "Reviewer names are only needed when issue marking is enabled."
-      : "Change reviewer name";
   }
 
   if (rerunButton) {

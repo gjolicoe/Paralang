@@ -419,6 +419,44 @@
   </dialog>
   {% endif %}
 
+  <dialog id="issueDialog" class="environment-dialog issue-dialog" aria-labelledby="issueDialogTitle">
+    <div class="environment-dialog-content">
+      <header class="environment-dialog-heading">
+        <div class="environment-dialog-icon issue-dialog-icon" aria-hidden="true">!</div>
+        <div>
+          <h2 id="issueDialogTitle">Create new issue</h2>
+          <p>Add a review note for the currently selected block.</p>
+        </div>
+        <button type="button" id="closeIssueDialog" class="environment-dialog-close" aria-label="Close issue form">&times;</button>
+      </header>
+      <form id="issueForm" class="issue-form">
+        <div class="issue-form-fields">
+          <label><span>Reviewer name</span><input name="reviewer_name" required maxlength="100" autocomplete="name"><small>Your name will be remembered for the next issue.</small></label>
+          <label><span>Issue title</span><input name="title" required maxlength="200" value="Review this block"></label>
+          <fieldset class="issue-side-fieldset">
+            <legend>Issue location</legend>
+            <div class="issue-side-options">
+              <label class="issue-side-option">
+                <input type="radio" name="issue_side" value="left" checked>
+                <span><strong>English page</strong><small>Mark the selected English block.</small></span>
+              </label>
+              <label class="issue-side-option">
+                <input type="radio" name="issue_side" value="right">
+                <span><strong>French page</strong><small>Mark the selected French block.</small></span>
+              </label>
+            </div>
+          </fieldset>
+          <label class="issue-comment-field"><span>Comment</span><textarea name="comment" maxlength="2000" rows="5"></textarea></label>
+        </div>
+        <div id="issueFormMessage" class="paste-html-message" role="alert" hidden></div>
+        <div class="environment-form-actions">
+          <button type="button" id="cancelIssueDialog" class="environment-button environment-button-secondary">Cancel</button>
+          <button type="submit" id="submitIssueButton" class="environment-button primary-action">Create issue</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <div id="layout" class="layout">
     <div class="view-control-bar" id="viewControlBar" aria-label="View controls">
       <div class="view-control-actions view-control-actions-left">
@@ -562,7 +600,6 @@
 
       <div class="diff-header-actions">
         <span id="issueRefreshCountdown" class="issue-refresh-countdown">Refresh in 5s</span>
-        <button type="button" id="changeReviewerNameButton">Change name</button>
         <button type="button" id="rerunAutomatedIssuesButton">Re-run automated check</button>
         <button type="button" id="markIssueButton">Create new issue</button>
       </div>
