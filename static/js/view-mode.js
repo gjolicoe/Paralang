@@ -97,6 +97,7 @@ function setDarkMode(enabled) {
     refreshSelectedOutlineForTheme(leftFrame);
     refreshSelectedOutlineForTheme(rightFrame);
   }
+
 }
 
 function loadDarkMode() {

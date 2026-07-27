@@ -1,3 +1,21 @@
+function applyCodeOutlineTreatment(frame, target, outlineColor = "#a99de7") {
+    const warningColor = "rgba(220, 53, 69, 0.95)";
+    const isWarning = outlineColor === warningColor;
+    const isRightFrame = frame?.id === "rightCodeFrame";
+    const purpleDark = "#3b2e7e";
+    const purpleLight = "#7566c5";
+    const start = isWarning
+        ? "#ff9900"
+        : (isRightFrame ? purpleLight : purpleDark);
+    const end = isWarning
+        ? start
+        : (isRightFrame ? purpleDark : purpleLight);
+
+    target.dataset.paralangCodeOutlineColor = outlineColor;
+    target.style.setProperty("--paralang-code-outline-start", start);
+    target.style.setProperty("--paralang-code-outline-end", end);
+}
+
 function scrollCodeFrameToBlock(frame, blockIndex, outlineColor = "#a99de7") {
     if (!frame || blockIndex < 0) return false;
 
@@ -20,7 +38,9 @@ function scrollCodeFrameToBlock(frame, blockIndex, outlineColor = "#a99de7") {
             "code-line-selected-last",
             "code-line-selected-single"
         );
-        el.style.removeProperty("--paralang-code-outline");
+        el.style.removeProperty("--paralang-code-outline-start");
+        el.style.removeProperty("--paralang-code-outline-end");
+        delete el.dataset.paralangCodeOutlineColor;
     });
 
     clearCodeFocusMode(frame);
@@ -36,7 +56,7 @@ function scrollCodeFrameToBlock(frame, blockIndex, outlineColor = "#a99de7") {
 
     targets.forEach((target, index) => {
         target.setAttribute("data-paralang-code-selected", "true");
-        target.style.setProperty("--paralang-code-outline", outlineColor);
+        applyCodeOutlineTreatment(frame, target, outlineColor);
 
         if (!highlightModeEnabled || singleViewEnabled) {
             return;
@@ -124,7 +144,9 @@ function scrollCodeFrameToSignature(frame, signature, outlineColor = "#a99de7", 
             "code-line-selected-last",
             "code-line-selected-single"
         );
-        el.style.removeProperty("--paralang-code-outline");
+        el.style.removeProperty("--paralang-code-outline-start");
+        el.style.removeProperty("--paralang-code-outline-end");
+        delete el.dataset.paralangCodeOutlineColor;
     });
 
     const firstTarget = finalTargets[0];
@@ -138,7 +160,7 @@ function scrollCodeFrameToSignature(frame, signature, outlineColor = "#a99de7", 
 
     finalTargets.forEach((target, index) => {
         target.setAttribute("data-paralang-code-selected", "true");
-        target.style.setProperty("--paralang-code-outline", outlineColor);
+        applyCodeOutlineTreatment(frame, target, outlineColor);
 
         if (!highlightModeEnabled || singleViewEnabled) {
             return;
