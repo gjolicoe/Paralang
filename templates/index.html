@@ -122,7 +122,7 @@
       <div class="left-page-selection">
         <label for="left" id="leftSelectLabel">
           {% if is_url_input %}
-            EN Canada.ca URL
+            EN website URL
           {% else %}
             EN page
           {% endif %}
@@ -130,7 +130,7 @@
 
         {% if is_url_input %}
         <input id="left" name="left" type="text" value="{{ left_input_value }}"
-          placeholder="Paste EN Canada.ca URL">
+          placeholder="Paste EN website URL">
         {% else %}
         <select id="left" name="left">
           {% for file in en_files %}
@@ -146,7 +146,7 @@
       <div id="rightSelectGroup" class="right-page-selection">
         <label for="right">
           {% if is_url_input %}
-            FR Canada.ca URL
+            FR website URL
           {% else %}
             FR page
           {% endif %}
@@ -154,7 +154,7 @@
 
         {% if is_url_input %}
         <input id="right" name="right" type="text" value="{{ right_input_value }}"
-          placeholder="Paste FR Canada.ca URL">
+          placeholder="Paste FR website URL">
         {% else %}
         <select id="right" name="right">
           {% for file in fr_files %}
@@ -242,7 +242,7 @@
           {% for preset in environment_presets %}
           <div class="environment-preset-row" data-preset-id="{{ preset.id }}" data-preset='{{ preset|tojson|forceescape }}'>
             <div class="environment-preset-mark" aria-hidden="true">{{ preset.label[:1]|upper }}</div>
-            <span class="environment-preset-details"><strong>{{ preset.label }}</strong><small>{{ preset.group }}</small><code title="{{ preset.root }}">{{ preset.root }}</code></span>
+            <span class="environment-preset-details"><strong>{{ preset.label }}</strong><small>{{ preset.group }} · {{ preset.source_type|upper }}</small><code title="{{ preset.root if preset.source_type == 'folder' else preset.allowed_origins[0] }}">{{ preset.root if preset.source_type == 'folder' else preset.allowed_origins[0] }}</code></span>
             <div class="environment-preset-actions">
               <button type="button" class="environment-button environment-button-secondary" data-edit-preset="{{ preset.id }}">Edit</button>
               <button type="button" class="environment-button environment-button-secondary" data-export-preset="{{ preset.id }}">Export</button>
@@ -265,16 +265,18 @@
         <div class="environment-form-grid">
           <label><span>Name</span><input name="label" required maxlength="80" placeholder="Department website"></label>
           <label><span>Preset ID</span><input name="id" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="department-website"><small>Lowercase letters, numbers, and hyphens.</small></label>
+          <label><span>Preset type</span><select name="source_type" id="environmentPresetType"><option value="folder">Folder</option><option value="url">Public website URL</option></select><small>Choose how pages are loaded.</small></label>
           <label><span>Group</span><input name="group" maxlength="80" value="Team presets" data-i18n-value><small>Used as a header in the Environment menu.</small></label>
-          <label><span>Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
-          <label><span>Folder layout</span><select name="collection_mode"><option value="named-folders">Named subfolders</option><option value="direct">Pages directly in root</option></select></label>
+          <label class="preset-folder-field"><span>Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
+          <label class="preset-folder-field"><span>Folder layout</span><select name="collection_mode"><option value="named-folders">Named subfolders</option><option value="direct">Pages directly in root</option></select></label>
+          <label class="preset-url-field" hidden><span>Allowed website</span><input name="allowed_origin" type="url" placeholder="https://www.example.com"><small>Public HTTPS origin only; paths are entered when reviewing pages.</small></label>
           <label><span>Content selector</span><input name="content_selector" value=".content-area" maxlength="200"><small>CSS selector for the primary page content.</small></label>
         </div>
-        <div class="environment-detection-options">
+        <div class="environment-detection-options preset-folder-field">
           <label class="environment-checkbox"><input type="checkbox" name="include_root_html"><span><strong>Detect files in each root</strong><small>Include HTML files directly inside the selected folder.</small></span></label>
           <label class="environment-checkbox"><input type="checkbox" id="detectAdditionalFolders"><span><strong>Detect additional folders</strong><small>Search one or more relative subfolder paths.</small></span></label>
         </div>
-        <div id="additionalFoldersFields" class="additional-folders-fields">
+        <div id="additionalFoldersFields" class="additional-folders-fields preset-folder-field">
           <div class="additional-folders-heading">
             <span>Additional folder paths</span>
             <button type="button" id="addAdditionalFolder" class="environment-button environment-button-secondary">+ Add folder</button>

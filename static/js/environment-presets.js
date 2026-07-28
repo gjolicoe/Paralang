@@ -13,6 +13,9 @@
   const formDescription = document.getElementById("environmentPresetFormDescription");
   const resetButton = document.getElementById("environmentPresetReset");
   const submitButton = document.getElementById("environmentPresetSubmit");
+  const presetType = document.getElementById("environmentPresetType");
+  const folderFields = Array.from(form.querySelectorAll(".preset-folder-field"));
+  const urlFields = Array.from(form.querySelectorAll(".preset-url-field"));
   let editingPresetId = null;
 
   if (!dialog || !openButton || !form) return;
@@ -54,7 +57,24 @@
   closeButton.addEventListener("click", () => dialog.close());
 
   function updateAdditionalFoldersVisibility() {
-    additionalFoldersFields.hidden = !detectAdditionalFolders.checked;
+    additionalFoldersFields.hidden =
+      presetType.value === "url" || !detectAdditionalFolders.checked;
+  }
+
+  function updatePresetTypeVisibility() {
+    const isUrl = presetType.value === "url";
+    folderFields.forEach(field => {
+      if (field !== additionalFoldersFields) field.hidden = isUrl;
+    });
+    urlFields.forEach(field => {
+      field.hidden = !isUrl;
+    });
+    form.elements.root.required = !isUrl;
+    form.elements.allowed_origin.required = isUrl;
+    formDescription.textContent = translate(isUrl
+      ? "Connect Paralang to a public HTTPS website."
+      : "Connect Paralang to a local or shared folder structure.");
+    updateAdditionalFoldersVisibility();
   }
 
   function appendAdditionalFolder(value = "", focus = true) {
@@ -98,7 +118,9 @@
     form.elements.label.value = preset.label || "";
     form.elements.id.value = preset.id || "";
     form.elements.group.value = preset.group || "";
+    presetType.value = preset.source_type || "folder";
     form.elements.root.value = preset.root || "";
+    form.elements.allowed_origin.value = preset.allowed_origins?.[0] || "";
     form.elements.collection_mode.value = preset.collection_mode || "named-folders";
     form.elements.content_selector.value = preset.content_selector || ".content-area";
     form.elements.include_root_html.checked = Boolean(preset.include_root_html);
@@ -112,12 +134,14 @@
       appendAdditionalFolder(value, false);
     });
     updateAdditionalFoldersVisibility();
+    updatePresetTypeVisibility();
     showMessage("");
     form.scrollIntoView({behavior: "smooth", block: "start"});
     form.elements.label.focus({preventScroll: true});
   }
 
   detectAdditionalFolders.addEventListener("change", updateAdditionalFoldersVisibility);
+  presetType.addEventListener("change", updatePresetTypeVisibility);
   addAdditionalFolder.addEventListener("click", () => appendAdditionalFolder());
   additionalFoldersList.addEventListener("click", event => {
     const remove = event.target.closest("[data-remove-additional-folder]");
@@ -131,30 +155,39 @@
       const firstInput = additionalFoldersList.querySelector("input[name='additional_folder']");
       if (firstInput) firstInput.value = "report-rapport";
       showMessage("");
-      updateAdditionalFoldersVisibility();
       setFormMode();
+      updatePresetTypeVisibility();
     }, 0);
   });
   updateAdditionalFoldersVisibility();
+  updatePresetTypeVisibility();
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
     showMessage("");
     const data = new FormData(form);
     try {
-      await savePreset({
+      const preset = {
         id: data.get("id"),
         label: data.get("label"),
         group: data.get("group"),
-        root: data.get("root"),
-        collection_mode: data.get("collection_mode"),
+        source_type: data.get("source_type"),
         content_selector: data.get("content_selector"),
-        include_root_html: data.has("include_root_html"),
-        include_landing_pages: true,
-        additional_folders: detectAdditionalFolders.checked
+      };
+      if (preset.source_type === "url") {
+        preset.allowed_origin = data.get("allowed_origin");
+      } else {
+        Object.assign(preset, {
+          root: data.get("root"),
+          collection_mode: data.get("collection_mode"),
+          include_root_html: data.has("include_root_html"),
+          include_landing_pages: true,
+          additional_folders: detectAdditionalFolders.checked
           ? data.getAll("additional_folder").map(value => value.trim()).filter(Boolean)
-          : []
-      }, editingPresetId);
+          : [],
+        });
+      }
+      await savePreset(preset, editingPresetId);
       window.location.reload();
     } catch (error) {
       showMessage(error.message);

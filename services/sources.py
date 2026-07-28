@@ -14,6 +14,7 @@ DATA_ROOT = PROJECT_ROOT / "data"
 ENVIRONMENT_PRESETS_PATH = DATA_ROOT / "environment-presets.json"
 LOCAL_FILES_ROOT = DATA_ROOT / "local-files"
 URL_CACHE_ROOT = PROJECT_ROOT / ".cache" / "canada-ca-pages"
+URL_PRESET_CACHE_ROOT = PROJECT_ROOT / ".cache" / "url-presets"
 MAX_CANADA_CA_PAGE_BYTES = 100 * 1024 * 1024
 MAX_CANADA_CA_REDIRECTS = 10
 
@@ -44,10 +45,42 @@ PASTED_HTML_ENV = "pasted-html"
 BUILTIN_SOURCE_ENVIRONMENTS = {
     "local-files": {"label": "Local files", "root": LOCAL_FILES_ROOT, "type": "folder", "group": "Built-in environments", "collection_mode": "named-folders", "folder_name_pattern": r"[^\\/]+", "show_when_empty": True, "include_root_html": True, "include_landing_pages": True, "additional_folders": ["report-rapport"]},
     "pasted-html": {"label": "Pasted HTML", "root": PASTED_HTML_CACHE_ROOT, "type": "cache-folder", "group": "Built-in environments", "show_when_empty": True},
-    "canada-ca-url": {"label": "Canada.ca", "root": URL_CACHE_ROOT, "type": "url-input", "group": "Built-in environments"},
+    "canada-ca-url": {
+        "label": "Canada.ca",
+        "root": URL_CACHE_ROOT,
+        "type": "url-input",
+        "group": "Built-in environments",
+        "allowed_origins": ["https://www.canada.ca"],
+        "path_prefixes": ["/en/", "/fr/"],
+        "content_selector": "main",
+    },
 }
 SOURCE_ENVIRONMENTS = dict(BUILTIN_SOURCE_ENVIRONMENTS)
 _PRESET_LOCK = threading.Lock()
+
+
+def normalize_public_https_origin(value):
+    parsed = urlparse(str(value or "").strip())
+    hostname = (parsed.hostname or "").lower()
+    if (
+        parsed.scheme.lower() != "https"
+        or not hostname
+        or hostname == "localhost"
+        or "." not in hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("Allowed website must be a public HTTPS origin, such as https://www.example.com.")
+    try:
+        port = parsed.port
+    except ValueError as error:
+        raise ValueError("Allowed website contains an invalid port.") from error
+    if re.fullmatch(r"\d+(?:\.\d+){3}", hostname) or ":" in hostname:
+        raise ValueError("Allowed website must use a public hostname rather than an IP address.")
+    return f"https://{hostname}" + (f":{port}" if port and port != 443 else "")
 
 
 def validate_environment_preset(value):
@@ -61,16 +94,35 @@ def validate_environment_preset(value):
     label = str(value.get("label", "")).strip()
     if not label or len(label) > 80:
         raise ValueError("Preset name is required and must be 80 characters or fewer.")
+    group = str(value.get("group", "Team presets")).strip() or "Team presets"
+    selector = str(value.get("content_selector", ".content-area")).strip()
+    if len(group) > 80 or not selector or len(selector) > 200 or any(char in selector for char in "{};"):
+        raise ValueError("Preset group or content selector is invalid.")
+    source_type = str(value.get("source_type", "folder")).strip().lower()
+    if source_type not in {"folder", "url"}:
+        raise ValueError("Preset type must be folder or URL.")
+    if source_type == "url":
+        raw_origins = value.get("allowed_origins")
+        if raw_origins is None:
+            raw_origins = [value.get("allowed_origin", "")]
+        if not isinstance(raw_origins, list) or len(raw_origins) != 1:
+            raise ValueError("A URL preset must define one allowed website.")
+        allowed_origin = normalize_public_https_origin(raw_origins[0])
+        return {
+            "schema_version": 1,
+            "id": preset_id,
+            "label": label,
+            "group": group,
+            "source_type": "url",
+            "allowed_origins": [allowed_origin],
+            "content_selector": selector,
+        }
     root_text = str(value.get("root", "")).strip()
     if not root_text or not Path(root_text).is_absolute():
         raise ValueError("Root must be an absolute local or network folder path.")
     collection_mode = value.get("collection_mode", "named-folders")
     if collection_mode not in {"named-folders", "direct"}:
         raise ValueError("Collection mode must be named-folders or direct.")
-    group = str(value.get("group", "Team presets")).strip() or "Team presets"
-    selector = str(value.get("content_selector", ".content-area")).strip()
-    if len(group) > 80 or not selector or len(selector) > 200 or any(char in selector for char in "{};"):
-        raise ValueError("Preset group or content selector is invalid.")
     pattern = str(value.get("folder_name_pattern", r"[^\\/]+"))
     try:
         re.compile(pattern)
@@ -106,7 +158,13 @@ def load_environment_presets():
     SOURCE_ENVIRONMENTS.clear()
     SOURCE_ENVIRONMENTS.update(BUILTIN_SOURCE_ENVIRONMENTS)
     for preset in read_environment_presets():
-        SOURCE_ENVIRONMENTS[preset["id"]] = {**preset, "root": Path(preset["root"]), "type": "folder"}
+        if preset["source_type"] == "url":
+            root = URL_PRESET_CACHE_ROOT / preset["id"]
+            source_type = "url-input"
+        else:
+            root = Path(preset["root"])
+            source_type = "folder"
+        SOURCE_ENVIRONMENTS[preset["id"]] = {**preset, "root": root, "type": source_type}
 
 
 def write_environment_presets(presets):
@@ -178,9 +236,7 @@ def get_source_root(source_env, year=None):
         return safe_resolve(config["root"])
 
     if config.get("type") == "url-input":
-        if source_env == CANADA_CA_URL_ENV:
-            config["root"].mkdir(parents=True, exist_ok=True)
-
+        config["root"].mkdir(parents=True, exist_ok=True)
         return safe_resolve(config["root"])
 
     if config.get("collection_mode") == "direct":
@@ -319,21 +375,50 @@ def is_custom_environment(source_env):
     return source_env in SOURCE_ENVIRONMENTS and source_env not in BUILTIN_SOURCE_ENVIRONMENTS
 
 
-def is_allowed_canada_ca_url(url):
+def get_url_origin(url):
     parsed = urlparse((url or "").strip())
+    try:
+        port = parsed.port
+    except ValueError:
+        return ""
+    hostname = (parsed.hostname or "").lower()
+    if parsed.scheme.lower() != "https" or not hostname or parsed.username or parsed.password:
+        return ""
+    return f"https://{hostname}" + (f":{port}" if port and port != 443 else "")
 
-    if parsed.scheme != "https":
+
+def is_allowed_environment_url(source_env, url):
+    config = SOURCE_ENVIRONMENTS.get(source_env, {})
+    if config.get("type") != "url-input":
         return False
-
-    if (
-        parsed.hostname != "www.canada.ca"
-        or parsed.port not in {None, 443}
-        or parsed.username is not None
-        or parsed.password is not None
-    ):
+    parsed = urlparse((url or "").strip())
+    if get_url_origin(url) not in config.get("allowed_origins", []):
         return False
+    prefixes = config.get("path_prefixes", ["/"])
+    return any(parsed.path.startswith(prefix) for prefix in prefixes)
 
-    return bool(re.match(r"^/(en|fr)/", parsed.path))
+
+class EnvironmentUrlRedirectHandler(HTTPRedirectHandler):
+    def __init__(self, source_env, max_redirects=MAX_CANADA_CA_REDIRECTS):
+        super().__init__()
+        self.source_env = source_env
+        self.max_redirects = max_redirects
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirect_count = getattr(req, "_paralang_redirect_count", 0) + 1
+        resolved_url = urljoin(req.full_url, newurl)
+        if redirect_count > self.max_redirects:
+            raise ValueError("The website returned too many redirects.")
+        if not is_allowed_environment_url(self.source_env, resolved_url):
+            raise ValueError("The website redirected outside the preset's allowed origin.")
+        redirected = super().redirect_request(req, fp, code, msg, headers, resolved_url)
+        if redirected is not None:
+            redirected._paralang_redirect_count = redirect_count
+        return redirected
+
+
+def is_allowed_canada_ca_url(url):
+    return is_allowed_environment_url(CANADA_CA_URL_ENV, url)
 
 
 class CanadaCaRedirectHandler(HTTPRedirectHandler):
@@ -417,55 +502,55 @@ def inject_base_href(html, url):
     )
 
 
-def fetch_canada_ca_url_to_cache(url):
+def fetch_environment_url_to_cache(source_env, url):
     url = (url or "").strip()
-
-    if not is_allowed_canada_ca_url(url):
-        raise ValueError("Only https://www.canada.ca/en/... and https://www.canada.ca/fr/... URLs are allowed.")
-
-    cached_path = get_canada_ca_cached_file_path(url)
+    config = SOURCE_ENVIRONMENTS.get(source_env, {})
+    if not is_allowed_environment_url(source_env, url):
+        allowed = ", ".join(config.get("allowed_origins", [])) or "the configured website"
+        raise ValueError(f"Only HTTPS URLs from {allowed} are allowed.")
+    cache_root = get_source_root(source_env, "_")
+    cached_name = get_canada_ca_cached_relative_path(url)
+    cached_path = cache_root / cached_name
     metadata_path = get_canada_ca_metadata_path(cached_path)
-
     request = Request(
         url,
-        headers={
-            "User-Agent": "Paralang local QA tool"
-        }
+        headers={"User-Agent": "Paralang local QA tool"}
     )
-
-    opener = build_opener(CanadaCaRedirectHandler())
+    opener = build_opener(EnvironmentUrlRedirectHandler(source_env))
     with opener.open(request, timeout=20) as response:
         final_url = response.geturl()
-        if not is_allowed_canada_ca_url(final_url):
-            raise ValueError("The final download URL is outside the approved Canada.ca paths.")
+        if not is_allowed_environment_url(source_env, final_url):
+            raise ValueError("The final download URL is outside the preset's allowed origin.")
         raw = read_limited_response(response)
-
     html = raw.decode("utf-8", errors="ignore")
     html = inject_base_href(html, final_url)
-
     cached_path.write_text(html, encoding="utf-8")
-
-    metadata = {
-        "source_url": final_url
-    }
-
+    metadata = {"source_url": final_url}
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    return cached_name
 
-    return get_canada_ca_cached_relative_path(url)
+
+def fetch_canada_ca_url_to_cache(url):
+    return fetch_environment_url_to_cache(CANADA_CA_URL_ENV, url)
 
 
-def get_canada_ca_source_url_from_cached_file(filename):
-    path = URL_CACHE_ROOT / filename
+def get_environment_source_url_from_cached_file(source_env, filename):
+    source_root = get_source_root(source_env, "_")
+    if not source_root:
+        return None
+    path = source_root / filename
     metadata_path = get_canada_ca_metadata_path(path)
-
     if not metadata_path.exists():
         return None
-
     try:
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         return metadata.get("source_url")
     except Exception:
         return None
+
+
+def get_canada_ca_source_url_from_cached_file(filename):
+    return get_environment_source_url_from_cached_file(CANADA_CA_URL_ENV, filename)
 
 def get_resolved_source_file_path(source_env, year, filename):
     source_root = get_source_root(source_env, year)

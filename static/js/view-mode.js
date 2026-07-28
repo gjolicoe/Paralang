@@ -106,7 +106,7 @@ function loadDarkMode() {
 }
 
 function getResolvedFileForSide(filename, side) {
-  if (getSelectedEnv() !== "canada-ca-url") {
+  if (!selectedEnvUsesTextInputs(getSelectedEnv())) {
     return filename;
   }
 
@@ -150,7 +150,7 @@ function appendCodeWindowParams(src, options = {}) {
 function getPageSrc(filename, side = "left") {
   const env = getSelectedEnv();
 
-  if (env === "canada-ca-url") {
+  if (selectedEnvUsesTextInputs(env)) {
     const resolvedFile = getResolvedFileForSide(filename, side);
 
     if (!resolvedFile) return "";
@@ -182,7 +182,7 @@ function appendCodeSectionParams(src, options = {}) {
 function getCodeSrc(filename, side = "left", options = {}) {
   const env = getSelectedEnv();
 
-  if (env === "canada-ca-url") {
+  if (selectedEnvUsesTextInputs(env)) {
     const resolvedFile = getResolvedFileForSide(filename, side);
 
     if (!resolvedFile) return "";
@@ -493,13 +493,15 @@ function updatePageInputLabels() {
   let leftText = "EN page";
   let rightText = "FR page";
 
-  if (env === "canada-ca-url") {
-    leftText = "EN Canada.ca URL";
-    rightText = "FR Canada.ca URL";
+  if (selectedEnvUsesTextInputs(env)) {
+    const environmentName = envSelect.selectedOptions[0]?.textContent.trim() || "website";
+    leftText = `EN ${environmentName} URL`;
+    rightText = `FR ${environmentName} URL`;
   }
 
   if (singleViewEnabled) {
-    leftText = selectedEnvUsesTextInputs(env) ? "Canada.ca URL" : "Page";
+    const environmentName = envSelect.selectedOptions[0]?.textContent.trim() || "website";
+    leftText = selectedEnvUsesTextInputs(env) ? `${environmentName} URL` : "Page";
   }
 
   if (leftLabel) {
@@ -507,9 +509,10 @@ function updatePageInputLabels() {
   }
 
   if (leftInput?.matches('input[type="text"]')) {
+    const environmentName = envSelect.selectedOptions[0]?.textContent.trim() || "website";
     leftInput.placeholder = singleViewEnabled
-      ? "Paste Canada.ca URL"
-      : "Paste EN Canada.ca URL";
+      ? `Paste ${environmentName} URL`
+      : `Paste EN ${environmentName} URL`;
   }
 
   if (rightLabel) {

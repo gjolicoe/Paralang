@@ -14,6 +14,16 @@
   const originalValues = new WeakMap();
 
   const fr = {
+    "EN website URL": "URL du site Web EN",
+    "FR website URL": "URL du site Web FR",
+    "Paste EN website URL": "Coller l’URL du site Web EN",
+    "Paste FR website URL": "Coller l’URL du site Web FR",
+    "Preset type": "Type de préréglage",
+    "Public website URL": "URL d’un site Web public",
+    "Choose how pages are loaded.": "Choisissez la façon dont les pages sont chargées.",
+    "Allowed website": "Site Web autorisé",
+    "Public HTTPS origin only; paths are entered when reviewing pages.": "Origine HTTPS publique seulement; les chemins sont saisis lors de la révision des pages.",
+    "Connect Paralang to a public HTTPS website.": "Connectez Paralang à un site Web HTTPS public.",
     "Enable dark mode": "Activer le mode sombre",
     "Enable light mode": "Activer le mode clair",
     "Environment": "Environnement",

@@ -135,7 +135,7 @@ function getCurrentReviewFile(side) {
   if (side === "right") {
     const hidden = document.getElementById("rightResolvedFile");
 
-    if (getSelectedEnv() === "canada-ca-url" && hidden) {
+    if (reviewIssuesDisabledForEnvironment(getSelectedEnv()) && hidden) {
       return hidden.value;
     }
 
@@ -144,7 +144,7 @@ function getCurrentReviewFile(side) {
 
   const hidden = document.getElementById("leftResolvedFile");
 
-  if (getSelectedEnv() === "canada-ca-url" && hidden) {
+  if (reviewIssuesDisabledForEnvironment(getSelectedEnv()) && hidden) {
     return hidden.value;
   }
 

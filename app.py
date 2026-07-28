@@ -11,9 +11,8 @@ from services.sources import (
     get_available_years,
     get_html_files,
     is_url_input_environment,
-    CANADA_CA_URL_ENV,
-    fetch_canada_ca_url_to_cache,
-    get_canada_ca_source_url_from_cached_file,
+    fetch_environment_url_to_cache,
+    get_environment_source_url_from_cached_file,
     safe_resolve,
     path_is_within,
     LOCAL_FILES_ENV,
@@ -276,18 +275,17 @@ def index():
         fr_files = []
         year = "_"
 
-        if source_env == CANADA_CA_URL_ENV:
-            if left_input_value:
-                try:
-                    left_file = fetch_canada_ca_url_to_cache(left_input_value)
-                except Exception as error:
-                    print(f"[Paralang] Could not fetch left Canada.ca URL: {error}")
+        if left_input_value:
+            try:
+                left_file = fetch_environment_url_to_cache(source_env, left_input_value)
+            except Exception as error:
+                print(f"[Paralang] Could not fetch left URL for {source_env}: {error}")
 
-            if right_input_value:
-                try:
-                    right_file = fetch_canada_ca_url_to_cache(right_input_value)
-                except Exception as error:
-                    print(f"[Paralang] Could not fetch right Canada.ca URL: {error}")
+        if right_input_value:
+            try:
+                right_file = fetch_environment_url_to_cache(source_env, right_input_value)
+            except Exception as error:
+                print(f"[Paralang] Could not fetch right URL for {source_env}: {error}")
 
     else:
         available_years = get_available_years(source_env)
@@ -460,9 +458,9 @@ def page_view(source_env, year, filename):
 
         base = soup.new_tag("base")
 
-        if source_env == CANADA_CA_URL_ENV:
-            source_url = get_canada_ca_source_url_from_cached_file(filename)
-            base["href"] = source_url or "https://www.canada.ca/"
+        if is_url_input_environment(source_env):
+            source_url = get_environment_source_url_from_cached_file(source_env, filename)
+            base["href"] = source_url or "/"
         else:
             source_parent = Path(filename).parent.as_posix()
 

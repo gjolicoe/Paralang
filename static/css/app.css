@@ -1144,6 +1144,11 @@ body.dark-mode .environment-checkbox small {
   display: none;
 }
 
+.preset-folder-field[hidden],
+.preset-url-field[hidden] {
+  display: none;
+}
+
 .additional-folders-heading,
 .additional-folder-row {
   display: flex;

@@ -26,9 +26,9 @@ Create an issue for a selected block, add a title and comment, identify the revi
 
 ### Flexible content sources
 
-Review pages from local files, team-configured folder presets, pasted HTML, or public Canada.ca URLs. Canada.ca pages are downloaded to a local cache before review.
+Review pages from local files, team-configured folder or URL presets, pasted HTML, or public Canada.ca URLs. URL pages are downloaded to a local cache before review.
 
-Use **Workspace > Manage environments** to create and manage custom presets. A preset can point directly at a folder of HTML pages or discover named collection folders. It can detect HTML in each collection root and in any number of configured relative subfolders, including nested paths such as `campaign/pages`, and can use a custom CSS selector to locate the primary page content.
+Use **Workspace > Manage environments** to create and manage custom presets. Folder presets can point directly at HTML pages or discover named collection folders and relative subfolders such as `campaign/pages`. URL presets accept pages from one configured public HTTPS website. Both types can use a custom CSS selector to locate the primary page content.
 
 Custom presets can be edited, exported as JSON for another user to import, or deleted. They may also be grouped under custom headings in the Environment menu. Local preset definitions are stored in `data/environment-presets.json`.
 
