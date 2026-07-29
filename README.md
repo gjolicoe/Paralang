@@ -22,7 +22,7 @@ Paralang compares the structure and content blocks of a page pair and reports po
 
 ### Review issues
 
-Create an issue for a selected block, add a title and comment, identify the reviewer, and jump from an issue back to its page content. User-created and automated issues are stored locally in `data/paralang-issues.json` and can be removed when fixed.
+Create an issue for the selected block using the review form, choose the English or French side, and add a title, comment, and reviewer name. Paralang remembers the reviewer name for the next issue, and selecting an existing issue returns you to the affected page content. User-created and automated issues are stored in `data/paralang-issues.json` and can be removed when fixed.
 
 ### Flexible content sources
 
@@ -44,7 +44,7 @@ English filenames must end in `-en.html` and French filenames in `-fr.html`. A `
 
 ### Pasted HTML review
 
-Paste complete English and French HTML documents directly into Paralang. Choose temporary storage in `.cache/pasted_html/` or longer-term storage in `data/local-files/pasted-html/`. Temporary entries older than 14 days are removed when new content is submitted; Local files are retained until removed manually. If similar content already exists, Paralang lets you overwrite it, create a numbered copy, or cancel.
+Paste complete English and French HTML documents directly into Paralang. Paralang creates readable paired filenames, preferring the English H1 when one is available. Choose temporary storage in `.cache/pasted_html/` or longer-term storage in `data/local-files/pasted-html/`. Temporary entries older than 14 days are removed when new content is submitted; Local files are retained until removed manually. If similar content already exists, Paralang lets you overwrite it, create a numbered copy, or cancel.
 
 ### Customizable workspace
 
@@ -87,7 +87,7 @@ The launcher checks for Flask and Beautiful Soup and installs the pinned package
 
 Paralang runs only on `127.0.0.1`. Reviewed HTML is displayed in a sandbox with scripts, forms, embedded frames, plug-ins, and browser network APIs disabled. HTTPS stylesheets, fonts, and images remain available, but page requests use a `no-referrer` policy so the remote server is not sent the Paralang URL or local filename.
 
-Canada.ca URL imports may follow redirects only when every redirect remains under `https://www.canada.ca/en/` or `https://www.canada.ca/fr/`. Pasted HTML requests and Canada.ca page downloads are limited to 100 MB each. Content stored in `data/` and `.cache/` remains local and uses the workstation or shared drive's existing access controls.
+URL imports may follow redirects only while every redirect remains on the environment's configured HTTPS website. Canada.ca imports are further restricted to `https://www.canada.ca/en/` and `https://www.canada.ca/fr/`. Pasted HTML requests and downloaded URL pages are limited to 100 MB each. Content stored in `data/` and `.cache/` remains local and uses the workstation or shared drive's existing access controls.
 
 If startup fails, diagnostic output is available in `.cache/launcher/`.
 
@@ -96,7 +96,7 @@ If startup fails, diagnostic output is available in `.cache/launcher/`.
 To run without the desktop launcher, install the dependencies and start Flask directly:
 
 ```console
-python -m pip install flask beautifulsoup4
+python -m pip install -r requirements.txt
 python app.py
 ```
 
