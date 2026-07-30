@@ -1,0 +1,54 @@
+name: Report an issue
+description: Report an error, unexpected behaviour, or something unclear in Paralang.
+title: "[Issue]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue.
+
+        Before submitting, please remove protected or personal information, credentials, internal URLs, page content, and full local file paths.
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Issue details
+      description: Describe what you were trying to do, what happened, and what you expected.
+      placeholder: |
+        I was trying to...
+        Instead, Paralang...
+        I expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Paralang environment
+      description: This information may be prefilled by Paralang. Review or remove it if necessary.
+      placeholder: |
+        Paralang version:
+        Computer platform:
+        Date and time:
+        Report ID:
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional information
+      description: Add any other information that could help explain or reproduce the issue.
+      placeholder: You may drag and drop a screenshot here after removing sensitive information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy_confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I have removed protected or personal information, credentials, internal URLs, page content, and full local file paths.
+          required: true
