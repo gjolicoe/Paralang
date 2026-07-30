@@ -232,6 +232,21 @@
   };
 
   Object.assign(fr, {
+    "Issue": "Problème",
+    "Suggestion": "Suggestion",
+    "Report a problem, error, or something unclear.": "Signalez un problème, une erreur ou quelque chose qui manque de clarté.",
+    "Short title": "Titre court",
+    "Short title:": "Titre court :",
+    "Summarize your feedback in a few words.": "Résumez vos commentaires en quelques mots.",
+    "Example: Comparison does not load": "Exemple : La comparaison ne se charge pas",
+    "Example: Add a faster comparison workflow": "Exemple : Ajouter une méthode de comparaison plus rapide",
+    "Tell us what went wrong. You can add a screenshot before submitting.": "Dites-nous ce qui s’est mal passé. Vous pourrez ajouter une capture d’écran avant l’envoi.",
+    "Keep it safe:": "Protégez vos renseignements :",
+    "Do not include page content, personal or protected information, credentials, internal URLs, or full local file paths.": "N’incluez pas le contenu des pages, des renseignements personnels ou protégés, des identifiants, des URL internes ou des chemins d’accès locaux complets.",
+    "GitHub Issues is recommended.": "GitHub Issues est recommandé.",
+    "Review and submit your report on GitHub. A GitHub account is required. If you do not have one, use Outlook instead.": "Vérifiez et envoyez votre rapport dans GitHub. Un compte GitHub est requis. Si vous n’en avez pas, utilisez plutôt Outlook.",
+    "Continue with GitHub": "Continuer avec GitHub",
+    "Continue with Outlook": "Continuer avec Outlook",
     "Tell us what you wanted to accomplish.": "Dites-nous ce que vous vouliez accomplir.",
     "What was unclear?": "Qu’est-ce qui n’était pas clair?",
     "Which instruction, button, or part of the screen was confusing?": "Quelle instruction, quel bouton ou quelle partie de l’écran prêtait à confusion?",

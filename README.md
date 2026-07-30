@@ -56,7 +56,7 @@ Switch the Paralang interface between English and French from the language butto
 
 ### In-app feedback
 
-Use **Send feedback** to report a problem, describe something confusing, or suggest an improvement. Paralang prepares an Outlook email containing your comments and automatically includes the app version, computer platform, date, and a report ID. You can review the message and attach a screenshot before sending it.
+Use **Send feedback** to report an issue or suggest an improvement. Paralang can prepare either a GitHub issue or an Outlook email containing your comments and automatically includes the app version, computer platform, date, and a report ID. GitHub Issues is recommended for tracking; Outlook remains available for users without a GitHub account. Review the prepared report and remove protected information before sending it.
 
 ## Shared team use
 

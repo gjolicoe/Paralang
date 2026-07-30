@@ -48,7 +48,12 @@ function getDiffHeight() {
 }
 
 function setDiffHeight(height) {
-  setVar("--diff-height", px(height));
+  const numericHeight = Number(height);
+  const safeHeight = Number.isFinite(numericHeight)
+    ? Math.max(85, numericHeight)
+    : defaults.diffHeight;
+
+  setVar("--diff-height", px(safeHeight));
 }
 
 function setDiffHidden(hidden) {
@@ -115,7 +120,7 @@ function setupDiffResizer() {
     function onMove(moveEvent) {
       const delta = startY - moveEvent.clientY;
       const maxHeight = Math.max(120, window.innerHeight - 180);
-      const newHeight = Math.max(0, Math.min(maxHeight, startHeight + delta));
+      const newHeight = Math.max(85, Math.min(maxHeight, startHeight + delta));
 
       setDiffHidden(false);
       setDiffHeight(newHeight);

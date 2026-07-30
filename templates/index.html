@@ -4,10 +4,10 @@
 <head>
   <meta charset="utf-8">
   <title>Paralang</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='20260724-2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='20260730-4') }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="alternate icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/i18n.js', v='20260730-2') }}"></script>
 
 </head>
 
@@ -314,29 +314,24 @@
           <legend>What would you like to tell us?</legend>
           <div class="feedback-type-options">
             <label class="feedback-type-option">
-              <input type="radio" name="feedback_type" value="bug" checked>
+              <input type="radio" name="feedback_type" value="issue" checked>
               <span class="feedback-type-mark" aria-hidden="true">!</span>
-              <span><strong>Something didn't work</strong><small>Report unexpected behaviour or an error.</small></span>
-            </label>
-            <label class="feedback-type-option">
-              <input type="radio" name="feedback_type" value="confusing">
-              <span class="feedback-type-mark" aria-hidden="true">?</span>
-              <span><strong>Something was confusing</strong><small>Tell us what was unclear or difficult.</small></span>
+              <span><strong>Issue</strong><small>Report a problem, error, or something unclear.</small></span>
             </label>
             <label class="feedback-type-option">
               <input type="radio" name="feedback_type" value="suggestion">
               <span class="feedback-type-mark" aria-hidden="true">+</span>
-              <span><strong>I have a suggestion</strong><small>Share an idea that could improve Paralang.</small></span>
-            </label>
-            <label class="feedback-type-option">
-              <input type="radio" name="feedback_type" value="other">
-              <span class="feedback-type-mark" aria-hidden="true">&#8230;</span>
-              <span><strong>Something else</strong><small>Send a comment, question, or other feedback.</small></span>
+              <span><strong>Suggestion</strong><small>Share an idea that could improve Paralang.</small></span>
             </label>
           </div>
         </fieldset>
 
         <div class="feedback-fields">
+          <label class="feedback-field">
+            <span>Short title</span>
+            <small>Summarize your feedback in a few words.</small>
+            <input id="feedbackTitle" name="title" type="text" required maxlength="120" placeholder="Example: Comparison does not load">
+          </label>
           <label class="feedback-field">
             <span id="feedbackPrimaryLabel">What were you trying to do?</span>
             <small id="feedbackPrimaryHelp">Briefly describe what you were doing.</small>
@@ -344,19 +339,28 @@
           </label>
           <label id="feedbackSecondaryField" class="feedback-field">
             <span id="feedbackSecondaryLabel">What happened instead?</span>
-            <small id="feedbackSecondaryHelp">Tell us what went wrong. You can add a screenshot in Outlook.</small>
+            <small id="feedbackSecondaryHelp">Tell us what went wrong. You can add a screenshot before submitting.</small>
             <textarea id="feedbackSecondary" name="secondary" maxlength="1200" rows="3"></textarea>
           </label>
         </div>
 
+        <p class="feedback-privacy"><strong>Keep it safe:</strong> Do not include page content, personal or protected information, credentials, internal URLs, or full local file paths.</p>
+
         <aside class="feedback-email-note">
-          <span class="feedback-email-note-icon" aria-hidden="true">&#9993;</span>
-          <span><strong>We'll prepare the email for you.</strong><small>Outlook will open with your answers filled in. Review the message, add a screenshot if helpful, and select Send.</small></span>
+          <span class="feedback-email-note-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"/>
+            </svg>
+          </span>
+          <span><strong>GitHub Issues is recommended.</strong><small>Review and submit your report on GitHub. A GitHub account is required. If you do not have one, use Outlook instead.</small></span>
         </aside>
 
         <div class="environment-form-actions feedback-form-actions">
           <button type="button" id="cancelFeedback" class="environment-button environment-button-secondary">Cancel</button>
-          <button type="submit" class="environment-button primary-action">Continue to Outlook</button>
+          <div class="feedback-destination-actions">
+            <button type="button" id="outlookFeedbackButton" class="environment-button environment-button-secondary">Continue with Outlook</button>
+            <button type="submit" id="githubIssueButton" class="environment-button primary-action">Continue with GitHub</button>
+          </div>
         </div>
       </form>
     </div>
@@ -702,14 +706,14 @@
 
   <script src="{{ url_for('static', filename='js/table-number-check.js') }}"></script>
   <script src="{{ url_for('static', filename='js/code-sync.js', v='20260727-2') }}"></script>
-  <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/layout.js', v='20260730-1') }}"></script>
   <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
   <script src="{{ url_for('static', filename='js/review-issues.js') }}"></script>
   <script src="{{ url_for('static', filename='js/view-mode.js', v='20260727-2') }}"></script>
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
   <script src="{{ url_for('static', filename='js/environment-presets.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/feedback.js', v='20260730-2') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
