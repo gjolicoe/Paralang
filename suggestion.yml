@@ -1,0 +1,51 @@
+name: Suggest an improvement
+description: Suggest a feature or improvement for Paralang.
+title: "[Suggestion]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve Paralang.
+
+        Before submitting, please remove protected or personal information, credentials, internal URLs, page content, and full local file paths.
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Suggestion details
+      description: Describe what you would like Paralang to do.
+      placeholder: I would like Paralang to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: How would this help?
+      description: Explain when you would use this improvement and how it would support your work.
+      placeholder: This would help when...
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Paralang environment
+      description: This information may be prefilled by Paralang. Review or remove it if necessary.
+      placeholder: |
+        Paralang version:
+        Computer platform:
+        Date and time:
+        Report ID:
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy_confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I have removed protected or personal information, credentials, internal URLs, page content, and full local file paths.
+          required: true
