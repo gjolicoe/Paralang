@@ -59,6 +59,12 @@
     dialog.close();
   }
 
+  function clearFeedbackForm() {
+    form.reset();
+    currentReportId = reportId();
+    updateQuestions();
+  }
+
   function reportId() {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
       return window.crypto.randomUUID().split("-")[0].toUpperCase();
@@ -174,6 +180,7 @@
 
   closeButton.addEventListener("click", closeDialog);
   cancelButton.addEventListener("click", closeDialog);
+  dialog.addEventListener("close", clearFeedbackForm);
   form.addEventListener("change", event => {
     if (event.target.name === "feedback_type") updateQuestions();
   });

@@ -16,6 +16,7 @@
   const presetType = document.getElementById("environmentPresetType");
   const folderFields = Array.from(form.querySelectorAll(".preset-folder-field"));
   const urlFields = Array.from(form.querySelectorAll(".preset-url-field"));
+  const groupStorageKey = "paralangEnvironmentPresetGroup";
   let editingPresetId = null;
 
   if (!dialog || !openButton || !form) return;
@@ -30,7 +31,21 @@
   }
 
   function restoreDefaultGroup() {
-    form.elements.group.value = translate("Team presets");
+    let savedGroup = "";
+    try {
+      savedGroup = localStorage.getItem(groupStorageKey) || "";
+    } catch {
+      // Storage may be unavailable; fall back to the translated default.
+    }
+    form.elements.group.value = savedGroup || translate("Team presets");
+  }
+
+  function rememberGroup(group) {
+    try {
+      localStorage.setItem(groupStorageKey, group);
+    } catch {
+      // Remembering the group is optional.
+    }
   }
 
   async function savePreset(preset, existingId = null) {
@@ -55,6 +70,7 @@
     dialog.showModal();
   });
   closeButton.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => form.reset());
 
   function updateAdditionalFoldersVisibility() {
     additionalFoldersFields.hidden =
@@ -188,6 +204,7 @@
         });
       }
       await savePreset(preset, editingPresetId);
+      rememberGroup(preset.group.trim());
       window.location.reload();
     } catch (error) {
       showMessage(error.message);

@@ -468,6 +468,7 @@ function scrollToUserMarkedIssue(side, blockIndex, blockSignature = "") {
 function setupReviewIssueControls() {
   const markIssueButton = document.getElementById("markIssueButton");
   const issueForm = document.getElementById("issueForm");
+  const issueDialog = document.getElementById("issueDialog");
 
   if (markIssueButton) {
     markIssueButton.addEventListener("click", openIssueDialog);
@@ -483,6 +484,12 @@ function setupReviewIssueControls() {
     ?.addEventListener("click", closeIssueDialog);
   document.getElementById("cancelIssueDialog")
     ?.addEventListener("click", closeIssueDialog);
+  issueDialog?.addEventListener("close", () => {
+    issueForm?.reset();
+    pendingIssueBlockData = null;
+    pendingIssueSide = "left";
+    showIssueFormMessage("");
+  });
 
   const rerunButton = document.getElementById("rerunAutomatedIssuesButton");
 

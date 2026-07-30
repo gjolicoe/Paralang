@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='20260730-4') }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="alternate icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <script src="{{ url_for('static', filename='js/i18n.js', v='20260730-3') }}"></script>
+  <script src="{{ url_for('static', filename='js/i18n.js', v='20260730-5') }}"></script>
 
 </head>
 
@@ -255,7 +255,7 @@
         </div>
       </section>
 
-      <form id="environmentPresetForm">
+      <form id="environmentPresetForm" autocomplete="off">
         <div class="environment-section-heading">
           <div>
             <h3 id="environmentPresetFormTitle">Create a preset</h3>
@@ -309,7 +309,7 @@
         <button type="button" id="closeFeedbackDialog" class="environment-dialog-close" aria-label="Close feedback form">&times;</button>
       </header>
 
-      <form id="feedbackForm" class="feedback-form">
+      <form id="feedbackForm" class="feedback-form" autocomplete="off">
         <fieldset class="feedback-type-fieldset">
           <legend>What would you like to tell us?</legend>
           <div class="feedback-type-options">
@@ -435,7 +435,7 @@
         </div>
         <button type="button" id="closeIssueDialog" class="environment-dialog-close" aria-label="Close issue form">&times;</button>
       </header>
-      <form id="issueForm" class="issue-form">
+      <form id="issueForm" class="issue-form" autocomplete="off">
         <div class="issue-form-fields">
           <label><span>Reviewer name</span><input name="reviewer_name" required maxlength="100" autocomplete="name"><small>Your name will be remembered for the next issue.</small></label>
           <label><span>Issue title</span><input name="title" required maxlength="200" value="Review this block"></label>
@@ -708,12 +708,12 @@
   <script src="{{ url_for('static', filename='js/code-sync.js', v='20260727-2') }}"></script>
   <script src="{{ url_for('static', filename='js/layout.js', v='20260730-1') }}"></script>
   <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/review-issues.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/review-issues.js', v='20260730-2') }}"></script>
   <script src="{{ url_for('static', filename='js/view-mode.js', v='20260727-2') }}"></script>
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/environment-presets.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/feedback.js', v='20260730-3') }}"></script>
+  <script src="{{ url_for('static', filename='js/environment-presets.js', v='20260730-2') }}"></script>
+  <script src="{{ url_for('static', filename='js/feedback.js', v='20260730-4') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
