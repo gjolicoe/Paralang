@@ -37,7 +37,7 @@ For local files, place page pairs under a named folder in `data/local-files/`, f
 ```text
 data/local-files/my-review/
 |-- page-en.html
-`-- page-fr.html
+|-- page-fr.html
 ```
 
 English filenames must end in `-en.html` and French filenames in `-fr.html`. A `report-rapport/` subfolder is also supported.
