@@ -252,7 +252,7 @@
     "Which instruction, button, or part of the screen was confusing?": "Quelle instruction, quel bouton ou quelle partie de l’écran prêtait à confusion?",
     "What would you like Paralang to do?": "Que souhaiteriez-vous que Paralang fasse?",
     "Describe your idea in your own words.": "Décrivez votre idée dans vos propres mots.",
-    "How would this help you? (optional)": "En quoi cela vous aiderait-il? (facultatif)",
+    "How would this help you?": "En quoi cela vous aiderait-il?",
     "Tell us when or why you would use it.": "Dites-nous quand ou pourquoi vous l’utiliseriez.",
     "Add any comments or feedback here.": "Ajoutez vos commentaires ou toute autre rétroaction ici.",
     "Not available": "Non disponible",

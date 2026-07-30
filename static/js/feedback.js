@@ -31,7 +31,7 @@
       type: "Suggestion",
       primaryLabel: "What would you like Paralang to do?",
       primaryHelp: "Describe your idea in your own words.",
-      secondaryLabel: "How would this help you? (optional)",
+      secondaryLabel: "How would this help you?",
       secondaryHelp: "Tell us when or why you would use it."
     }
   };
