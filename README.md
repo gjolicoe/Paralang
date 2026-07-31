@@ -1,4 +1,12 @@
-# Paralang
+<p align="center">
+  <img
+    src="docs/assets/paralang-banner.png"
+    alt="Paralang"
+    width="900"
+  >
+</p>
+
+# Paralang, the local bilingual HTML review tool
 
 Paralang is a local bilingual review tool for comparing English and French HTML pages. It keeps the rendered pages, document structure, source code, and review issues together in one workspace so mismatches are easier to find and verify.
 
