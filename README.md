@@ -30,7 +30,7 @@
 
 <p align="center">
   <img
-    src="docs/assets/structure-maps.png"
+    src="docs/assets/paralang-structureview.png"
     alt="Paralang structure maps"
     width="325"
   >
