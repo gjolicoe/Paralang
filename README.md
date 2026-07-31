@@ -96,7 +96,7 @@
   <img
     src="docs/assets/paralang-pastedhtml.png"
     alt="Paralang pasted html popup"
-    width="900"
+    width="750"
   >
 </p>
 
@@ -136,6 +136,14 @@
 <p>On Windows, you can also double-click <code>launch-paralang.pyw</code> when <code>.pyw</code> files are associated with Python.</p>
 
 <p>The launcher checks for Flask and Beautiful Soup and installs the pinned packages in <code>requirements.txt</code> with <code>pip</code> if needed. It then starts Paralang at <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a>, opens the site in your browser, and leaves a small control window running. Use <strong>Refresh Application</strong> to restart the local server and automatically reload open Paralang pages after code changes. Use <strong>Open Browser</strong> to reopen the site and <strong>Stop Paralang</strong> (or close the control window) to stop the server cleanly.</p>
+
+<p align="center">
+  <img
+    src="docs/assets/paralang-launcher.png"
+    alt="Paralang launcher"
+    width="600"
+  >
+</p>
 
 <h2>Protected-content safeguards</h2>
 
