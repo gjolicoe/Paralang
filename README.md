@@ -72,6 +72,14 @@
 
 <p>Custom presets can be edited, exported as JSON for another user to import, or deleted. They may also be grouped under custom headings in the Environment menu. Local preset definitions are stored in <code>data/environment-presets.json</code>.</p>
 
+<p align="center">
+  <img
+    src="docs/assets/paralang-environmentpresets.png"
+    alt="Paralang custom environments popup"
+    width="900"
+  >
+</p>
+
 <p>For local files, place page pairs under a named folder in <code>data/local-files/</code>, for example:</p>
 
 <pre><code>data/local-files/my-review/
@@ -83,6 +91,14 @@
 <h3>Pasted HTML review</h3>
 
 <p>Paste complete English and French HTML documents directly into Paralang. Paralang creates readable paired filenames, preferring the English H1 when one is available. Choose temporary storage in <code>.cache/pasted_html/</code> or longer-term storage in <code>data/local-files/pasted-html/</code>. Temporary entries older than 14 days are removed when new content is submitted; Local files are retained until removed manually. If similar content already exists, Paralang lets you overwrite it, create a numbered copy, or cancel.</p>
+
+<p align="center">
+  <img
+    src="docs/assets/paralang-pastedhtml.png"
+    alt="Paralang pasted html popup"
+    width="900"
+  >
+</p>
 
 <h3>Customizable workspace</h3>
 
