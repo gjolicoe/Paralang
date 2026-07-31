@@ -32,7 +32,7 @@
   <img
     src="docs/assets/paralang-structureview.png"
     alt="Paralang structure maps"
-    width="325"
+    width="900"
   >
 </p>
 
