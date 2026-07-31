@@ -76,7 +76,7 @@
   <img
     src="docs/assets/paralang-environmentpresets.png"
     alt="Paralang custom environments popup"
-    width="900"
+    width="600"
   >
 </p>
 
@@ -96,7 +96,7 @@
   <img
     src="docs/assets/paralang-pastedhtml.png"
     alt="Paralang pasted html popup"
-    width="750"
+    width="600"
   >
 </p>
 
@@ -141,7 +141,7 @@
   <img
     src="docs/assets/paralang-launcher.png"
     alt="Paralang launcher"
-    width="600"
+    width="500"
   >
 </p>
 
