@@ -26,7 +26,7 @@
 
 <h3>Structure maps</h3>
 
-<p>Navigate either document from a compact map of its headings. Paralang flags section-count differences and keeps map navigation coordinated with the page views.</p>
+<p>Navigate either document from a compact map of its headings. Click a heading in either map to move the current comparison index directly to that section. Paralang also flags section-count differences and keeps map navigation coordinated with the page views.</p>
 
 <p align="center">
   <img
