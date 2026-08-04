@@ -10,6 +10,26 @@
 
 <p>Paralang is a local bilingual review tool for comparing English and French HTML pages. It keeps the rendered pages, document structure, source code, and review issues together in one workspace so mismatches are easier to find and verify.</p>
 
+<p>Paralang is designed for web publishers and reviewers who compare bilingual HTML before publication, particularly English and French content prepared for Canada.ca.</p>
+
+<p><strong>Using Paralang?</strong> Start with <a href="#getting-started">Getting started</a> below. <strong>Developing Paralang?</strong> See the <a href="CONTRIBUTING.md">developer and contribution guide</a>.</p>
+
+<h2>Getting started</h2>
+
+<ol>
+  <li>Launch <code>launch-paralang.pyw</code> from the project folder. The launcher starts the local server and opens Paralang in your browser.</li>
+  <li>Choose an environment, then select or enter the English and French pages you want to compare.</li>
+  <li>Select <strong>Load</strong> and use the synchronized page views, structure maps, code panels, and issues panel to complete the review.</li>
+</ol>
+
+<blockquote>
+  <p><strong>Team reviews:</strong> Keep Paralang on a shared drive and have every reviewer launch the same copy from the same path. Issues, presets, pasted HTML, and downloaded page caches are tied to that project folder.</p>
+</blockquote>
+
+<blockquote>
+  <p><strong>Privacy:</strong> Paralang runs locally and does not upload reviewed documents to an application server. URL environments download the pages you explicitly request, and feedback is sent only after you review and submit the prepared GitHub issue or email. See <a href="#protected-content-safeguards">Protected-content safeguards</a> for details.</p>
+</blockquote>
+
 <h2>Features</h2>
 
 <p align="center">
