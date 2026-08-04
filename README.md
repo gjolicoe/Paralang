@@ -23,7 +23,7 @@
 </ol>
 
 > [!IMPORTANT]
-> **For shared team reviews, every reviewer must launch the same copy of Paralang from the same shared-drive path.** Issues, presets, pasted HTML, and downloaded page caches are tied to that project folder. Separate copies will not share review data.
+> **For the best team experience, keep the Paralang application folder on a shared drive and have everyone launch that same copy.** This allows reviewers to work with the same issues, presets, pasted HTML, and downloaded page caches. Running separate copies creates separate review data.
 
 <blockquote>
   <p><strong>Privacy:</strong> Paralang runs locally and does not upload reviewed documents to an application server. URL environments download the pages you explicitly request, and feedback is sent only after you review and submit the prepared GitHub issue or email. See <a href="#protected-content-safeguards">Protected-content safeguards</a> for details.</p>
