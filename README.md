@@ -22,9 +22,8 @@
   <li>Select <strong>Load</strong> and use the synchronized page views, structure maps, code panels, and issues panel to complete the review.</li>
 </ol>
 
-<blockquote>
-  <p><strong>Team reviews:</strong> Keep Paralang on a shared drive and have every reviewer launch the same copy from the same path. Issues, presets, pasted HTML, and downloaded page caches are tied to that project folder.</p>
-</blockquote>
+> [!IMPORTANT]
+> **For shared team reviews, every reviewer must launch the same copy of Paralang from the same shared-drive path.** Issues, presets, pasted HTML, and downloaded page caches are tied to that project folder. Separate copies will not share review data.
 
 <blockquote>
   <p><strong>Privacy:</strong> Paralang runs locally and does not upload reviewed documents to an application server. URL environments download the pages you explicitly request, and feedback is sent only after you review and submit the prepared GitHub issue or email. See <a href="#protected-content-safeguards">Protected-content safeguards</a> for details.</p>
