@@ -170,6 +170,12 @@
 
 <p>URL imports may follow redirects only while every redirect remains on the environment's configured HTTPS website. Canada.ca imports are further restricted to <code>https://www.canada.ca/en/</code> and <code>https://www.canada.ca/fr/</code>. Pasted HTML requests and downloaded URL pages are limited to 100 MB each. Content stored in <code>data/</code> and <code>.cache/</code> remains local and uses the workstation or shared drive's existing access controls.</p>
 
+<h2>Portable Windows edition</h2>
+
+<p>The <code>portable-windows</code> branch includes its Python packages as wheel archives in <code>vendor-wheels/</code>. Users launch <code>launch-paralang.pyw</code> normally; Python imports directly from those local archives and Paralang never runs <code>pip</code>. The archives are data, are not executables, and are never extracted on the user's computer. The workstation must already provide an approved Python installation with Tkinter and a <code>.pyw</code> file association.</p>
+
+<p>Maintainers can refresh the bundled dependencies from <code>requirements.txt</code> by running <code>refresh-vendor.ps1</code> on an approved build computer, then committing the resulting <code>vendor-wheels/</code> changes.</p>
+
 <p>If startup fails, diagnostic output is available in <code>.cache/launcher/</code>.</p>
 
 <h3>Manual server</h3>

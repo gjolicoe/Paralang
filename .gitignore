@@ -17,11 +17,20 @@ data/local-files/**
 
 # Python, local environments, editors, and OS files
 __pycache__/
+.pytest_cache/
+vendor/
+.vendor-stage/
+.vendor-download/
 *.py[cod]
 *.log
 *.tmp
 *.bak
 .venv/
+.build-venv/
+build/
+dist/
+*.spec
+Paralang-Portable-*.zip
 venv/
 env/
 .vscode/

@@ -1,5 +1,12 @@
-from flask import Flask, send_from_directory, abort, render_template, request, jsonify
 from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+VENDOR_WHEELS = sorted((PROJECT_ROOT / "vendor-wheels").glob("*.whl"))
+for vendor_wheel in reversed(VENDOR_WHEELS):
+    sys.path.insert(0, str(vendor_wheel))
+
+from flask import Flask, send_from_directory, abort, render_template, request, jsonify
 from bs4 import BeautifulSoup
 
 from urllib.parse import urlsplit

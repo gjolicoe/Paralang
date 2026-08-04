@@ -14,7 +14,7 @@ import webbrowser
 
 PROJECT_DIR = Path(__file__).resolve().parent
 APP_PATH = PROJECT_DIR / "app.py"
-REQUIREMENTS_PATH = PROJECT_DIR / "requirements.txt"
+VENDOR_WHEELS_DIR = PROJECT_DIR / "vendor-wheels"
 SERVER_URL = "http://127.0.0.1:5000"
 LOG_DIR = PROJECT_DIR / ".cache" / "launcher"
 STDOUT_LOG = LOG_DIR / "paralang.stdout.log"
@@ -227,39 +227,36 @@ class ParalangLauncher:
             return False
 
     def ensure_dependencies(self):
+        environment = self.server_environment()
         dependency_check = subprocess.run(
             [sys.executable, "-c", "import flask, bs4"],
             cwd=PROJECT_DIR,
             capture_output=True,
             text=True,
             creationflags=CREATE_NO_WINDOW,
+            env=environment,
         )
         if dependency_check.returncode == 0:
             return True
 
-        self.status.set("Installing required Python packages...")
-        if not REQUIREMENTS_PATH.is_file():
-            self.fail(f"requirements.txt was not found in:\n{PROJECT_DIR}")
-            return False
-
-        install_check = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", str(REQUIREMENTS_PATH)],
-            cwd=PROJECT_DIR,
-            capture_output=True,
-            text=True,
-            creationflags=CREATE_NO_WINDOW,
+        self.fail(
+            "The bundled Python dependencies are missing or incompatible.\n\n"
+            f"Python: {sys.executable}\n\n"
+            "Download a fresh complete copy of the portable-windows branch.\n"
+            "No package installation was attempted.\n\n"
+            f"Details:\n{dependency_check.stderr.strip() or dependency_check.stdout.strip()}"
         )
-        if install_check.returncode != 0:
-            self.fail(
-                "Required Python packages could not be installed automatically.\n\n"
-                f"Python: {sys.executable}\n\n"
-                "Install them manually with:\n"
-                "python -m pip install -r requirements.txt\n\n"
-                f"Installer output:\n{install_check.stderr.strip() or install_check.stdout.strip()}"
-            )
-            return False
+        return False
 
-        return True
+    @staticmethod
+    def server_environment():
+        environment = os.environ.copy()
+        existing_path = environment.get("PYTHONPATH", "")
+        vendor_wheels = [str(path) for path in sorted(VENDOR_WHEELS_DIR.glob("*.whl"))]
+        environment["PYTHONPATH"] = os.pathsep.join(
+            [*vendor_wheels, *([existing_path] if existing_path else [])]
+        )
+        return environment
 
     def start(self):
         self.poll_attempts = 0
@@ -288,6 +285,7 @@ class ParalangLauncher:
                 stdout=stdout_file,
                 stderr=stderr_file,
                 creationflags=CREATE_NO_WINDOW,
+                env=self.server_environment(),
             )
         finally:
             stdout_file.close()
