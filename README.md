@@ -14,6 +14,9 @@
 
 <p><strong>Using Paralang?</strong> Start with <a href="#getting-started">Getting started</a> below. <strong>Developing Paralang?</strong> See the <a href="CONTRIBUTING.md">developer and contribution guide</a>.</p>
 
+> [!IMPORTANT]
+> **Python 3 with Tkinter must be installed on the workstation before Paralang can run.** This requirement also applies to the <code>portable-windows</code> version: that branch includes Paralang's third-party Python packages, but it does not include the Python interpreter itself.
+
 <h2>Getting started</h2>
 
 <ol>
@@ -180,3 +183,26 @@
 python app.py</code></pre>
 
 <p>Then open <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a>. Stop the server with <code>Ctrl+C</code>.</p>
+
+<h2>Updating the portable branch</h2>
+
+<p>Make regular application changes on <code>main</code>. After committing and pushing them, merge <code>main</code> into <code>portable-windows</code> so the portable-only dependency files remain in that branch:</p>
+
+<pre><code>git switch main
+git add -A
+git commit -m "Describe your changes"
+git push origin main
+
+git switch portable-windows
+git merge main
+git push origin portable-windows
+
+git switch main</code></pre>
+
+<p>If the branches are kept in separate worktree folders, run the merge from the portable folder instead:</p>
+
+<pre><code>cd ..\paralang-portable
+git merge main
+git push origin portable-windows</code></pre>
+
+<p>If Git reports a merge conflict, resolve the files reported by <code>git status</code>, then run <code>git add -A</code>, <code>git commit</code>, and <code>git push origin portable-windows</code>. Do not merge <code>portable-windows</code> back into <code>main</code> unless its portable-only files are intentionally wanted on the main branch.</p>
