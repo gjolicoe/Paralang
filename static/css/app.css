@@ -287,10 +287,19 @@ body.dark-mode .toolbar label {
 }
 
 .url-cache-status {
+  display: inline-flex;
+  flex-direction: column;
   align-self: center;
+  justify-content: center;
+  gap: 2px;
   color: #667085;
   font-size: 11px;
+  line-height: 1.15;
   white-space: nowrap;
+}
+
+.url-cache-status span {
+  display: block;
 }
 
 body.dark-mode .url-cache-status {
