@@ -212,6 +212,11 @@ body.dark-mode {
   display: contents;
 }
 
+.toolbar-fetch-error {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
 .toolbar-source-controls #envSelectGroup {
   grid-column: 1;
   min-width: 0;

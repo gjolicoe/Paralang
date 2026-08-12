@@ -265,6 +265,7 @@ def index():
 
     left_headings = []
     right_headings = []
+    url_fetch_errors = []
     if is_url_input:
         left_input_value = request.args.get("left", "").strip()
         right_input_value = request.args.get("right", "").strip()
@@ -280,12 +281,14 @@ def index():
                 left_file = fetch_environment_url_to_cache(source_env, left_input_value)
             except Exception as error:
                 print(f"[Paralang] Could not fetch left URL for {source_env}: {error}")
+                url_fetch_errors.append(f"The EN page could not be downloaded: {error}")
 
         if right_input_value:
             try:
                 right_file = fetch_environment_url_to_cache(source_env, right_input_value)
             except Exception as error:
                 print(f"[Paralang] Could not fetch right URL for {source_env}: {error}")
+                url_fetch_errors.append(f"The FR page could not be downloaded: {error}")
 
     else:
         available_years = get_available_years(source_env)
@@ -361,6 +364,7 @@ def index():
         year=year,
         source_options=source_options,
         environment_presets=read_environment_presets(),
+        url_fetch_errors=url_fetch_errors,
         available_years=available_years,
         is_url_input=is_url_input,
         left_headings=left_headings,

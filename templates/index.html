@@ -87,6 +87,11 @@
       <span id="darkModeIcon" class="icon-toggle-btn__icon" aria-hidden="true"></span>
     </button>
     <form class="toolbar" method="get" action="/">
+      {% if url_fetch_errors %}
+      <div class="paste-html-message toolbar-fetch-error" role="alert">
+        {% for error in url_fetch_errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
       <div class="toolbar-source-controls">
         <div id="envSelectGroup">
         <label for="env">Environment</label>
