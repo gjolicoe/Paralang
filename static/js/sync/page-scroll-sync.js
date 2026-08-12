@@ -84,35 +84,42 @@ function attachElementSnapSync() {
 }
 
 function attachComparableElementClickHandlers(frame) {
-    const elements = getComparableElements(frame);
+    const doc = frame.contentDocument || frame.contentWindow.document;
 
-    elements.forEach(el => {
-        if (el.dataset.paralangClickBound === "true") {
+    if (!doc) {
+        return;
+    }
+
+    getComparableElements(frame).forEach(element => {
+        element.style.cursor = "pointer";
+    });
+
+    if (doc.documentElement.dataset.paralangClickBound === "true") return;
+
+    doc.documentElement.dataset.paralangClickBound = "true";
+
+    doc.addEventListener("click", event => {
+        const currentElements = getComparableElements(frame);
+        const clickedElement = currentElements.find(element => {
+            return element === event.target || element.contains(event.target);
+        });
+
+        if (!clickedElement) return;
+
+        event.stopPropagation();
+
+        const clickedIndex = currentElements.indexOf(clickedElement);
+
+        if (frame.id === "leftFrame") {
+            syncToElement(clickedIndex);
             return;
         }
 
-        el.dataset.paralangClickBound = "true";
-        el.style.cursor = "pointer";
+        const leftIndex = Math.max(
+            0,
+            clickedIndex - getEffectiveRightSyncOffset()
+        );
 
-        el.addEventListener("click", event => {
-            event.stopPropagation();
-
-            const currentElements = getComparableElements(frame);
-            const clickedIndex = currentElements.indexOf(el);
-
-            if (clickedIndex < 0) return;
-
-            if (frame.id === "leftFrame") {
-                syncToElement(clickedIndex);
-                return;
-            }
-
-            const leftIndex = Math.max(
-                0,
-                clickedIndex - getEffectiveRightSyncOffset()
-            );
-
-            syncToElement(leftIndex);
-        });
+        syncToElement(leftIndex);
     });
 }

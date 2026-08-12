@@ -28,13 +28,17 @@ MAX_CODE_VIEW_CACHE_ITEMS = 10
 _CODE_VIEW_CACHE = {}
 
 
-def get_code_view_cache_key(path, source_env):
+def get_code_view_cache_key(path, source_env, open_details_indexes=None):
     try:
         modified_time = path.stat().st_mtime
     except OSError:
         modified_time = 0
 
-    return f"{source_env}|{safe_resolve(path)}|{modified_time}"
+    open_details_key = ",".join(
+        str(index) for index in sorted(open_details_indexes or [])
+    )
+
+    return f"{source_env}|{safe_resolve(path)}|{modified_time}|{open_details_key}"
 
 
 def trim_code_view_cache():
@@ -193,13 +197,21 @@ def build_highlighted_code_lines(path, source_env, year, open_details_indexes=No
         tag = node.name.lower()
 
         details_parent = node.find_parent("details")
+        is_standalone_summary = (
+            tag == "summary"
+            and details_parent is not None
+            and node.find_parent("figure") is None
+        )
 
-        if details_parent and not details_parent.has_attr("open"):
+        if tag == "summary" and not is_standalone_summary:
+            return False
+
+        if node.find_parent("summary") and tag != "summary":
             return False
 
         if tag not in {
             "h1", "h2", "h3", "h4", "h5", "h6",
-            "p", "li", "dt", "dd", "tr", "figure", "img"
+            "p", "li", "dt", "dd", "tr", "summary", "figure", "img"
         }:
             return False
 
@@ -525,7 +537,7 @@ def get_h2_section_window_for_block(highlighted_lines, selected_block_index):
 
 
 def get_cached_highlighted_code_lines(path, source_env, year, open_details_indexes=None):
-    cache_key = get_code_view_cache_key(path, source_env)
+    cache_key = get_code_view_cache_key(path, source_env, open_details_indexes)
 
     if cache_key in _CODE_VIEW_CACHE:
         return _CODE_VIEW_CACHE[cache_key]

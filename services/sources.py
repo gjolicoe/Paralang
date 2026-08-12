@@ -1,10 +1,17 @@
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
+import ctypes
 import hashlib
 import json
+import os
 import re
+import shutil
+import subprocess
+import tempfile
 import threading
+from datetime import datetime, timezone
 
 from services.pasted_html_cache import PASTED_HTML_CACHE_ROOT
 
@@ -17,6 +24,7 @@ URL_CACHE_ROOT = PROJECT_ROOT / ".cache" / "canada-ca-pages"
 URL_PRESET_CACHE_ROOT = PROJECT_ROOT / ".cache" / "url-presets"
 MAX_CANADA_CA_PAGE_BYTES = 100 * 1024 * 1024
 MAX_CANADA_CA_REDIRECTS = 10
+CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 LOCAL_FILES_ROOT.mkdir(parents=True, exist_ok=True)
 URL_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
@@ -57,6 +65,7 @@ BUILTIN_SOURCE_ENVIRONMENTS = {
 }
 SOURCE_ENVIRONMENTS = dict(BUILTIN_SOURCE_ENVIRONMENTS)
 _PRESET_LOCK = threading.Lock()
+_URL_FETCH_LOCK = threading.Lock()
 
 
 def normalize_public_https_origin(value):
@@ -502,7 +511,42 @@ def inject_base_href(html, url):
     )
 
 
-def fetch_environment_url_to_cache(source_env, url):
+def get_environment_url_cache_info(source_env, url):
+    url = (url or "").strip()
+
+    if not url or not is_allowed_environment_url(source_env, url):
+        return None
+
+    cache_root = get_source_root(source_env, "_")
+    cached_path = cache_root / get_canada_ca_cached_relative_path(url)
+    metadata_path = get_canada_ca_metadata_path(cached_path)
+
+    if not cached_path.is_file() or not metadata_path.is_file():
+        return None
+
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        fetched_at = metadata.get("fetched_at")
+
+        if not fetched_at:
+            fetched_at = datetime.fromtimestamp(
+                cached_path.stat().st_mtime,
+                tz=timezone.utc
+            ).isoformat()
+
+        fetched_datetime = datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))
+
+        return {
+            "fetched_at": fetched_at,
+            "fetched_at_display": fetched_datetime.astimezone().strftime(
+                "%Y-%m-%d %H:%M"
+            )
+        }
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def fetch_environment_url_to_cache(source_env, url, force_refresh=False):
     url = (url or "").strip()
     config = SOURCE_ENVIRONMENTS.get(source_env, {})
     if not is_allowed_environment_url(source_env, url):
@@ -512,22 +556,166 @@ def fetch_environment_url_to_cache(source_env, url):
     cached_name = get_canada_ca_cached_relative_path(url)
     cached_path = cache_root / cached_name
     metadata_path = get_canada_ca_metadata_path(cached_path)
+
+    def cached_copy_is_available():
+        try:
+            return (
+                cached_path.is_file()
+                and cached_path.stat().st_size > 0
+                and metadata_path.is_file()
+            )
+        except OSError:
+            return False
+
+    if not force_refresh and cached_copy_is_available():
+        return cached_name
+
+    # A workspace can be refreshed from more than one browser tab. Only one
+    # request should download a given pair while the others reuse its result.
+    with _URL_FETCH_LOCK:
+        if not force_refresh and cached_copy_is_available():
+            return cached_name
+
+        return _download_environment_url_to_cache(
+            source_env,
+            url,
+            cached_name,
+            cached_path,
+            metadata_path
+        )
+
+
+def _download_environment_url_to_cache(
+    source_env,
+    url,
+    cached_name,
+    cached_path,
+    metadata_path
+):
     request = Request(
         url,
         headers={"User-Agent": "Paralang local QA tool"}
     )
     opener = build_opener(EnvironmentUrlRedirectHandler(source_env))
-    with opener.open(request, timeout=20) as response:
-        final_url = response.geturl()
-        if not is_allowed_environment_url(source_env, final_url):
-            raise ValueError("The final download URL is outside the preset's allowed origin.")
-        raw = read_limited_response(response)
+    try:
+        with opener.open(request, timeout=20) as response:
+            final_url = response.geturl()
+            if not is_allowed_environment_url(source_env, final_url):
+                raise ValueError("The final download URL is outside the preset's allowed origin.")
+            raw = read_limited_response(response)
+    except HTTPError:
+        raise
+    except (OSError, TimeoutError) as urllib_error:
+        # Some Windows/Python/OpenSSL combinations are reset by Canada.ca's CDN
+        # even though the OS-native HTTPS stack works. Curl uses that native
+        # stack on Windows, so retain urllib as the portable default and use
+        # curl as a compatibility transport for network-level failures only.
+        try:
+            raw, final_url = fetch_environment_url_with_curl(source_env, url)
+        except Exception as curl_error:
+            raise OSError(
+                f"The page could not be downloaded with either available HTTPS transport. "
+                f"Python: {urllib_error}. System: {curl_error}"
+            ) from curl_error
     html = raw.decode("utf-8", errors="ignore")
     html = inject_base_href(html, final_url)
     cached_path.write_text(html, encoding="utf-8")
-    metadata = {"source_url": final_url}
+    metadata = {
+        "source_url": final_url,
+        "fetched_at": datetime.now(timezone.utc).isoformat()
+    }
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return cached_name
+
+
+def fetch_environment_url_with_curl(source_env, url):
+    curl_path = get_trusted_curl_path()
+    if not curl_path:
+        raise OSError("The system curl transport is not available.")
+
+    current_url = url
+    for redirect_count in range(MAX_CANADA_CA_REDIRECTS + 1):
+        if not is_allowed_environment_url(source_env, current_url):
+            raise ValueError("The website redirected outside the preset's allowed origin.")
+
+        cache_root = get_source_root(source_env, "_")
+        with tempfile.TemporaryDirectory(prefix="paralang-download-", dir=cache_root) as temp_dir:
+            body_path = Path(temp_dir) / "body"
+            headers_path = Path(temp_dir) / "headers"
+            result = subprocess.run(
+                [
+                    curl_path,
+                    # This must be the first curl option. It prevents user or
+                    # machine curl configuration from changing the request.
+                    "--disable",
+                    "--silent",
+                    "--show-error",
+                    "--proto",
+                    "=https",
+                    "--connect-timeout",
+                    "20",
+                    "--max-time",
+                    "20",
+                    "--max-filesize",
+                    str(MAX_CANADA_CA_PAGE_BYTES),
+                    "--user-agent",
+                    "Paralang local QA tool",
+                    "--output",
+                    str(body_path),
+                    "--dump-header",
+                    str(headers_path),
+                    "--write-out",
+                    "%{http_code}",
+                    current_url,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=25,
+                creationflags=CREATE_NO_WINDOW,
+            )
+            if result.returncode != 0:
+                raise OSError(result.stderr.strip() or f"curl exited with code {result.returncode}.")
+
+            try:
+                status = int(result.stdout.strip())
+            except ValueError as error:
+                raise OSError("The system HTTPS transport returned an invalid status.") from error
+
+            header_text = headers_path.read_text(encoding="iso-8859-1")
+            if status in {301, 302, 303, 307, 308}:
+                locations = re.findall(r"^Location:\s*(.+?)\s*$", header_text, flags=re.IGNORECASE | re.MULTILINE)
+                if not locations:
+                    raise OSError("The website returned a redirect without a destination.")
+                if redirect_count >= MAX_CANADA_CA_REDIRECTS:
+                    raise ValueError("The website returned too many redirects.")
+                current_url = urljoin(current_url, locations[-1])
+                continue
+            if status < 200 or status >= 300:
+                raise OSError(f"The website returned HTTP {status}.")
+
+            raw = body_path.read_bytes()
+            if len(raw) > MAX_CANADA_CA_PAGE_BYTES:
+                raise ValueError("The Canada.ca page exceeds the 100 MB download limit.")
+            return raw, current_url
+
+    raise ValueError("The website returned too many redirects.")
+
+
+def get_trusted_curl_path():
+    if os.name == "nt":
+        # Ask Windows for its protected system directory rather than trusting
+        # PATH or environment variables that could point at another curl.exe.
+        buffer = ctypes.create_unicode_buffer(32768)
+        length = ctypes.windll.kernel32.GetSystemDirectoryW(buffer, len(buffer))
+        if not length or length >= len(buffer):
+            return None
+        system_curl = Path(buffer.value) / "curl.exe"
+        return str(system_curl) if system_curl.is_file() else None
+
+    # On non-Windows systems curl is not guaranteed to have a fixed location.
+    # which() returns an absolute executable path; subprocess never uses a shell.
+    curl_path = shutil.which("curl")
+    return str(Path(curl_path).resolve()) if curl_path else None
 
 
 def fetch_canada_ca_url_to_cache(url):

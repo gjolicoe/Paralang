@@ -9,7 +9,11 @@ function watchForApplicationRestart() {
 
   if (!initialInstanceId) return;
 
-  window.setInterval(async () => {
+  let reloadRequested = false;
+
+  const intervalId = window.setInterval(async () => {
+    if (reloadRequested) return;
+
     try {
       const response = await fetch("/api/app-instance", { cache: "no-store" });
 
@@ -18,6 +22,8 @@ function watchForApplicationRestart() {
       const result = await response.json();
 
       if (result.instance_id && result.instance_id !== initialInstanceId) {
+        reloadRequested = true;
+        window.clearInterval(intervalId);
         window.location.reload();
       }
     } catch (error) {

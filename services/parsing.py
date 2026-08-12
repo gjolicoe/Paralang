@@ -143,6 +143,7 @@ def get_heading_section_counts(content_area, headings):
         "li",
         "dt", "dd",
         "tr",
+        "summary",
         "figure",
         "img"
     ])
@@ -151,8 +152,19 @@ def get_heading_section_counts(content_area, headings):
 
     for element in content_area.select(comparable_selector):
         tag = element.name.lower()
+        is_standalone_summary = (
+            tag == "summary"
+            and element.find_parent("details") is not None
+            and element.find_parent("figure") is None
+        )
 
-        if is_inside_closed_details(element):
+        if tag == "summary" and not is_standalone_summary:
+            continue
+
+        if element.find_parent("summary") and tag != "summary":
+            continue
+
+        if is_inside_closed_details(element) and not is_standalone_summary:
             continue
 
         if element.find_parent("li") and tag != "li":
@@ -288,6 +300,7 @@ def extract_comparable_blocks(filename, source_env, year):
         "li",
         "dt", "dd",
         "tr",
+        "summary",
         "figure",
         "img"
     ]
@@ -297,8 +310,19 @@ def extract_comparable_blocks(filename, source_env, year):
 
     for element in content_area.select(",".join(selector)):
         tag = element.name.lower()
+        is_standalone_summary = (
+            tag == "summary"
+            and element.find_parent("details") is not None
+            and element.find_parent("figure") is None
+        )
 
-        if is_inside_closed_details(element):
+        if tag == "summary" and not is_standalone_summary:
+            continue
+
+        if element.find_parent("summary") and tag != "summary":
+            continue
+
+        if is_inside_closed_details(element) and not is_standalone_summary:
             continue
 
         if element.find_parent("li") and tag != "li":

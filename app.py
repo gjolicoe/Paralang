@@ -19,6 +19,7 @@ from services.sources import (
     get_html_files,
     is_url_input_environment,
     fetch_environment_url_to_cache,
+    get_environment_url_cache_info,
     get_environment_source_url_from_cached_file,
     safe_resolve,
     path_is_within,
@@ -272,6 +273,9 @@ def index():
 
     left_headings = []
     right_headings = []
+    url_fetch_errors = []
+    left_cache_info = None
+    right_cache_info = None
     if is_url_input:
         left_input_value = request.args.get("left", "").strip()
         right_input_value = request.args.get("right", "").strip()
@@ -281,18 +285,33 @@ def index():
         en_files = []
         fr_files = []
         year = "_"
-
         if left_input_value:
             try:
-                left_file = fetch_environment_url_to_cache(source_env, left_input_value)
+                left_file = fetch_environment_url_to_cache(
+                    source_env,
+                    left_input_value
+                )
+                left_cache_info = get_environment_url_cache_info(
+                    source_env,
+                    left_input_value
+                )
             except Exception as error:
                 print(f"[Paralang] Could not fetch left URL for {source_env}: {error}")
+                url_fetch_errors.append(f"The EN page could not be downloaded: {error}")
 
         if right_input_value:
             try:
-                right_file = fetch_environment_url_to_cache(source_env, right_input_value)
+                right_file = fetch_environment_url_to_cache(
+                    source_env,
+                    right_input_value
+                )
+                right_cache_info = get_environment_url_cache_info(
+                    source_env,
+                    right_input_value
+                )
             except Exception as error:
                 print(f"[Paralang] Could not fetch right URL for {source_env}: {error}")
+                url_fetch_errors.append(f"The FR page could not be downloaded: {error}")
 
     else:
         available_years = get_available_years(source_env)
@@ -368,6 +387,9 @@ def index():
         year=year,
         source_options=source_options,
         environment_presets=read_environment_presets(),
+        url_fetch_errors=url_fetch_errors,
+        left_cache_info=left_cache_info,
+        right_cache_info=right_cache_info,
         available_years=available_years,
         is_url_input=is_url_input,
         left_headings=left_headings,
@@ -582,12 +604,18 @@ def code_view(source_env, year, filename):
         abort(404)
 
     selected_block_index = request.args.get("center_block_index", type=int)
+    open_details_indexes = {
+        int(value)
+        for value in request.args.get("open_details", "").split(",")
+        if value.strip().isdigit()
+    }
 
     code_result = format_html_for_code_view(
         requested,
         source_env,
         year,
-        selected_block_index=selected_block_index
+        selected_block_index=selected_block_index,
+        open_details_indexes=open_details_indexes
     )
 
     return render_template(
@@ -613,6 +641,42 @@ def api_get_issues():
     return jsonify({
         "issues": issues
     })
+
+
+@app.post("/api/reload-url-pages")
+def api_reload_url_pages():
+    payload = request.get_json(silent=True) or {}
+    source_env = str(payload.get("source_env", "")).strip()
+    force_refresh = bool(payload.get("force_refresh", True))
+
+    if not is_url_input_environment(source_env):
+        return jsonify({"ok": False, "error": "This environment is not URL-based."}), 400
+
+    result = {"ok": True, "pages": {}}
+
+    for side in ("left", "right"):
+        url = str(payload.get(side, "")).strip()
+
+        if not url:
+            continue
+
+        try:
+            filename = fetch_environment_url_to_cache(
+                source_env,
+                url,
+                force_refresh=force_refresh
+            )
+            result["pages"][side] = {
+                "filename": filename,
+                "cache_info": get_environment_url_cache_info(source_env, url)
+            }
+        except Exception as error:
+            return jsonify({
+                "ok": False,
+                "error": f"The {side} page could not be downloaded: {error}"
+            }), 400
+
+    return jsonify(result)
 
 
 @app.route("/api/issues", methods=["POST"])

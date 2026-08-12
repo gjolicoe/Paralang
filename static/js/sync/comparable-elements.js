@@ -14,13 +14,28 @@ function getComparableElements(frame) {
     if (!contentArea) return [];
 
     return Array.from(
-        contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6, p, li, dt, dd, tr, figure, img")
+        contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6, p, li, dt, dd, tr, summary, figure, img")
     ).filter(element => {
         const tag = element.tagName.toLowerCase();
 
         const detailsParent = element.closest("details");
+        const isStandaloneSummary = tag === "summary"
+            && detailsParent
+            && !detailsParent.closest("figure");
 
-        if (detailsParent && !detailsParent.open) {
+        if (tag === "summary" && !isStandaloneSummary) {
+            return false;
+        }
+
+        if (element.closest("summary") && tag !== "summary") {
+            return false;
+        }
+
+        if (
+            detailsParent
+            && !detailsParent.open
+            && !isStandaloneSummary
+        ) {
             return false;
         }
 
@@ -48,7 +63,23 @@ function getComparableElementsForDocument(contentArea) {
         const tag = el.tagName.toLowerCase();
 
         const detailsParent = el.closest("details");
-        if (detailsParent && !detailsParent.hasAttribute("open")) {
+        const isStandaloneSummary = tag === "summary"
+            && detailsParent
+            && !detailsParent.closest("figure");
+
+        if (tag === "summary" && !isStandaloneSummary) {
+            return false;
+        }
+
+        if (el.closest("summary") && tag !== "summary") {
+            return false;
+        }
+
+        if (
+            detailsParent
+            && !detailsParent.hasAttribute("open")
+            && !isStandaloneSummary
+        ) {
             return false;
         }
 
@@ -119,7 +150,11 @@ function getComparableElementSignature(element) {
 
     const detailsParent = element.closest("details");
 
-    if (detailsParent && !detailsParent.open) {
+    if (
+        detailsParent
+        && !detailsParent.open
+        && element.tagName.toLowerCase() !== "summary"
+    ) {
         return "";
     }
 

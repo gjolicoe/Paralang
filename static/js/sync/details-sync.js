@@ -26,11 +26,13 @@ function setDetailsOpenAtIndex(frame, detailsIndex, open) {
     target.open = open;
 }
 
-function getFirstComparableIndexInsideDetails(frame, detailsElement) {
+function getFirstComparableIndexAfterSummary(frame, detailsElement) {
     const elements = getComparableElements(frame);
+    const summary = detailsElement.querySelector(":scope > summary");
 
     return elements.findIndex(element => {
-        return element.closest("details") === detailsElement;
+        return element !== summary
+            && element.closest("details") === detailsElement;
     });
 }
 
@@ -39,7 +41,7 @@ function moveSyncToFirstElementInsideDetails(frame, detailsElement) {
 
     if (detailsIndex < 0) return;
 
-    const comparableIndex = getFirstComparableIndexInsideDetails(frame, detailsElement);
+    const comparableIndex = getFirstComparableIndexAfterSummary(frame, detailsElement);
 
     if (comparableIndex < 0) return;
 
@@ -144,7 +146,7 @@ function attachDetailsSyncHandlers(frame) {
             }
 
             if (detailsElement.open) {
-                const detailsComparableIndex = getFirstComparableIndexInsideDetails(
+                const detailsComparableIndex = getFirstComparableIndexAfterSummary(
                     frame,
                     detailsElement
                 );
@@ -161,6 +163,7 @@ function attachDetailsSyncHandlers(frame) {
                 }
             }
 
+            attachComparableElementClickHandlers(frame);
             syncToElement(selectedElementIndex);
         });
         clearComparableElementsCache(frame);
