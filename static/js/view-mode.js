@@ -176,11 +176,21 @@ function appendCodeSectionParams(src, options = {}) {
 
   url.searchParams.set("center_block_index", String(centerBlockIndex));
 
+  if (options.openDetails) {
+    url.searchParams.set("open_details", options.openDetails);
+  } else {
+    url.searchParams.delete("open_details");
+  }
+
   return url.pathname + url.search;
 }
 
 function getCodeSrc(filename, side = "left", options = {}) {
   const env = getSelectedEnv();
+  const codeOptions = {
+    ...options,
+    openDetails: getOpenDetailsParamForSide(side)
+  };
 
   if (selectedEnvUsesTextInputs(env)) {
     const resolvedFile = getResolvedFileForSide(filename, side);
@@ -189,13 +199,13 @@ function getCodeSrc(filename, side = "left", options = {}) {
 
     return appendCodeSectionParams(
       `/code/${env}/_/${encodeURIComponent(resolvedFile)}`,
-      options
+      codeOptions
     );
   }
 
   return appendCodeSectionParams(
     `/code/${env}/${getSelectedYear()}/${encodeURI(filename)}`,
-    options
+    codeOptions
   );
 }
 

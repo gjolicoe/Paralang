@@ -241,20 +241,19 @@ function syncCodePanelsToCurrentSelection() {
         return;
     }
 
-    const leftBlockSynced = scrollCodeFrameToBlock(
+    const leftSignature = getComparableSignatureForFrameIndex(leftFrame, leftIndex);
+    const leftSignatureSynced = scrollCodeFrameToSignature(
         leftCodeFrame,
-        leftIndex,
-        "#a99de7"
+        leftSignature,
+        "#a99de7",
+        leftIndex
     );
 
-    if (!leftBlockSynced) {
-        const leftSignature = getComparableSignatureForFrameIndex(leftFrame, leftIndex);
-
-        scrollCodeFrameToSignature(
+    if (!leftSignatureSynced) {
+        scrollCodeFrameToBlock(
             leftCodeFrame,
-            leftSignature,
-            "#a99de7",
-            leftIndex
+            leftIndex,
+            "#a99de7"
         );
     }
 
@@ -264,23 +263,22 @@ function syncCodePanelsToCurrentSelection() {
             ? "rgba(220, 53, 69, 0.95)"
             : "#a99de7";
 
-        const rightBlockSynced = scrollCodeFrameToBlock(
+        const rightSignature = getComparableSignatureForFrameIndex(
+            rightFrame,
+            rightIndex
+        );
+        const rightSignatureSynced = scrollCodeFrameToSignature(
             rightCodeFrame,
-            rightIndex,
-            rightColor
+            rightSignature,
+            rightColor,
+            rightIndex
         );
 
-        if (!rightBlockSynced) {
-            const rightSignature = getComparableSignatureForFrameIndex(
-                rightFrame,
-                rightIndex
-            );
-
-            scrollCodeFrameToSignature(
+        if (!rightSignatureSynced) {
+            scrollCodeFrameToBlock(
                 rightCodeFrame,
-                rightSignature,
-                rightColor,
-                rightIndex
+                rightIndex,
+                rightColor
             );
         }
     }
@@ -435,20 +433,35 @@ function attachCodePanelClickHandlers(frame, side) {
             event.stopPropagation();
 
             const blockIndex = Number(line.dataset.blockIndex);
+            const pageFrame = side === "right" ? rightFrame : leftFrame;
+            const pageElements = getComparableElements(pageFrame);
+            const codeSignature = normalizeComparableSignature(
+                line.dataset.blockSignature || ""
+            );
+            const matchingPageIndex = codeSignature
+                ? pageElements.findIndex(element => {
+                    return normalizeComparableSignature(
+                        getComparableElementSignature(element)
+                    ) === codeSignature;
+                })
+                : -1;
+            const pageIndex = matchingPageIndex >= 0
+                ? matchingPageIndex
+                : blockIndex;
 
-            if (!Number.isFinite(blockIndex)) return;
+            if (!Number.isFinite(pageIndex)) return;
 
             if (side === "right") {
                 const leftIndex = Math.max(
                     0,
-                    blockIndex - getEffectiveRightSyncOffset()
+                    pageIndex - getEffectiveRightSyncOffset()
                 );
 
                 syncToElement(leftIndex);
                 return;
             }
 
-            syncToElement(blockIndex);
+            syncToElement(pageIndex);
         });
     });
 }

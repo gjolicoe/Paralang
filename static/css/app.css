@@ -286,6 +286,17 @@ body.dark-mode .toolbar label {
   color: #b8c0cc;
 }
 
+.url-cache-status {
+  align-self: center;
+  color: #667085;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+body.dark-mode .url-cache-status {
+  color: #b8c0cc;
+}
+
 .toolbar select,
 .toolbar input[type="text"],
 .toolbar button,

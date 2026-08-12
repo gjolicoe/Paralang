@@ -132,10 +132,20 @@ rightSelect.addEventListener("change", () => {
 });
 
 document.querySelector(".toolbar").addEventListener("submit", event => {
-    if (!singleViewEnabled) return;
+    // A newly entered URL still needs the server to resolve it into a cached
+    // file. Folder-based environments already have their selections locally.
+    if (selectedEnvUsesTextInputs(getSelectedEnv()) && !singleViewEnabled) {
+      return;
+    }
 
     event.preventDefault();
-    loadSinglePage();
+
+    if (singleViewEnabled) {
+      loadSinglePage();
+      return;
+    }
+
+    loadDualPages();
 });
 
 leftCodeFrame.addEventListener("load", () => {
@@ -181,3 +191,55 @@ document.addEventListener("keyup", event => {
 window.addEventListener("blur", () => {
   codeManualScrollMode = false;
 });
+
+const reloadUrlPagesButton = document.getElementById("reloadUrlPages");
+
+if (reloadUrlPagesButton) {
+  reloadUrlPagesButton.addEventListener("click", async () => {
+    reloadUrlPagesButton.disabled = true;
+    setViewLoading(true, "Reloading website pages...");
+
+    try {
+      const response = await fetch("/api/reload-url-pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_env: getSelectedEnv(),
+          left: leftSelect.value,
+          right: rightSelect.value
+        })
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "The website pages could not be reloaded.");
+      }
+
+      ["left", "right"].forEach(side => {
+        const page = result.pages?.[side];
+        if (!page) return;
+
+        const resolvedInput = document.getElementById(`${side}ResolvedFile`);
+        const cacheTime = document.getElementById(`${side}UrlCacheTime`);
+
+        if (resolvedInput) resolvedInput.value = page.filename;
+
+        if (cacheTime && page.cache_info) {
+          cacheTime.dateTime = page.cache_info.fetched_at;
+          cacheTime.textContent = page.cache_info.fetched_at_display;
+        }
+      });
+
+      if (singleViewEnabled) {
+        loadSinglePage();
+      } else {
+        loadDualPages();
+      }
+    } catch (error) {
+      setViewLoading(false);
+      window.alert(error.message);
+    } finally {
+      reloadUrlPagesButton.disabled = false;
+    }
+  });
+}

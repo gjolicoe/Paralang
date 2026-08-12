@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+from datetime import datetime, timezone
 
 from services.pasted_html_cache import PASTED_HTML_CACHE_ROOT
 
@@ -64,6 +65,7 @@ BUILTIN_SOURCE_ENVIRONMENTS = {
 }
 SOURCE_ENVIRONMENTS = dict(BUILTIN_SOURCE_ENVIRONMENTS)
 _PRESET_LOCK = threading.Lock()
+_URL_FETCH_LOCK = threading.Lock()
 
 
 def normalize_public_https_origin(value):
@@ -509,7 +511,42 @@ def inject_base_href(html, url):
     )
 
 
-def fetch_environment_url_to_cache(source_env, url):
+def get_environment_url_cache_info(source_env, url):
+    url = (url or "").strip()
+
+    if not url or not is_allowed_environment_url(source_env, url):
+        return None
+
+    cache_root = get_source_root(source_env, "_")
+    cached_path = cache_root / get_canada_ca_cached_relative_path(url)
+    metadata_path = get_canada_ca_metadata_path(cached_path)
+
+    if not cached_path.is_file() or not metadata_path.is_file():
+        return None
+
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        fetched_at = metadata.get("fetched_at")
+
+        if not fetched_at:
+            fetched_at = datetime.fromtimestamp(
+                cached_path.stat().st_mtime,
+                tz=timezone.utc
+            ).isoformat()
+
+        fetched_datetime = datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))
+
+        return {
+            "fetched_at": fetched_at,
+            "fetched_at_display": fetched_datetime.astimezone().strftime(
+                "%Y-%m-%d %H:%M"
+            )
+        }
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def fetch_environment_url_to_cache(source_env, url, force_refresh=False):
     url = (url or "").strip()
     config = SOURCE_ENVIRONMENTS.get(source_env, {})
     if not is_allowed_environment_url(source_env, url):
@@ -519,6 +556,42 @@ def fetch_environment_url_to_cache(source_env, url):
     cached_name = get_canada_ca_cached_relative_path(url)
     cached_path = cache_root / cached_name
     metadata_path = get_canada_ca_metadata_path(cached_path)
+
+    def cached_copy_is_available():
+        try:
+            return (
+                cached_path.is_file()
+                and cached_path.stat().st_size > 0
+                and metadata_path.is_file()
+            )
+        except OSError:
+            return False
+
+    if not force_refresh and cached_copy_is_available():
+        return cached_name
+
+    # A workspace can be refreshed from more than one browser tab. Only one
+    # request should download a given pair while the others reuse its result.
+    with _URL_FETCH_LOCK:
+        if not force_refresh and cached_copy_is_available():
+            return cached_name
+
+        return _download_environment_url_to_cache(
+            source_env,
+            url,
+            cached_name,
+            cached_path,
+            metadata_path
+        )
+
+
+def _download_environment_url_to_cache(
+    source_env,
+    url,
+    cached_name,
+    cached_path,
+    metadata_path
+):
     request = Request(
         url,
         headers={"User-Agent": "Paralang local QA tool"}
@@ -547,7 +620,10 @@ def fetch_environment_url_to_cache(source_env, url):
     html = raw.decode("utf-8", errors="ignore")
     html = inject_base_href(html, final_url)
     cached_path.write_text(html, encoding="utf-8")
-    metadata = {"source_url": final_url}
+    metadata = {
+        "source_url": final_url,
+        "fetched_at": datetime.now(timezone.utc).isoformat()
+    }
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return cached_name
 

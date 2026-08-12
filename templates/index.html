@@ -478,6 +478,19 @@
         <button type="button" id="toggleHighlightMode" class="view-control-button">
           Hide outline
         </button>
+
+        {% if is_url_input and (left_cache_info or right_cache_info) %}
+        <button type="button" id="reloadUrlPages" class="view-control-button"
+          title="{% if left_cache_info %}EN cached {{ left_cache_info.fetched_at_display }}{% endif %}{% if left_cache_info and right_cache_info %} · {% endif %}{% if right_cache_info %}FR cached {{ right_cache_info.fetched_at_display }}{% endif %}">
+          Reload URLs
+        </button>
+        <span class="url-cache-status">
+          Cached
+          {% if left_cache_info %}EN <time id="leftUrlCacheTime" datetime="{{ left_cache_info.fetched_at }}">{{ left_cache_info.fetched_at_display }}</time>{% endif %}
+          {% if left_cache_info and right_cache_info %}·{% endif %}
+          {% if right_cache_info %}FR <time id="rightUrlCacheTime" datetime="{{ right_cache_info.fetched_at }}">{{ right_cache_info.fetched_at_display }}</time>{% endif %}
+        </span>
+        {% endif %}
       </div>
 
       <div class="view-control-actions view-control-actions-right">
