@@ -3,6 +3,8 @@ import uuid
 
 from services.preflight import diff_comparable_blocks
 from services.parsing import extract_comparable_blocks
+from services.accessibility import scan_accessibility
+from services.aria_checks import compare_aria
 from services.sources import get_resolved_source_file_path
 from services.review_storage import (
     create_issues_bulk,
@@ -13,7 +15,46 @@ from services.review_storage import (
 )
 
 
-AUTOMATED_CHECK_VERSION = 4
+AUTOMATED_CHECK_VERSION = 9
+
+
+def merge_skipped_heading_issues(left_issues, right_issues):
+    """Pair equivalent skipped-heading findings by document order."""
+    left_skips = [issue for issue in left_issues if issue.get("opcode") == "heading-level-skipped"]
+    right_skips = [issue for issue in right_issues if issue.get("opcode") == "heading-level-skipped"]
+    other_issues = [
+        {**issue, "left": issue["target"], "right": None}
+        for issue in left_issues
+        if issue.get("opcode") != "heading-level-skipped"
+    ] + [
+        {**issue, "left": None, "right": issue["target"]}
+        for issue in right_issues
+        if issue.get("opcode") != "heading-level-skipped"
+    ]
+
+    for index in range(max(len(left_skips), len(right_skips))):
+        left_issue = left_skips[index] if index < len(left_skips) else None
+        right_issue = right_skips[index] if index < len(right_skips) else None
+        source_issue = left_issue or right_issue
+        locations = "both English and French pages" if left_issue and right_issue else (
+            "the English page" if left_issue else "the French page"
+        )
+        details = []
+        if left_issue:
+            details.append(f'English: {left_issue["detail"]}')
+        if right_issue and (not left_issue or right_issue["detail"] != left_issue["detail"]):
+            details.append(f'French: {right_issue["detail"]}')
+        elif right_issue:
+            details.append(f'French: {right_issue["detail"]}')
+
+        other_issues.append({
+            **source_issue,
+            "left": left_issue["target"] if left_issue else None,
+            "right": right_issue["target"] if right_issue else None,
+            "detail": f"Location: {locations}. " + " ".join(details),
+        })
+
+    return other_issues
 
 
 def build_automated_issue_records(source_env, year, left_file, right_file):
@@ -24,6 +65,15 @@ def build_automated_issue_records(source_env, year, left_file, right_file):
     right_blocks = extract_comparable_blocks(right_file, source_env, year) if right_file else []
 
     preflight_issues = diff_comparable_blocks(left_blocks, right_blocks)
+
+    left_accessibility = scan_accessibility(left_file, source_env, year) if left_file else []
+    right_accessibility = scan_accessibility(right_file, source_env, year) if right_file else []
+    preflight_issues.extend(merge_skipped_heading_issues(
+        left_accessibility,
+        right_accessibility,
+    ))
+    if left_file and right_file:
+        preflight_issues.extend(compare_aria(left_file, right_file, source_env, year))
 
     page_pair_key = get_page_pair_key(source_env, year, left_file, right_file)
     scan_id = f"scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
@@ -70,6 +120,11 @@ def build_automated_issue_records(source_env, year, left_file, right_file):
             "right_block_index": right.get("index") if right else None,
             "left_cell_index": issue.get("left_cell_index"),
             "right_cell_index": issue.get("right_cell_index"),
+            "alignment_confidence": issue.get("alignment_confidence", "high"),
+            "left_section_start_index": issue.get("left_section_start_index"),
+            "left_section_end_index": issue.get("left_section_end_index"),
+            "right_section_start_index": issue.get("right_section_start_index"),
+            "right_section_end_index": issue.get("right_section_end_index"),
             "automated_check_version": AUTOMATED_CHECK_VERSION,
             "severity": issue.get("severity", "warning"),
             "title": issue.get("label", "Automated issue"),

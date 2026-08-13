@@ -625,6 +625,11 @@ def api_get_issues():
     left_file = request.args.get("left_file", "")
     right_file = request.args.get("right_file", "")
 
+    # Polling must apply the same staleness/version check as the full page
+    # render. Otherwise a browser left open across a checker upgrade keeps
+    # presenting obsolete automated coordinates indefinitely.
+    ensure_automated_issues_exist(source_env, year, left_file, right_file)
+
     issues = get_issues_for_page_pair(
         source_env,
         year,

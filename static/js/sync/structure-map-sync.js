@@ -11,15 +11,7 @@ function getHeadingsForFrame(frame) {
 
     return Array.from(
         contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6")
-    ).filter(heading => {
-        const detailsParent = heading.closest("details");
-
-        if (detailsParent && !detailsParent.hasAttribute("open")) {
-            return false;
-        }
-
-        return true;
-    });
+    );
 }
 
 function isElementAtOrBeforeTarget(heading, target) {
@@ -51,6 +43,8 @@ function getActiveHeadingIndexForFrame(frame, comparableIndex) {
     let activeHeadingIndex = -1;
 
     headings.forEach((heading, index) => {
+        if (isInsideClosedDetails(heading)) return;
+
         if (isElementAtOrBeforeTarget(heading, target)) {
             activeHeadingIndex = index;
         }
@@ -228,4 +222,136 @@ function scrollToHeading(frameId, headingIndex) {
     }
 
     syncToElement(matchingIndex);
+}
+
+function getStructureMapHeadingModels(frame) {
+    if (!frame) return [];
+
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    const contentArea = doc ? getPrimaryContentContainer(doc) : null;
+
+    if (!contentArea) return [];
+
+    const comparableElements = getComparableElements(frame);
+    const headingElements = Array.from(
+        contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6")
+    );
+
+    return headingElements.map((heading, headingIndex) => {
+        const level = Number(heading.tagName.slice(1));
+        const comparableIndex = comparableElements.indexOf(heading);
+        let sectionCount = 0;
+
+        if (comparableIndex >= 0) {
+            for (let index = comparableIndex + 1; index < comparableElements.length; index += 1) {
+                const element = comparableElements[index];
+                const tag = element.tagName.toLowerCase();
+
+                if (/^h[1-6]$/.test(tag) && Number(tag.slice(1)) <= level) {
+                    break;
+                }
+
+                sectionCount += 1;
+            }
+        }
+
+        return {
+            headingIndex,
+            level,
+            text: (heading.textContent || "").replace(/\s+/g, " ").trim(),
+            sectionCount,
+            countMismatch: false
+        };
+    }).filter(heading => heading.text);
+}
+
+function markStructureMapCountMismatches(leftHeadings, rightHeadings) {
+    const count = Math.max(leftHeadings.length, rightHeadings.length);
+
+    for (let index = 0; index < count; index += 1) {
+        const leftHeading = leftHeadings[index];
+        const rightHeading = rightHeadings[index];
+        const mismatch = !leftHeading
+            || !rightHeading
+            || leftHeading.sectionCount !== rightHeading.sectionCount;
+
+        if (leftHeading) leftHeading.countMismatch = mismatch;
+        if (rightHeading) rightHeading.countMismatch = mismatch;
+    }
+}
+
+function renderStructureMap(frame, panel, title, headings) {
+    if (!panel) return;
+
+    panel.replaceChildren();
+
+    const titleElement = document.createElement("h2");
+    titleElement.textContent = title;
+    panel.appendChild(titleElement);
+
+    headings.forEach(heading => {
+        const button = document.createElement("button");
+        button.className = `heading-btn level-${heading.level}`;
+        button.type = "button";
+        button.dataset.frameId = frame.id;
+        button.dataset.headingIndex = String(heading.headingIndex);
+        button.addEventListener("click", () => {
+            scrollToHeading(frame.id, heading.headingIndex);
+        });
+
+        const mainLine = document.createElement("span");
+        mainLine.className = "heading-main-line";
+
+        const level = document.createElement("span");
+        level.className = "heading-level";
+        level.textContent = `H${heading.level}`;
+
+        const text = document.createElement("span");
+        text.className = "heading-text";
+        text.dataset.i18nSkip = "";
+        text.textContent = heading.text;
+
+        const sectionCount = document.createElement("span");
+        sectionCount.className = "heading-section-count";
+        sectionCount.classList.toggle("is-count-mismatch", heading.countMismatch);
+        sectionCount.textContent = `${heading.sectionCount} elements`;
+
+        mainLine.append(level, text);
+        button.append(mainLine, sectionCount);
+        panel.appendChild(button);
+    });
+
+    const note = document.createElement("div");
+    note.className = "small-note";
+    note.textContent = `${headings.length} headings`;
+    panel.appendChild(note);
+}
+
+function refreshStructureMaps() {
+    const leftHeadings = getStructureMapHeadingModels(leftFrame);
+    const rightHeadings = singleViewEnabled
+        ? []
+        : getStructureMapHeadingModels(rightFrame);
+
+    if (!singleViewEnabled) {
+        markStructureMapCountMismatches(leftHeadings, rightHeadings);
+    }
+
+    renderStructureMap(
+        leftFrame,
+        document.querySelector(".left-map"),
+        "Left structure",
+        leftHeadings
+    );
+
+    if (!singleViewEnabled) {
+        renderStructureMap(
+            rightFrame,
+            document.querySelector(".right-map"),
+            "Right structure",
+            rightHeadings
+        );
+    }
+
+    window.ParalangI18n?.translateElement(document.querySelector(".view-grid"));
 }

@@ -274,6 +274,48 @@ function setViewLoading(isLoading, message = "Loading view...") {
   overlay.setAttribute("aria-hidden", isLoading ? "false" : "true");
 }
 
+function beginViewLoad(pageCount) {
+  viewLoadSequence += 1;
+  activeViewLoad = {
+    id: viewLoadSequence,
+    pagesRemaining: pageCount,
+    codeRemaining: codePanelEnabled ? (singleViewEnabled ? 1 : 2) : 0,
+    issuesStarted: false,
+    issuesFinished: false
+  };
+}
+
+async function finishIssuesForViewLoad(load) {
+  try {
+    await refreshUserIssuesFromServer();
+  } finally {
+    if (activeViewLoad !== load) return;
+    load.issuesFinished = true;
+    completeViewLoadIfReady(load);
+  }
+}
+
+function completeViewLoadIfReady(load = activeViewLoad) {
+  if (!load || activeViewLoad !== load) return;
+
+  if (load.pagesRemaining === 0 && !load.issuesStarted) {
+    load.issuesStarted = true;
+    finishIssuesForViewLoad(load);
+  }
+
+  if (load.pagesRemaining === 0 && load.codeRemaining === 0 && load.issuesFinished) {
+    activeViewLoad = null;
+    setViewLoading(false);
+  }
+}
+
+function notifyCodeViewLoaded() {
+  const load = activeViewLoad;
+  if (!load || load.codeRemaining <= 0) return;
+  load.codeRemaining -= 1;
+  completeViewLoadIfReady(load);
+}
+
 function setSingleView(enabled, options = {}) {
   const reloadPages = options.reloadPages !== false;
 
@@ -356,6 +398,7 @@ function loadSinglePage() {
   loaded = 0;
 
   setViewLoading(true, "Loading page view...");
+  beginViewLoad(1);
 
   const leftSrc = getPageSrc(leftFile, "left");
 
@@ -378,6 +421,7 @@ function loadDualPages() {
   loaded = 0;
 
   setViewLoading(true, "Loading page view...");
+  beginViewLoad(2);
 
   const leftSrc = getPageSrc(leftFile, "left");
   const rightSrc = getPageSrc(rightFile, "right");
@@ -418,10 +462,17 @@ function frameLoaded(event) {
   if (loaded >= requiredLoads) {
     loadDarkMode();
 
+    refreshStructureMaps();
     attachElementSnapSync();
     syncToElement(selectedElementIndex);
 
-    setViewLoading(false);
+    const load = activeViewLoad;
+    if (load) {
+      load.pagesRemaining = 0;
+      completeViewLoadIfReady(load);
+    } else {
+      setViewLoading(false);
+    }
   }
 }
 

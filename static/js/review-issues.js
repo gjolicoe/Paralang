@@ -1,35 +1,47 @@
 let issuePollingTimer = null;
 let issueCountdownTimer = null;
 let issuePollingInProgress = false;
+let issueRefreshPromise = null;
+let issueRefreshKey = "";
 let issueRefreshSecondsRemaining = 10;
 const issueRefreshIntervalSeconds = 10;
 
 async function refreshUserIssuesFromServer() {
-  if (issuePollingInProgress) return;
+  const params = getCurrentIssueApiParams();
+  const requestKey = params.toString();
+
+  if (issueRefreshPromise) {
+    if (issueRefreshKey === requestKey) return issueRefreshPromise;
+    await issueRefreshPromise;
+    return refreshUserIssuesFromServer();
+  }
 
   issuePollingInProgress = true;
+  issueRefreshKey = requestKey;
+  issueRefreshPromise = (async () => {
+    try {
+      const response = await fetch(`/api/issues?${params.toString()}`, {
+        method: "GET",
+        cache: "no-store"
+      });
 
-  try {
-    const params = getCurrentIssueApiParams();
+      if (!response.ok) return false;
 
-    const response = await fetch(`/api/issues?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      return;
+      const result = await response.json();
+      renderIssues(result.issues || []);
+      resetIssueRefreshCountdown();
+      return true;
+    } catch (error) {
+      console.warn("[Paralang] Could not refresh user issues:", error);
+      return false;
+    } finally {
+      issuePollingInProgress = false;
+      issueRefreshPromise = null;
+      issueRefreshKey = "";
     }
+  })();
 
-    const result = await response.json();
-
-    renderIssues(result.issues || []);
-    resetIssueRefreshCountdown();
-  } catch (error) {
-    console.warn("[Paralang] Could not refresh user issues:", error);
-  } finally {
-    issuePollingInProgress = false;
-  }
+  return issueRefreshPromise;
 }
 
 function startIssuePolling() {
@@ -672,9 +684,15 @@ function renderIssueRow(issue) {
   row.className = `diff-row ${sourceClass} ${issue.severity || "warning"}`;
   row.dataset.issueId = issue.id;
   row.dataset.issueSource = issue.issue_source || "user";
+  row.dataset.issueTitle = issue.title || "";
   row.dataset.issueSide = issue.side;
   row.dataset.issueBlockIndex = issue.block_index;
   row.dataset.issueBlockSignature = issue.block_signature || "";
+  row.dataset.issueAlignmentConfidence = issue.alignment_confidence || "";
+  row.dataset.issueLeftSectionStart = issue.left_section_start_index ?? "";
+  row.dataset.issueLeftSectionEnd = issue.left_section_end_index ?? "";
+  row.dataset.issueRightSectionStart = issue.right_section_start_index ?? "";
+  row.dataset.issueRightSectionEnd = issue.right_section_end_index ?? "";
 
   row.innerHTML = `
     <div class="diff-index">${sourceLabel}</div>
@@ -734,6 +752,7 @@ function renderIssues(issues) {
   updateIssuePanelHeaderCounts();
   updateNoIssuesMessage();
   highlightTableNumberMismatches();
+  highlightStoredAutomatedAlignmentIssues();
 }
 
 async function rerunAutomatedIssuesCheck() {
@@ -803,10 +822,16 @@ function setupIssuePanelClickHandler() {
     event.preventDefault();
     event.stopPropagation();
 
-    scrollToIssueTarget(
-      issueRow.dataset.issueSide || "left",
-      Number(issueRow.dataset.issueBlockIndex ?? -1),
-      issueRow.dataset.issueBlockSignature || ""
-    );
+    if (issueRow.classList.contains("automated-issue")
+        && issueRow.dataset.issueTitle.startsWith("Extra block")
+        && ["high", "low"].includes(issueRow.dataset.issueAlignmentConfidence)) {
+      highlightAutomatedAlignmentIssue(issueRow);
+    } else {
+      scrollToIssueTarget(
+        issueRow.dataset.issueSide || "left",
+        Number(issueRow.dataset.issueBlockIndex ?? -1),
+        issueRow.dataset.issueBlockSignature || ""
+      );
+    }
   });
 }

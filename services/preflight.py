@@ -1,5 +1,6 @@
 from difflib import SequenceMatcher
 from decimal import Decimal, InvalidOperation
+import math
 import re
 
 
@@ -104,6 +105,178 @@ def comparable_token(block):
         return ""
 
     return block["signature"]
+
+
+def paragraph_match_cost(left, right):
+    """Return a language-agnostic cost for pairing two paragraph blocks."""
+    left_length = max(1, len(left.get("text", "")))
+    right_length = max(1, len(right.get("text", "")))
+    length_cost = min(1.4, abs(math.log(left_length / right_length)))
+
+    # Numbers survive translation and are especially useful for captions and
+    # table titles (years, table numbers, percentages, and dollar amounts).
+    left_numbers = set(re.findall(r"\d+(?:[.,]\d+)?", left.get("text", "")))
+    right_numbers = set(re.findall(r"\d+(?:[.,]\d+)?", right.get("text", "")))
+    if left_numbers and right_numbers:
+        if left_numbers == right_numbers:
+            length_cost *= 0.45
+        elif left_numbers.isdisjoint(right_numbers):
+            length_cost += 0.45
+
+    return min(1.7, length_cost)
+
+
+def block_match_cost(left, right):
+    if left.get("signature") != right.get("signature"):
+        return 1.35
+    if left.get("tag") == "p":
+        return paragraph_match_cost(left, right)
+    return 0.0
+
+
+def align_comparable_blocks(left_blocks, right_blocks):
+    """Globally align blocks, using paragraph length to place insertions."""
+    gap_cost = 0.8
+    left_count = len(left_blocks)
+    right_count = len(right_blocks)
+    costs = [[0.0] * (right_count + 1) for _ in range(left_count + 1)]
+    moves = [[None] * (right_count + 1) for _ in range(left_count + 1)]
+
+    for i in range(1, left_count + 1):
+        costs[i][0] = i * gap_cost
+        moves[i][0] = "delete"
+    for j in range(1, right_count + 1):
+        costs[0][j] = j * gap_cost
+        moves[0][j] = "insert"
+
+    for i in range(1, left_count + 1):
+        for j in range(1, right_count + 1):
+            candidates = [
+                (costs[i - 1][j - 1] + block_match_cost(
+                    left_blocks[i - 1], right_blocks[j - 1]
+                ), "match"),
+                (costs[i - 1][j] + gap_cost, "delete"),
+                (costs[i][j - 1] + gap_cost, "insert"),
+            ]
+            # Prefer a real pairing on exact ties; length differences still
+            # decide where a paragraph gap belongs when one side has an extra.
+            costs[i][j], moves[i][j] = min(
+                candidates,
+                key=lambda candidate: (candidate[0], candidate[1] != "match")
+            )
+
+    alignment = []
+    i, j = left_count, right_count
+    while i or j:
+        move = moves[i][j]
+        if move == "match":
+            alignment.append((left_blocks[i - 1], right_blocks[j - 1]))
+            i -= 1
+            j -= 1
+        elif move == "delete":
+            alignment.append((left_blocks[i - 1], None))
+            i -= 1
+        else:
+            alignment.append((None, right_blocks[j - 1]))
+            j -= 1
+
+    alignment.reverse()
+    return alignment
+
+
+def get_section_block_range(section):
+    blocks = section.get("blocks", []) if section else []
+    if not blocks:
+        heading = section.get("heading") if section else None
+        index = heading.get("index") if heading else None
+        return index, index
+    return blocks[0].get("index"), blocks[-1].get("index")
+
+
+def paragraph_gap_confidence(alignment, position):
+    """Classify whether the unmatched paragraph is distinct from its peers."""
+    left, right = alignment[position]
+    extra = left or right
+    if not extra or extra.get("tag") != "p":
+        return "high"
+
+    def is_paragraph_pair(pair):
+        present = [block for block in pair if block is not None]
+        return bool(present) and all(block.get("tag") == "p" for block in present)
+
+    run_start = position
+    run_end = position
+    while run_start > 0 and is_paragraph_pair(alignment[run_start - 1]):
+        run_start -= 1
+    while run_end + 1 < len(alignment) and is_paragraph_pair(alignment[run_end + 1]):
+        run_end += 1
+
+    paragraph_run = alignment[run_start:run_end + 1]
+    left_count = sum(left_block is not None for left_block, _ in paragraph_run)
+    right_count = sum(right_block is not None for _, right_block in paragraph_run)
+    gap_count = sum(
+        left_block is None or right_block is None
+        for left_block, right_block in paragraph_run
+    )
+
+    # One paragraph split into several (commonly chart footnotes separated by
+    # <br> on one page and <p> on the other) is a grouping ambiguity, not
+    # evidence that any individual paragraph is extra.
+    if gap_count > 1 or min(left_count, right_count) == 1:
+        return "low"
+
+    neighboring_pairs = []
+    for distance in range(1, 4):
+        for nearby_position in (position - distance, position + distance):
+            if not 0 <= nearby_position < len(alignment):
+                continue
+            nearby_left, nearby_right = alignment[nearby_position]
+            if (nearby_left and nearby_right
+                    and nearby_left.get("tag") == "p"
+                    and nearby_right.get("tag") == "p"):
+                neighboring_pairs.append((nearby_left, nearby_right))
+
+    if not neighboring_pairs:
+        return "low"
+
+    extra_length = max(1, len(extra.get("text", "")))
+    plausible_matches = []
+    for nearby_left, nearby_right in neighboring_pairs:
+        counterpart = nearby_right if left else nearby_left
+        ratio_cost = abs(math.log(
+            extra_length / max(1, len(counterpart.get("text", "")))
+        ))
+        plausible_matches.append(ratio_cost)
+
+    # A large difference from every nearby counterpart means the gap choice
+    # is stable. Similar-length repeated paragraphs remain deliberately soft.
+    return "high" if min(plausible_matches) >= 0.45 else "low"
+
+
+def get_ambiguous_paragraph_range(alignment, position, side):
+    """Return the local paragraph run around an uncertain alignment gap."""
+    start = position
+    end = position
+
+    def is_paragraph_pair(pair):
+        present = [block for block in pair if block is not None]
+        return bool(present) and all(block.get("tag") == "p" for block in present)
+
+    while start > 0 and is_paragraph_pair(alignment[start - 1]):
+        start -= 1
+    while end + 1 < len(alignment) and is_paragraph_pair(alignment[end + 1]):
+        end += 1
+
+    side_offset = 0 if side == "left" else 1
+    indexes = [
+        pair[side_offset].get("index")
+        for pair in alignment[start:end + 1]
+        if pair[side_offset] is not None
+    ]
+    indexes = [index for index in indexes if index is not None]
+    if not indexes:
+        return None, None
+    return min(indexes), max(indexes)
 
 
 def classify_preflight_issue(left, right):
@@ -230,31 +403,42 @@ def diff_comparable_blocks(left_blocks, right_blocks):
                     "detail": f"Left heading is {left_heading['tag'].upper()}; right heading is {right_heading['tag'].upper()}."
                 })
 
-        left_tokens = [comparable_token(b) for b in left_section["blocks"]]
-        right_tokens = [comparable_token(b) for b in right_section["blocks"]]
+        alignment = align_comparable_blocks(
+            left_section["blocks"], right_section["blocks"]
+        )
+        left_range = get_section_block_range(left_section)
+        right_range = get_section_block_range(right_section)
 
-        matcher = SequenceMatcher(None, left_tokens, right_tokens, autojunk=False)
-
-        for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
-            if opcode == "equal":
+        for position, (left, right) in enumerate(alignment):
+            if left and right and left["signature"] == right["signature"]:
                 continue
 
-            left_slice = left_section["blocks"][i1:i2]
-            right_slice = right_section["blocks"][j1:j2]
-            max_len = max(len(left_slice), len(right_slice))
+            issue_info = classify_preflight_issue(left, right)
+            confidence = paragraph_gap_confidence(alignment, position)
+            issue_left_range = left_range
+            issue_right_range = right_range
+            if confidence == "low":
+                issue_left_range = get_ambiguous_paragraph_range(
+                    alignment, position, "left"
+                )
+                issue_right_range = get_ambiguous_paragraph_range(
+                    alignment, position, "right"
+                )
+            opcode = "delete" if right is None else (
+                "insert" if left is None else "replace"
+            )
 
-            for offset in range(max_len):
-                left = left_slice[offset] if offset < len(left_slice) else None
-                right = right_slice[offset] if offset < len(right_slice) else None
-
-                issue_info = classify_preflight_issue(left, right)
-
-                issues.append({
-                    "index": len(issues) + 1,
-                    "opcode": opcode,
-                    "left": left,
-                    "right": right,
-                    **issue_info
-                })
+            issues.append({
+                "index": len(issues) + 1,
+                "opcode": opcode,
+                "left": left,
+                "right": right,
+                "alignment_confidence": confidence,
+                "left_section_start_index": issue_left_range[0],
+                "left_section_end_index": issue_left_range[1],
+                "right_section_start_index": issue_right_range[0],
+                "right_section_end_index": issue_right_range[1],
+                **issue_info
+            })
 
     return issues

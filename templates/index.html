@@ -633,6 +633,7 @@
         <div class="diff-row user-issue {{ issue.severity }}"
             data-issue-id="{{ issue.id }}"
             data-issue-source="{{ issue.issue_source }}"
+            data-issue-title="{{ issue.title|e }}"
             data-issue-side="{{ issue.side }}"
             data-issue-block-index="{{ issue.block_index }}"
             data-issue-block-signature="{{ issue.block_signature|default('', true)|e }}">
@@ -663,9 +664,15 @@
         <div class="diff-row automated-issue {{ issue.severity }}"
             data-issue-id="{{ issue.id }}"
             data-issue-source="{{ issue.issue_source }}"
+            data-issue-title="{{ issue.title|e }}"
             data-issue-side="{{ issue.side }}"
             data-issue-block-index="{{ issue.block_index }}"
-            data-issue-block-signature="{{ issue.block_signature|default('', true)|e }}">
+            data-issue-block-signature="{{ issue.block_signature|default('', true)|e }}"
+            data-issue-alignment-confidence="{{ issue.alignment_confidence|default('', true) }}"
+            data-issue-left-section-start="{{ issue.left_section_start_index if issue.left_section_start_index is not none else '' }}"
+            data-issue-left-section-end="{{ issue.left_section_end_index if issue.left_section_end_index is not none else '' }}"
+            data-issue-right-section-start="{{ issue.right_section_start_index if issue.right_section_start_index is not none else '' }}"
+            data-issue-right-section-end="{{ issue.right_section_end_index if issue.right_section_end_index is not none else '' }}">
           <div class="diff-index">Auto</div>
 
           <div class="diff-left">
@@ -725,8 +732,8 @@
   <script src="{{ url_for('static', filename='js/code-sync.js', v='20260727-2') }}"></script>
   <script src="{{ url_for('static', filename='js/layout.js', v='20260730-1') }}"></script>
   <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/review-issues.js', v='20260730-2') }}"></script>
-  <script src="{{ url_for('static', filename='js/view-mode.js', v='20260727-2') }}"></script>
+  <script src="{{ url_for('static', filename='js/review-issues.js', v='20260813-1') }}"></script>
+  <script src="{{ url_for('static', filename='js/view-mode.js', v='20260813-1') }}"></script>
   <script src="{{ url_for('static', filename='js/events.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pasted-html.js') }}"></script>
   <script src="{{ url_for('static', filename='js/environment-presets.js', v='20260730-2') }}"></script>

@@ -137,52 +137,7 @@ def mark_heading_section_count_mismatches(left_headings, right_headings):
 
 
 def get_heading_section_counts(content_area, headings):
-    comparable_selector = ",".join([
-        "h1", "h2", "h3", "h4", "h5", "h6",
-        "p",
-        "li",
-        "dt", "dd",
-        "tr",
-        "summary",
-        "figure",
-        "img"
-    ])
-
-    comparable_elements = []
-
-    for element in content_area.select(comparable_selector):
-        tag = element.name.lower()
-        is_standalone_summary = (
-            tag == "summary"
-            and element.find_parent("details") is not None
-            and element.find_parent("figure") is None
-        )
-
-        if tag == "summary" and not is_standalone_summary:
-            continue
-
-        if element.find_parent("summary") and tag != "summary":
-            continue
-
-        if is_inside_closed_details(element) and not is_standalone_summary:
-            continue
-
-        if element.find_parent("li") and tag != "li":
-            continue
-        
-        if element.find_parent("dl") and tag not in {"dt", "dd"}:
-            continue
-
-        if element.find_parent("table") and tag != "tr":
-            continue
-
-        text = get_direct_text(element)
-        is_visual = tag in {"figure", "img"}
-
-        if not text and not is_visual:
-            continue
-
-        comparable_elements.append(element)
+    comparable_elements = get_comparable_elements(content_area)
 
     for heading_index, heading in enumerate(headings):
         heading_element = heading["element"]
@@ -226,12 +181,10 @@ def short_preview(text, limit=120):
 
 
 def is_inside_closed_details(element):
-    details_parent = element.find_parent("details")
-
-    if not details_parent:
-        return False
-
-    return not details_parent.has_attr("open")
+    return any(
+        not details_parent.has_attr("open")
+        for details_parent in element.find_parents("details")
+    )
 
 
 def get_direct_text(element):
@@ -294,51 +247,14 @@ def extract_comparable_blocks(filename, source_env, year):
     if not content_area:
         return []
 
-    selector = [
-        "h1", "h2", "h3", "h4", "h5", "h6",
-        "p",
-        "li",
-        "dt", "dd",
-        "tr",
-        "summary",
-        "figure",
-        "img"
-    ]
+    comparable_elements = get_comparable_elements(content_area)
 
     blocks = []
     tag_counts = {}
 
-    for element in content_area.select(",".join(selector)):
+    for element in comparable_elements:
         tag = element.name.lower()
-        is_standalone_summary = (
-            tag == "summary"
-            and element.find_parent("details") is not None
-            and element.find_parent("figure") is None
-        )
-
-        if tag == "summary" and not is_standalone_summary:
-            continue
-
-        if element.find_parent("summary") and tag != "summary":
-            continue
-
-        if is_inside_closed_details(element) and not is_standalone_summary:
-            continue
-
-        if element.find_parent("li") and tag != "li":
-            continue
-        
-        if element.find_parent("dl") and tag not in {"dt", "dd"}:
-            continue
-
-        if element.find_parent("table") and tag != "tr":
-            continue
-
         text = get_direct_text(element)
-        is_visual = tag in {"figure", "img"}
-
-        if not text and not is_visual:
-            continue
 
         occurrence = tag_counts.get(tag, 0)
         tag_counts[tag] = occurrence + 1
@@ -361,6 +277,57 @@ def extract_comparable_blocks(filename, source_env, year):
             ]
 
     return blocks
+
+
+def get_comparable_elements(content_area):
+    selector = [
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "p",
+        "li",
+        "dt", "dd",
+        "tr",
+        "summary",
+        "figure",
+        "img"
+    ]
+
+    elements = []
+
+    for element in content_area.select(",".join(selector)):
+        tag = element.name.lower()
+        is_standalone_summary = (
+            tag == "summary"
+            and element.find_parent("details") is not None
+            and element.find_parent("figure") is None
+        )
+
+        if tag == "summary" and not is_standalone_summary:
+            continue
+
+        if element.find_parent("summary") and tag != "summary":
+            continue
+
+        if is_inside_closed_details(element):
+            continue
+
+        if element.find_parent("li") and tag != "li":
+            continue
+        
+        if element.find_parent("dl") and tag not in {"dt", "dd"}:
+            continue
+
+        if element.find_parent("table") and tag != "tr":
+            continue
+
+        text = get_direct_text(element)
+        is_visual = tag in {"figure", "img"}
+
+        if not text and not is_visual:
+            continue
+
+        elements.append(element)
+
+    return elements
 
 
 def get_primary_content_container_for_source(soup, source_env):

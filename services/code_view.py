@@ -190,6 +190,22 @@ def build_highlighted_code_lines(path, source_env, year, open_details_indexes=No
     heading_index = 0
     block_index = 0
 
+    open_details_indexes = {
+        int(index)
+        for index in (open_details_indexes or [])
+        if str(index).lstrip("-").isdigit()
+    }
+    details_indexes = {
+        id(details): index
+        for index, details in enumerate(content_area.find_all("details"))
+    }
+
+    def is_inside_closed_details(node):
+        return any(
+            details_indexes.get(id(details_parent)) not in open_details_indexes
+            for details_parent in node.find_parents("details")
+        )
+
     def is_comparable_code_block(node):
         if not isinstance(node, Tag):
             return False
@@ -207,6 +223,9 @@ def build_highlighted_code_lines(path, source_env, year, open_details_indexes=No
             return False
 
         if node.find_parent("summary") and tag != "summary":
+            return False
+
+        if is_inside_closed_details(node):
             return False
 
         if tag not in {

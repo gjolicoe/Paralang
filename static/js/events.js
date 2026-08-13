@@ -162,6 +162,8 @@ leftCodeFrame.addEventListener("load", () => {
   if (pendingCodePanelSync && !singleViewEnabled) {
     syncCodePanelsToCurrentSelection();
   }
+
+  notifyCodeViewLoaded();
 });
 
 rightCodeFrame.addEventListener("load", () => {
@@ -174,6 +176,8 @@ rightCodeFrame.addEventListener("load", () => {
     syncCodePanelsToCurrentSelection();
     pendingCodePanelSync = false;
   }
+
+  notifyCodeViewLoaded();
 });
 
 document.addEventListener("keydown", event => {

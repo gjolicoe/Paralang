@@ -4,6 +4,19 @@ function getPrimaryContentContainer(doc) {
         || doc.querySelector("main");
 }
 
+function isExcludedComparableElement(element) {
+    const tag = element.tagName.toLowerCase();
+    const detailsParent = element.closest("details");
+    const isStandaloneSummary = tag === "summary"
+        && detailsParent
+        && !detailsParent.closest("figure");
+
+    return (tag === "summary" && !isStandaloneSummary)
+        || Boolean(element.closest("summary") && tag !== "summary")
+        || isInsideClosedDetails(element)
+        || Boolean(element.closest("li") && tag !== "li");
+}
+
 function getComparableElements(frame) {
     const doc = frame.contentDocument || frame.contentWindow.document;
 
@@ -18,28 +31,7 @@ function getComparableElements(frame) {
     ).filter(element => {
         const tag = element.tagName.toLowerCase();
 
-        const detailsParent = element.closest("details");
-        const isStandaloneSummary = tag === "summary"
-            && detailsParent
-            && !detailsParent.closest("figure");
-
-        if (tag === "summary" && !isStandaloneSummary) {
-            return false;
-        }
-
-        if (element.closest("summary") && tag !== "summary") {
-            return false;
-        }
-
-        if (
-            detailsParent
-            && !detailsParent.open
-            && !isStandaloneSummary
-        ) {
-            return false;
-        }
-
-        if (element.closest("li") && tag !== "li") {
+        if (isExcludedComparableElement(element)) {
             return false;
         }
 
@@ -62,32 +54,11 @@ function getComparableElementsForDocument(contentArea) {
     return Array.from(contentArea.querySelectorAll(snapSelector)).filter(el => {
         const tag = el.tagName.toLowerCase();
 
-        const detailsParent = el.closest("details");
-        const isStandaloneSummary = tag === "summary"
-            && detailsParent
-            && !detailsParent.closest("figure");
-
-        if (tag === "summary" && !isStandaloneSummary) {
-            return false;
-        }
-
-        if (el.closest("summary") && tag !== "summary") {
-            return false;
-        }
-
-        if (
-            detailsParent
-            && !detailsParent.hasAttribute("open")
-            && !isStandaloneSummary
-        ) {
+        if (isExcludedComparableElement(el)) {
             return false;
         }
 
         if (["strong", "em", "span", "a"].includes(tag)) {
-            return false;
-        }
-
-        if (el.closest("li") && tag !== "li") {
             return false;
         }
 
@@ -148,13 +119,7 @@ function areCurrentBlocksOutOfSync(leftIndex, rightIndex) {
 function getComparableElementSignature(element) {
     if (!element) return "";
 
-    const detailsParent = element.closest("details");
-
-    if (
-        detailsParent
-        && !detailsParent.open
-        && element.tagName.toLowerCase() !== "summary"
-    ) {
+    if (isInsideClosedDetails(element)) {
         return "";
     }
 
@@ -186,4 +151,18 @@ function getComparableSignatureForFrameIndex(frame, index) {
 
     const safeIndex = Math.max(0, Math.min(index, elements.length - 1));
     return getComparableElementSignature(elements[safeIndex]);
+}
+
+function isInsideClosedDetails(element) {
+    let detailsParent = element.closest("details");
+
+    while (detailsParent) {
+        if (!detailsParent.open) return true;
+
+        detailsParent = detailsParent.parentElement
+            ? detailsParent.parentElement.closest("details")
+            : null;
+    }
+
+    return false;
 }

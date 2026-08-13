@@ -222,9 +222,13 @@ function syncCodePanelsToCurrentSelection() {
 
     let reloadedCodeFrame = false;
 
-    if (leftCodeFrame && !codeFrameWindowContainsBlock(leftCodeFrame, leftIndex)) {
-        reloadCodeFrameAroundBlock("left", leftIndex);
-        reloadedCodeFrame = true;
+    if (leftCodeFrame) {
+        if (!codeFrameWindowContainsBlock(leftCodeFrame, leftIndex)) {
+            reloadCodeFrameAroundBlock("left", leftIndex);
+            reloadedCodeFrame = true;
+        } else {
+            cancelPendingCodeSectionReload("left");
+        }
     }
 
     if (
@@ -234,6 +238,8 @@ function syncCodePanelsToCurrentSelection() {
     ) {
         reloadCodeFrameAroundBlock("right", rightIndex);
         reloadedCodeFrame = true;
+    } else if (!singleViewEnabled && rightCodeFrame) {
+        cancelPendingCodeSectionReload("right");
     }
 
     if (reloadedCodeFrame) {
@@ -468,11 +474,6 @@ function attachCodePanelClickHandlers(frame, side) {
 
 
 
-const codeSectionReloadInProgress = {
-    left: false,
-    right: false
-};
-
 function codeFrameWindowContainsBlock(frame, blockIndex) {
     const doc = frame.contentDocument || frame.contentWindow.document;
 
@@ -512,10 +513,19 @@ const pendingCodeSectionReloads = {
     right: null
 };
 
-const lastRequestedCodeSectionSrc = {
+const pendingCodeSectionSources = {
     left: "",
     right: ""
 };
+
+function cancelPendingCodeSectionReload(side) {
+    if (pendingCodeSectionReloads[side]) {
+        clearTimeout(pendingCodeSectionReloads[side]);
+        pendingCodeSectionReloads[side] = null;
+    }
+
+    pendingCodeSectionSources[side] = "";
+}
 
 function reloadCodeFrameAroundBlock(side, blockIndex) {
     const filename = side === "right" ? rightSelect.value : leftSelect.value;
@@ -531,21 +541,31 @@ function reloadCodeFrameAroundBlock(side, blockIndex) {
 
     const currentSrc = frame.getAttribute("src") || "";
 
-    if (lastRequestedCodeSectionSrc[side] === src || currentSrc === src) {
+    if (currentSrc === src) {
         return;
     }
 
+    // Keep one short scheduling window, but continually update its destination.
+    // Restarting the timer for every wheel event starves the reload while the
+    // user is scrolling, making it nearly impossible to cross a code window.
+    pendingCodeSectionSources[side] = src;
+
     if (pendingCodeSectionReloads[side]) {
-        clearTimeout(pendingCodeSectionReloads[side]);
+        return;
     }
 
     pendingCodeSectionReloads[side] = setTimeout(() => {
-        lastRequestedCodeSectionSrc[side] = src;
-
-        setCodeLoading(side, true);
-        setFrameSource(frame, src, "No code view available.");
+        const pendingSrc = pendingCodeSectionSources[side];
 
         pendingCodeSectionReloads[side] = null;
+        pendingCodeSectionSources[side] = "";
+
+        if (!pendingSrc || (frame.getAttribute("src") || "") === pendingSrc) {
+            return;
+        }
+
+        setCodeLoading(side, true);
+        setFrameSource(frame, pendingSrc, "No code view available.");
     }, 75);
 }
 
