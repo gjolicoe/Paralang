@@ -360,6 +360,7 @@ def index():
     automated_issues = [
         issue for issue in all_issues
         if issue.get("issue_source") == "automated"
+        and issue.get("title") != "Table number mismatch"
     ]
 
     user_issues = [
@@ -630,6 +631,13 @@ def api_get_issues():
         left_file,
         right_file
     )
+    issues = [
+        issue for issue in issues
+        if not (
+            issue.get("issue_source") == "automated"
+            and issue.get("title") == "Table number mismatch"
+        )
+    ]
 
     return jsonify({
         "issues": issues
@@ -777,6 +785,13 @@ def api_rerun_automated_issues():
         left_file,
         right_file
     )
+    issues = [
+        issue for issue in issues
+        if not (
+            issue.get("issue_source") == "automated"
+            and issue.get("title") == "Table number mismatch"
+        )
+    ]
 
     return jsonify({
         "ok": True,

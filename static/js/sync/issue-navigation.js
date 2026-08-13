@@ -35,8 +35,8 @@ function scrollToPreflightIssue(
 }
 
 function highlightTableNumberMismatches() {
-    const issues = Array.isArray(window.PARALANG_PREFLIGHT_ISSUES)
-        ? window.PARALANG_PREFLIGHT_ISSUES
+    const issues = Array.isArray(clientTableNumberIssues)
+        ? clientTableNumberIssues
         : [];
 
     [[leftFrame, "left"], [rightFrame, "right"]].forEach(([frame, side]) => {

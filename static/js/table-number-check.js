@@ -101,6 +101,5 @@ function refreshClientTableNumberIssues() {
     return;
   }
 
-  window.PARALANG_PREFLIGHT_ISSUES = clientTableNumberIssues;
   highlightTableNumberMismatches();
 }

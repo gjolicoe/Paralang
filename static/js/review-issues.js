@@ -706,14 +706,12 @@ function renderIssues(issues) {
   if (!diffPanel) return;
 
   latestStoredIssues = issues.filter(issue => {
-    return issue.title !== "Table number mismatch"
-      && !String(issue.id || "").startsWith("client_table_number_");
+    return !(issue.issue_source === "automated"
+      && (issue.title === "Table number mismatch"
+        || String(issue.id || "").startsWith("client_table_number_")));
   });
 
-  const renderedIssues = [
-    ...latestStoredIssues,
-    ...clientTableNumberIssues
-  ];
+  const renderedIssues = latestStoredIssues;
 
   removeAllStoredIssueRows();
 
