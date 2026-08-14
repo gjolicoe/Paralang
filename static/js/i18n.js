@@ -190,7 +190,7 @@
     "Canada.ca URL": "URL Canada.ca",
     "Page": "Page",
     "Paste Canada.ca URL": "Coller l’URL Canada.ca",
-    "Showing H2 sections": "Affichage des sections H2",
+    "Showing 1,000-line sections": "Affichage des sections de 1 000 lignes",
     "since the html file is over 10,000 lines.": "puisque le fichier HTML compte plus de 10 000 lignes.",
     "No .content-area or <main> found in this file.": "Aucun élément .content-area ou <main> n’a été trouvé dans ce fichier.",
     "Enter your name for QA notes:": "Entrez votre nom pour les notes d’AQ :",

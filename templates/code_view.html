@@ -14,9 +14,9 @@
       {% endif %}>
   {% if code_window and code_window.is_windowed %}
     <div class="code-section-window-bar">
-      Showing H2 sections
-      {{ code_window.start_h2_section }}–{{ code_window.end_h2_section }}
-      of {{ code_window.total_h2_sections }}
+      Showing 1,000-line sections
+      {{ code_window.start_section }}–{{ code_window.end_section }}
+      of {{ code_window.total_sections }}
       since the html file is over 10,000 lines.
     </div>
   {% endif %}

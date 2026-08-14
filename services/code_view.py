@@ -23,6 +23,8 @@ INLINE_LIKE_ELEMENTS = {
 RAW_TEXT_ELEMENTS = {"script", "style", "pre", "textarea"}
 
 LARGE_CODE_VIEW_LINE_THRESHOLD = 10000
+CODE_VIEW_SECTION_LINE_COUNT = 1000
+CODE_VIEW_WINDOW_SECTION_COUNT = 3
 MAX_CODE_VIEW_CACHE_ITEMS = 10
 
 _CODE_VIEW_CACHE = {}
@@ -425,41 +427,6 @@ def build_highlighted_code_lines(path, source_env, year, open_details_indexes=No
     return highlighted_lines
 
 
-def get_h2_section_ranges(highlighted_lines):
-    h2_lines = []
-
-    for index, line in enumerate(highlighted_lines):
-        block_index = line.get("block_index")
-
-        if block_index is None:
-            continue
-
-        raw_html = line.get("raw", "") or ""
-
-        if raw_html.lstrip().lower().startswith("<h2"):
-            h2_lines.append(index)
-
-    if not h2_lines:
-        return []
-
-    ranges = []
-
-    for position, start_index in enumerate(h2_lines):
-        end_index = (
-            h2_lines[position + 1] - 1
-            if position + 1 < len(h2_lines)
-            else len(highlighted_lines) - 1
-        )
-
-        ranges.append({
-            "section_index": position,
-            "start_index": start_index,
-            "end_index": end_index
-        })
-
-    return ranges
-
-
 def get_line_index_for_block(highlighted_lines, selected_block_index):
     if selected_block_index is None:
         return None
@@ -498,7 +465,7 @@ def get_line_index_for_block(highlighted_lines, selected_block_index):
     return nearest_line_index
 
 
-def get_h2_section_window_for_block(highlighted_lines, selected_block_index):
+def get_line_section_window_for_block(highlighted_lines, selected_block_index):
     total_lines = len(highlighted_lines)
 
     if total_lines <= LARGE_CODE_VIEW_LINE_THRESHOLD:
@@ -510,17 +477,6 @@ def get_h2_section_window_for_block(highlighted_lines, selected_block_index):
             "reason": "small-file"
         }
 
-    h2_ranges = get_h2_section_ranges(highlighted_lines)
-
-    if not h2_ranges:
-        return {
-            "is_windowed": False,
-            "start_index": 0,
-            "end_index": total_lines - 1,
-            "total_lines": total_lines,
-            "reason": "no-h2-sections"
-        }
-
     selected_line_index = get_line_index_for_block(
         highlighted_lines,
         selected_block_index
@@ -529,29 +485,37 @@ def get_h2_section_window_for_block(highlighted_lines, selected_block_index):
     if selected_line_index is None:
         selected_line_index = 0
 
-    current_section_position = 0
+    total_sections = (
+        total_lines + CODE_VIEW_SECTION_LINE_COUNT - 1
+    ) // CODE_VIEW_SECTION_LINE_COUNT
+    current_section = selected_line_index // CODE_VIEW_SECTION_LINE_COUNT
+    max_start_section = max(0, total_sections - CODE_VIEW_WINDOW_SECTION_COUNT)
+    start_section = min(
+        max(0, current_section - 1),
+        max_start_section
+    )
+    end_section = min(
+        total_sections - 1,
+        start_section + CODE_VIEW_WINDOW_SECTION_COUNT - 1
+    )
 
-    for position, section_range in enumerate(h2_ranges):
-        if section_range["start_index"] <= selected_line_index <= section_range["end_index"]:
-            current_section_position = position
-            break
-
-    start_section_position = max(0, current_section_position - 1)
-    end_section_position = min(len(h2_ranges) - 1, current_section_position + 1)
-
-    start_index = h2_ranges[start_section_position]["start_index"]
-    end_index = h2_ranges[end_section_position]["end_index"]
+    start_index = start_section * CODE_VIEW_SECTION_LINE_COUNT
+    end_index = min(
+        total_lines - 1,
+        (end_section + 1) * CODE_VIEW_SECTION_LINE_COUNT - 1
+    )
 
     return {
         "is_windowed": True,
         "start_index": start_index,
         "end_index": end_index,
         "total_lines": total_lines,
-        "current_h2_section": current_section_position + 1,
-        "start_h2_section": start_section_position + 1,
-        "end_h2_section": end_section_position + 1,
-        "total_h2_sections": len(h2_ranges),
-        "reason": "large-file-h2-window"
+        "current_section": current_section + 1,
+        "start_section": start_section + 1,
+        "end_section": end_section + 1,
+        "total_sections": total_sections,
+        "section_line_count": CODE_VIEW_SECTION_LINE_COUNT,
+        "reason": "large-file-line-window"
     }
 
 
@@ -588,7 +552,7 @@ def format_html_for_code_view(
         open_details_indexes=open_details_indexes
     )
 
-    code_window = get_h2_section_window_for_block(
+    code_window = get_line_section_window_for_block(
         highlighted_lines,
         selected_block_index
     )
