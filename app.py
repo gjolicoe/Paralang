@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from services.sources import (
     get_source_root,
+    SOURCE_ENVIRONMENTS,
     get_available_sources,
     get_available_years,
     get_html_files,
@@ -399,9 +400,19 @@ def index():
         app_instance_id=APP_INSTANCE_ID,
     )
 
+def get_file_language(source_env, filename):
+    if SOURCE_ENVIRONMENTS.get(source_env, {}).get("different_language_paths"):
+        return next((lang for lang in ("en", "fr") if filename.endswith(f"-{lang}.html")), None)
+    return None
+
+
 @app.route("/source/<source_env>/<year>/<path:filename>")
-def source(source_env, year, filename):
-    source_root = get_source_root(source_env, year)
+@app.route("/source-language/<source_env>/<year>/<language>/<path:filename>")
+def source(source_env, year, filename, language=None):
+    if language is not None and language not in {"en", "fr"}:
+        abort(404)
+    language = language or get_file_language(source_env, filename)
+    source_root = get_source_root(source_env, year, language)
 
     if not source_root:
         abort(404)
@@ -418,7 +429,7 @@ def source(source_env, year, filename):
 
 @app.route("/page/<source_env>/<year>/<path:filename>")
 def page_view(source_env, year, filename):
-    source_root = get_source_root(source_env, year)
+    source_root = get_source_root(source_env, year, get_file_language(source_env, filename))
 
     if not source_root:
         abort(404)
@@ -493,11 +504,11 @@ def page_view(source_env, year, filename):
         else:
             source_parent = Path(filename).parent.as_posix()
 
-            base["href"] = (
-                f"/source/{source_env}/{year}/{source_parent}/"
-                if source_parent != "."
-                else f"/source/{source_env}/{year}/"
-            )
+            language = get_file_language(source_env, filename)
+            source_prefix = (f"/source-language/{source_env}/{year}/{language}"
+                             if language else f"/source/{source_env}/{year}")
+            base["href"] = (f"{source_prefix}/{source_parent}/"
+                            if source_parent != "." else f"{source_prefix}/")
 
         soup.head.insert(0, base)
 
@@ -590,7 +601,7 @@ def page_view(source_env, year, filename):
 
 @app.route("/code/<source_env>/<year>/<path:filename>")
 def code_view(source_env, year, filename):
-    source_root = get_source_root(source_env, year)
+    source_root = get_source_root(source_env, year, get_file_language(source_env, filename))
 
     if not source_root:
         abort(404)

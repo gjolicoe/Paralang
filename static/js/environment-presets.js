@@ -77,6 +77,9 @@
       presetType.value === "url" || !detectAdditionalFolders.checked;
   }
 
+  const differentLanguagePaths = form.elements.different_language_paths;
+  differentLanguagePaths.addEventListener("change", updatePresetTypeVisibility);
+
   function updatePresetTypeVisibility() {
     const isUrl = presetType.value === "url";
     folderFields.forEach(field => {
@@ -85,7 +88,12 @@
     urlFields.forEach(field => {
       field.hidden = !isUrl;
     });
+    const separate = !isUrl && differentLanguagePaths.checked;
+    document.getElementById("languagePathsFields").hidden = isUrl;
+    document.getElementById("rootFolderLabel").textContent = translate(separate ? "English folder path" : "Root folder");
     form.elements.root.required = !isUrl;
+    document.getElementById("frenchRootField").hidden = !separate;
+    form.elements.root_fr.required = separate;
     form.elements.allowed_origin.required = isUrl;
     formDescription.textContent = translate(isUrl
       ? "Connect Paralang to a public HTTPS website."
@@ -135,7 +143,9 @@
     form.elements.id.value = preset.id || "";
     form.elements.group.value = preset.group || "";
     presetType.value = preset.source_type || "folder";
-    form.elements.root.value = preset.root || "";
+    form.elements.root.value = (preset.different_language_paths ? preset.root_en : preset.root) || "";
+    differentLanguagePaths.checked = Boolean(preset.different_language_paths);
+    form.elements.root_fr.value = preset.root_fr || "";
     form.elements.allowed_origin.value = preset.allowed_origins?.[0] || "";
     form.elements.collection_mode.value = preset.collection_mode || "named-folders";
     form.elements.content_selector.value = preset.content_selector || ".content-area";
@@ -195,6 +205,9 @@
       } else {
         Object.assign(preset, {
           root: data.get("root"),
+          different_language_paths: differentLanguagePaths.checked,
+          root_en: data.get("root"),
+          root_fr: data.get("root_fr"),
           collection_mode: data.get("collection_mode"),
           include_root_html: data.has("include_root_html"),
           include_landing_pages: true,

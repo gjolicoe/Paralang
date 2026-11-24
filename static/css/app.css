@@ -3303,3 +3303,17 @@ body.dark-mode .right-code-panel {
     grid-template-columns: 0px 1fr;
   }
 }
+
+#rootFolderInputs > label[hidden] {
+  display: none;
+}
+
+#rootFolderInputs:has(> label[hidden]) {
+  grid-template-columns: 1fr;
+}
+
+.language-paths-fields {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}

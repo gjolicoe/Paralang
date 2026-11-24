@@ -126,7 +126,14 @@ def validate_environment_preset(value):
             "allowed_origins": [allowed_origin],
             "content_selector": selector,
         }
-    root_text = str(value.get("root", "")).strip()
+    language_roots = {}
+    if value.get("different_language_paths"):
+        for language in ("en", "fr"):
+            root = str(value.get(f"root_{language}", "")).strip()
+            if not root or not Path(root).is_absolute():
+                raise ValueError(f"{language.upper()} path must be an absolute local or network folder path.")
+            language_roots[f"root_{language}"] = root
+    root_text = language_roots.get("root_en", str(value.get("root", "")).strip())
     if not root_text or not Path(root_text).is_absolute():
         raise ValueError("Root must be an absolute local or network folder path.")
     collection_mode = value.get("collection_mode", "named-folders")
@@ -149,7 +156,7 @@ def validate_environment_preset(value):
             raise ValueError("Each additional folder must be a safe relative path within the root.")
         if folder not in additional_folders:
             additional_folders.append(folder)
-    return {"schema_version": 1, "id": preset_id, "label": label, "group": group, "root": root_text, "source_type": "folder", "collection_mode": collection_mode, "folder_name_pattern": pattern, "include_root_html": collection_mode == "direct" or bool(value.get("include_root_html", False)), "include_landing_pages": bool(value.get("include_landing_pages", True)), "additional_folders": additional_folders, "content_selector": selector}
+    return {**language_roots, "different_language_paths": bool(language_roots), "schema_version": 1, "id": preset_id, "label": label, "group": group, "root": root_text, "source_type": "folder", "collection_mode": collection_mode, "folder_name_pattern": pattern, "include_root_html": collection_mode == "direct" or bool(value.get("include_root_html", False)), "include_landing_pages": bool(value.get("include_landing_pages", True)), "additional_folders": additional_folders, "content_selector": selector}
 
 
 def read_environment_presets():
@@ -234,11 +241,13 @@ def delete_environment_preset(preset_id):
 load_environment_presets()
 
 
-def get_source_root(source_env, year=None):
+def get_source_root(source_env, year=None, language=None):
     if source_env not in SOURCE_ENVIRONMENTS:
         return None
 
     config = SOURCE_ENVIRONMENTS[source_env]
+    if language and config.get("different_language_paths"):
+        config = {**config, "root": Path(config[f"root_{language}"])}
 
     if config.get("type") == "cache-folder":
         config["root"].mkdir(parents=True, exist_ok=True)
@@ -267,6 +276,15 @@ def get_available_years(source_env):
         return []
 
     config = SOURCE_ENVIRONMENTS[source_env]
+    if config.get("different_language_paths"):
+        years = set()
+        for language in ("en", "fr"):
+            years.update(get_available_years_for_config({**config, "root": Path(config[f"root_{language}"])}))
+        return sorted(years, reverse=True)
+    return get_available_years_for_config(config)
+
+
+def get_available_years_for_config(config):
     env_root = config["root"]
 
     if config.get("type") == "cache-folder":
@@ -327,8 +345,13 @@ def get_available_sources():
     return sources
 
 
-def get_html_files(source_env, year):
-    source_root = get_source_root(source_env, year)
+def get_html_files(source_env, year, language=None):
+    config = SOURCE_ENVIRONMENTS.get(source_env, {})
+    if config.get("different_language_paths") and language is None:
+        return sorted({name for lang in ("en", "fr")
+                       for name in get_html_files(source_env, year, lang)
+                       if name.endswith(f"-{lang}.html")})
+    source_root = get_source_root(source_env, year, language)
 
     if not source_root:
         return []
@@ -741,7 +764,13 @@ def get_canada_ca_source_url_from_cached_file(filename):
     return get_environment_source_url_from_cached_file(CANADA_CA_URL_ENV, filename)
 
 def get_resolved_source_file_path(source_env, year, filename):
-    source_root = get_source_root(source_env, year)
+    config = SOURCE_ENVIRONMENTS.get(source_env, {})
+    language = None
+    if config.get("different_language_paths"):
+        language = next((lang for lang in ("en", "fr") if str(filename).endswith(f"-{lang}.html")), None)
+        if language is None:
+            return None
+    source_root = get_source_root(source_env, year, language)
 
     if not source_root:
         return None

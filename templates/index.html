@@ -272,7 +272,15 @@
           <label><span>Preset ID</span><input name="id" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="department-website"><small>Lowercase letters, numbers, and hyphens.</small></label>
           <label><span>Preset type</span><select name="source_type" id="environmentPresetType"><option value="folder">Folder</option><option value="url">Public website URL</option></select><small>Choose how pages are loaded.</small></label>
           <label><span>Group</span><input name="group" maxlength="80" value="Team presets" data-i18n-value><small>Used as a header in the Environment menu.</small></label>
-          <label class="preset-folder-field"><span>Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
+        </div>
+        <div id="languagePathsFields" class="language-paths-fields preset-folder-field">
+          <label class="environment-checkbox"><input type="checkbox" name="different_language_paths" aria-controls="rootFolderInputs"><span><strong>Different paths for both languages</strong><small>Enter a separate root folder for English and French pages.</small></span></label>
+          <div id="rootFolderInputs" class="environment-form-grid">
+            <label><span id="rootFolderLabel">Root folder</span><input name="root" required placeholder="C:\content or \\server\share"></label>
+            <label id="frenchRootField" hidden><span>French folder path</span><input name="root_fr" placeholder="C:\content\french"></label>
+          </div>
+        </div>
+        <div class="environment-form-grid">
           <label class="preset-folder-field"><span>Folder layout</span><select name="collection_mode"><option value="named-folders">Named subfolders</option><option value="direct">Pages directly in root</option></select></label>
           <label class="preset-url-field" hidden><span>Allowed website</span><input name="allowed_origin" type="url" placeholder="https://www.example.com"><small>Public HTTPS origin only; paths are entered when reviewing pages.</small></label>
           <label><span>Content selector</span><input name="content_selector" value=".content-area" maxlength="200"><small>CSS selector for the primary page content.</small></label>
