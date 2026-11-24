@@ -320,12 +320,12 @@ def index():
         files = get_html_files(source_env, year)
         en_files = [
             f for f in files
-            if f.endswith("-en.html") or f == "home-accueil-en.html"
+            if (f.startswith("__en__/") if SOURCE_ENVIRONMENTS.get(source_env, {}).get("different_language_paths") else f.endswith("-en.html"))
         ]
 
         fr_files = [
             f for f in files
-            if f.endswith("-fr.html") or f == "home-accueil-fr.html"
+            if (f.startswith("__fr__/") if SOURCE_ENVIRONMENTS.get(source_env, {}).get("different_language_paths") else f.endswith("-fr.html"))
         ]
 
         left_file = request.args.get("left")
@@ -396,7 +396,8 @@ def index():
 
 def get_file_language(source_env, filename):
     if SOURCE_ENVIRONMENTS.get(source_env, {}).get("different_language_paths"):
-        return next((lang for lang in ("en", "fr") if filename.endswith(f"-{lang}.html")), None)
+        return next((lang for lang in ("en", "fr") if filename.startswith(f"__{lang}__/")),
+                    next((lang for lang in ("en", "fr") if filename.endswith(f"-{lang}.html")), None))
     return None
 
 
@@ -407,6 +408,8 @@ def source(source_env, year, filename, language=None):
         abort(404)
     language = language or get_file_language(source_env, filename)
     source_root = get_source_root(source_env, year, language)
+    if language and filename.startswith(f"__{language}__/"):
+        filename = filename.split("/", 1)[1]
 
     if not source_root:
         abort(404)
@@ -423,7 +426,10 @@ def source(source_env, year, filename, language=None):
 
 @app.route("/page/<source_env>/<year>/<path:filename>")
 def page_view(source_env, year, filename):
-    source_root = get_source_root(source_env, year, get_file_language(source_env, filename))
+    language = get_file_language(source_env, filename)
+    source_root = get_source_root(source_env, year, language)
+    if language and filename.startswith(f"__{language}__/"):
+        filename = filename.split("/", 1)[1]
 
     if not source_root:
         abort(404)
@@ -498,7 +504,7 @@ def page_view(source_env, year, filename):
         else:
             source_parent = Path(filename).parent.as_posix()
 
-            language = get_file_language(source_env, filename)
+            language = language or get_file_language(source_env, filename)
             source_prefix = (f"/source-language/{source_env}/{year}/{language}"
                              if language else f"/source/{source_env}/{year}")
             base["href"] = (f"{source_prefix}/{source_parent}/"
@@ -595,7 +601,10 @@ def page_view(source_env, year, filename):
 
 @app.route("/code/<source_env>/<year>/<path:filename>")
 def code_view(source_env, year, filename):
-    source_root = get_source_root(source_env, year, get_file_language(source_env, filename))
+    language = get_file_language(source_env, filename)
+    source_root = get_source_root(source_env, year, language)
+    if language and filename.startswith(f"__{language}__/"):
+        filename = filename.split("/", 1)[1]
 
     if not source_root:
         abort(404)

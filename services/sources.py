@@ -248,6 +248,8 @@ def get_source_root(source_env, year=None, language=None):
     config = SOURCE_ENVIRONMENTS[source_env]
     if language and config.get("different_language_paths"):
         config = {**config, "root": Path(config[f"root_{language}"])}
+        if year == "_":
+            return safe_resolve(config["root"])
 
     if config.get("type") == "cache-folder":
         config["root"].mkdir(parents=True, exist_ok=True)
@@ -280,6 +282,12 @@ def get_available_years(source_env):
         years = set()
         for language in ("en", "fr"):
             years.update(get_available_years_for_config({**config, "root": Path(config[f"root_{language}"])}))
+        for language in ("en", "fr"):
+            try:
+                if any(Path(config[f"root_{language}"]).glob("*.html")):
+                    years.add("_")
+            except OSError:
+                pass
         return sorted(years, reverse=True)
     return get_available_years_for_config(config)
 
@@ -333,7 +341,7 @@ def get_available_sources():
 
         years = get_available_years(key)
 
-        if years or config.get("show_when_empty"):
+        if years or config.get("show_when_empty") or config.get("different_language_paths"):
             sources.append({
                 "key": key,
                 "label": config["label"],
@@ -348,9 +356,8 @@ def get_available_sources():
 def get_html_files(source_env, year, language=None):
     config = SOURCE_ENVIRONMENTS.get(source_env, {})
     if config.get("different_language_paths") and language is None:
-        return sorted({name for lang in ("en", "fr")
-                       for name in get_html_files(source_env, year, lang)
-                       if name.endswith(f"-{lang}.html")})
+        return sorted({f"__{lang}__/{name}" for lang in ("en", "fr")
+                       for name in get_html_files(source_env, year, lang)})
     source_root = get_source_root(source_env, year, language)
 
     if not source_root:
@@ -372,7 +379,7 @@ def get_html_files(source_env, year, language=None):
             if landing_path.exists() and landing_path.is_file():
                 files.append(landing_page)
 
-    if config.get("include_root_html") or source_env == PASTED_HTML_ENV:
+    if config.get("include_root_html") or config.get("different_language_paths") or source_env == PASTED_HTML_ENV:
         try:
             for html_file in sorted(source_root.glob("*.html")):
                 if html_file.name not in files:
@@ -767,7 +774,11 @@ def get_resolved_source_file_path(source_env, year, filename):
     config = SOURCE_ENVIRONMENTS.get(source_env, {})
     language = None
     if config.get("different_language_paths"):
-        language = next((lang for lang in ("en", "fr") if str(filename).endswith(f"-{lang}.html")), None)
+        language = next((lang for lang in ("en", "fr") if str(filename).startswith(f"__{lang}__/")), None)
+        if language:
+            filename = str(filename).split("/", 1)[1]
+        else:
+            language = next((lang for lang in ("en", "fr") if str(filename).endswith(f"-{lang}.html")), None)
         if language is None:
             return None
     source_root = get_source_root(source_env, year, language)

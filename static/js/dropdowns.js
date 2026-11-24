@@ -23,6 +23,7 @@ function rebuildYearDropdown() {
 }
 
 function getPairedFilename(filename, fromSuffix, toSuffix) {
+    if (/^__(en|fr)__\//.test(filename)) return "";
     if (!filename.endsWith(fromSuffix)) return "";
     return filename.slice(0, -fromSuffix.length) + toSuffix;
 }
@@ -94,5 +95,5 @@ function selectOptionIfExists(select, value) {
 }
 
 function getDisplayFilename(file) {
-  return String(file || "").replace(/^report-rapport\//, "");
+  return String(file || "").replace(/^__(en|fr)__\//, "").replace(/^report-rapport\//, "");
 }
