@@ -322,14 +322,14 @@ function setSingleView(enabled, options = {}) {
 
     rebuildLeftDropdownForDualView();
 
-    if (selectedSingleFile.endsWith("-en.html")) {
+    if (enPageFiles.includes(selectedSingleFile)) {
       selectOptionIfExists(leftSelect, selectedSingleFile);
 
       const pairedFr = getPairedFilename(selectedSingleFile, "-en.html", "-fr.html");
       selectOptionIfExists(rightSelect, pairedFr);
     }
 
-    if (selectedSingleFile.endsWith("-fr.html")) {
+    if (frPageFiles.includes(selectedSingleFile)) {
       selectOptionIfExists(rightSelect, selectedSingleFile);
 
       const pairedEn = getPairedFilename(selectedSingleFile, "-fr.html", "-en.html");

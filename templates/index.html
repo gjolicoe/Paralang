@@ -140,7 +140,7 @@
         <select id="left" name="left">
           {% for file in en_files %}
           <option value="{{ file }}" data-lang="en" {% if file==left_file %}selected{% endif %}>
-            {{ file|replace('report-rapport/', '') }}
+            {{ file|replace('__en__/', '')|replace('__fr__/', '')|replace('report-rapport/', '') }}
           </option>
           {% endfor %}
         </select>
@@ -164,7 +164,7 @@
         <select id="right" name="right">
           {% for file in fr_files %}
           <option value="{{ file }}" data-lang="fr" {% if file==right_file %}selected{% endif %}>
-            {{ file|replace('report-rapport/', '') }}
+            {{ file|replace('__en__/', '')|replace('__fr__/', '')|replace('report-rapport/', '') }}
           </option>
           {% endfor %}
         </select>
